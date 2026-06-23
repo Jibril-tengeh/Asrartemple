@@ -114,7 +114,7 @@ export const AbjadCalculator: React.FC = () => {
             <ArrowLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Calculator className="text-blue-500" />
               Abjad
             </h1>
@@ -125,7 +125,7 @@ export const AbjadCalculator: React.FC = () => {
 
       <div className="space-y-6">
         {/* Input Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-100 dark:border-gray-700">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Entrez le texte en Arabe
           </label>
@@ -167,7 +167,7 @@ export const AbjadCalculator: React.FC = () => {
           className={`grid grid-cols-2 gap-3 sm:gap-4 transition-all duration-300 ${totalMashriqi > 0 ? 'opacity-100 translate-y-0' : 'opacity-50'}`}
         >
           {/* Mashriqi (Orientale) */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-4 sm:p-6 text-white shadow-lg relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-4 sm:p-5 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
               <span className="text-blue-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">Mashriq</span>
@@ -187,7 +187,7 @@ export const AbjadCalculator: React.FC = () => {
           </div>
 
           {/* Maghribi (Occidentale) */}
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-4 sm:p-6 text-white shadow-lg relative overflow-hidden">
+          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-4 sm:p-5 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
               <span className="text-emerald-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">Maghribi</span>
@@ -214,7 +214,7 @@ export const AbjadCalculator: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
               <button 
                 onClick={() => setShowWords(!showWords)}
-                className="w-full flex items-center justify-between p-5 sm:p-6 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Adad par Mots</h3>
                 {showWords ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
@@ -228,7 +228,7 @@ export const AbjadCalculator: React.FC = () => {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-5 sm:p-6 pt-0 flex flex-wrap gap-3 justify-end border-t border-gray-50 dark:border-gray-700/50" dir="rtl">
+                    <div className="p-4 sm:p-5 pt-0 flex flex-wrap gap-3 justify-end border-t border-gray-50 dark:border-gray-700/50" dir="rtl">
                       {wordsDetails.map((item, i) => (
                         <div key={i} className="flex flex-col items-center bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 min-w-[5rem] border border-gray-100 dark:border-gray-600 shadow-sm">
                           <span className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-arabic">{item.word}</span>
@@ -254,7 +254,7 @@ export const AbjadCalculator: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
               <button 
                 onClick={() => setShowLetters(!showLetters)}
-                className="w-full flex items-center justify-between p-5 sm:p-6 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Adad par Lettres</h3>
                 {showLetters ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
@@ -268,7 +268,7 @@ export const AbjadCalculator: React.FC = () => {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-5 sm:p-6 pt-0 flex flex-wrap gap-2 justify-end border-t border-gray-50 dark:border-gray-700/50" dir="rtl">
+                    <div className="p-4 sm:p-5 pt-0 flex flex-wrap gap-2 justify-end border-t border-gray-50 dark:border-gray-700/50" dir="rtl">
                       {details.map((item, i) => (
                         <div key={i} className={`flex flex-col items-center rounded-lg p-2 min-w-[3.5rem] border ${!item.valMashriqi && !item.valMaghribi ? 'bg-gray-100 dark:bg-gray-800 border-transparent opacity-50' : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600'}`}>
                           <span className="text-lg font-bold text-gray-900 dark:text-white mb-1 font-arabic">{item.char}</span>
@@ -306,7 +306,7 @@ export const AbjadCalculator: React.FC = () => {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
+              <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <History size={18} className="text-blue-500" /> Historique

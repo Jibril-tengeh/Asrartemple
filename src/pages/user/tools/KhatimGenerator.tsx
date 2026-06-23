@@ -83,7 +83,7 @@ export const KhatimGenerator: React.FC = () => {
           <ArrowLeft size={24} />
         </Link>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Star className="text-purple-500" />
             Générateur de Khatim
           </h1>
@@ -97,7 +97,7 @@ export const KhatimGenerator: React.FC = () => {
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Valeur Numérique Cible (Minimum 15)
         </label>
@@ -107,7 +107,7 @@ export const KhatimGenerator: React.FC = () => {
             value={inputNumber}
             onChange={(e) => setInputNumber(e.target.value)}
             placeholder="Ex: 66, 313, 129..."
-            className="flex-1 w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-xl sm:text-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-lg sm:text-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <button
             onClick={generateKhatim}
@@ -123,7 +123,7 @@ export const KhatimGenerator: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-md border border-gray-100 dark:border-gray-700 mx-auto max-w-sm"
+          className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 dark:border-gray-700 mx-auto max-w-sm"
         >
           <div className="text-center mb-6">
             <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
@@ -135,7 +135,7 @@ export const KhatimGenerator: React.FC = () => {
             {grid.map((val, idx) => (
               <div 
                 key={idx} 
-                className="aspect-square bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums shadow-sm border border-gray-100 dark:border-gray-600"
+                className="aspect-square bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold text-gray-900 dark:text-white tabular-nums shadow-sm border border-gray-100 dark:border-gray-600"
               >
                 {val}
               </div>

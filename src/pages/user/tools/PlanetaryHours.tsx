@@ -103,7 +103,7 @@ export const PlanetaryHours: React.FC = () => {
             <ArrowLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Clock className="text-amber-500" />
               Heures Planétaires
             </h1>
@@ -126,7 +126,7 @@ export const PlanetaryHours: React.FC = () => {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-6"
           >
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jour de la semaine</label>
                 <div className="flex flex-wrap gap-2">
@@ -223,7 +223,7 @@ export const PlanetaryHours: React.FC = () => {
             </div>
             
             <div className="text-right shrink-0">
-              <span className={`text-2xl font-bold font-arabic ${h.planet.color}`} dir="rtl">
+              <span className={`text-xl sm:text-2xl font-bold font-arabic ${h.planet.color}`} dir="rtl">
                 {h.planet.arabic}
               </span>
             </div>

@@ -43,7 +43,7 @@ export const SecretCard: React.FC<SecretCardProps> = ({ item, layoutMode = 'grid
           </div>
           
           {/* Content Area */}
-          <div className="p-3 sm:p-4 flex-1 flex flex-col justify-center bg-gray-50/50 dark:bg-gray-800/50 overflow-hidden">
+          <div className="p-2 sm:p-3 flex-1 flex flex-col justify-center bg-gray-50/50 dark:bg-gray-800/50 overflow-hidden">
             <h3 className="text-[15px] sm:text-[17px] font-bold text-gray-900 dark:text-gray-100 mb-1.5 leading-snug line-clamp-2">
               {item.title}
             </h3>
@@ -83,14 +83,14 @@ export const SecretCard: React.FC<SecretCardProps> = ({ item, layoutMode = 'grid
 
              {/* Title Over Image */}
              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent pointer-events-none z-0"></div>
-             <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-10">
+             <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 z-10">
                <h3 className={`font-bold text-white mb-0 leading-snug drop-shadow-md line-clamp-3 ${isGrid1 ? 'text-[18px] sm:text-[20px]' : 'text-[14px] sm:text-[16px]'}`}>
                  {item.title}
                </h3>
              </div>
           </div>
           
-          <div className="p-3 sm:p-4 flex-1 flex flex-col border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="p-2.5 sm:p-3 flex-1 flex flex-col border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
              {/* Description / Hook */}
              <p className={`text-gray-500 dark:text-gray-400 leading-relaxed ${isGrid1 ? 'text-sm sm:text-[15px] line-clamp-3' : 'text-[13px] sm:text-sm line-clamp-3'}`}>
                {item.hook || item.content}

@@ -78,13 +78,13 @@ export const SecretDetail: React.FC = () => {
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
             {item.title}
           </h1>
 
           {item.verse && (
             <div className="my-10 p-6 sm:p-8 bg-emerald-50/70 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-inner">
-              <p className="font-arabic text-3xl sm:text-4xl md:text-5xl text-emerald-800 dark:text-emerald-300 leading-relaxed sm:leading-loose text-center mb-6" dir="rtl">
+              <p className="font-arabic text-2xl sm:text-3xl md:text-4xl text-emerald-800 dark:text-emerald-300 leading-relaxed sm:leading-loose text-center mb-6" dir="rtl">
                 " {item.verse} "
               </p>
               {item.reference && (
