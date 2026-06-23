@@ -40,8 +40,15 @@ export const UserDashboard: React.FC = () => {
   }, [isSearchOpen]);
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || [
+      item.title,
+      item.content,
+      item.hook,
+      item.verse,
+      item.reference,
+      ...(item.benefits || [])
+    ].some(field => field?.toLowerCase().includes(q));
     const matchesFilter = filter === 'all' || item.category === filter;
     return matchesSearch && matchesFilter;
   });
@@ -61,7 +68,7 @@ export const UserDashboard: React.FC = () => {
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder={t('search')}
+                placeholder="Mots-clés, sourates, versets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-full pl-10 pr-10 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm shadow-sm"
@@ -126,7 +133,7 @@ export const UserDashboard: React.FC = () => {
                         : 'text-gray-700 dark:text-gray-200'
                       }`}
                   >
-                    <span>{t(cat === 'secret' ? 'secrets' : cat === 'recette' ? 'recettes' : cat === 'wird' ? 'wirds' : 'all')}</span>
+                    <span>{cat === 'all' ? t('all') : cat === 'wird' ? 'Versets' : cat === 'secret' ? 'Secrets' : 'Recettes'}</span>
                     {filter === cat && <span className="text-emerald-500 text-[10px]">●</span>}
                   </button>
                 ))}

@@ -59,21 +59,22 @@ export const ToolsDashboard: React.FC = () => {
               {/* Background Decoration */}
               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20`}></div>
               
-              <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
-                  <tool.icon size={24} />
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
+                    <tool.icon size={20} />
+                  </div>
+                  <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
+                    {tool.title}
+                    {tool.comingSoon && (
+                      <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
+                        Bientôt
+                      </span>
+                    )}
+                  </h3>
                 </div>
                 
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  {tool.title}
-                  {tool.comingSoon && (
-                    <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                      Bientôt
-                    </span>
-                  )}
-                </h3>
-                
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors line-clamp-3">
                   {tool.description}
                 </p>
               </div>
