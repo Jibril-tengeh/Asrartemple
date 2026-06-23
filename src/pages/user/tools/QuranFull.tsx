@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify } from 'lucide-react';
+import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -44,7 +44,36 @@ export const QuranFull: React.FC = () => {
   const [activeSurah, setActiveSurah] = useState<number | null>(null);
   const [surahArabic, setSurahArabic] = useState<SurahData | null>(null);
   const [surahFrench, setSurahFrench] = useState<SurahData | null>(null);
+  const [surahEnglish, setSurahEnglish] = useState<SurahData | null>(null);
+  const [surahHausa, setSurahHausa] = useState<SurahData | null>(null);
   const [loadingSurah, setLoadingSurah] = useState(false);
+
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
+  const [showArabic, setShowArabic] = useState(true);
+  const [showFrench, setShowFrench] = useState(true);
+  const [showEnglish, setShowEnglish] = useState(false);
+  const [showHausa, setShowHausa] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const getArabicSizeClass = () => {
+    switch(fontSize) {
+      case 'sm': return 'text-2xl sm:text-3xl leading-[2]';
+      case 'md': return 'text-3xl sm:text-4xl leading-[2.2]';
+      case 'lg': return 'text-4xl sm:text-5xl leading-[2.4]';
+      case 'xl': return 'text-5xl sm:text-6xl leading-[2.6]';
+      default: return 'text-3xl sm:text-4xl leading-[2.2]';
+    }
+  };
+
+  const getTranslationSizeClass = () => {
+    switch(fontSize) {
+      case 'sm': return 'text-sm sm:text-base';
+      case 'md': return 'text-base sm:text-lg';
+      case 'lg': return 'text-lg sm:text-xl';
+      case 'xl': return 'text-xl sm:text-2xl';
+      default: return 'text-base sm:text-lg';
+    }
+  };
 
   useEffect(() => {
     const fetchSurahs = async () => {
@@ -71,20 +100,26 @@ export const QuranFull: React.FC = () => {
     setLoadingSurah(true);
     setSurahArabic(null);
     setSurahFrench(null);
+    setSurahEnglish(null);
+    setSurahHausa(null);
     
     try {
-      const [arRes, frRes] = await Promise.all([
+      const [arRes, frRes, enRes, haRes] = await Promise.all([
         fetch(`https://api.alquran.cloud/v1/surah/${number}/ar.alafasy`),
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/fr.hamidullah`)
+        fetch(`https://api.alquran.cloud/v1/surah/${number}/fr.hamidullah`),
+        fetch(`https://api.alquran.cloud/v1/surah/${number}/en.sahih`),
+        fetch(`https://api.alquran.cloud/v1/surah/${number}/ha.gumi`)
       ]);
       
       const arData = await arRes.json();
       const frData = await frRes.json();
+      const enData = await enRes.json();
+      const haData = await haRes.json();
       
-      if (arData.code === 200 && frData.code === 200) {
-        setSurahArabic(arData.data);
-        setSurahFrench(frData.data);
-      }
+      if (arData.code === 200) setSurahArabic(arData.data);
+      if (frData.code === 200) setSurahFrench(frData.data);
+      if (enData.code === 200) setSurahEnglish(enData.data);
+      if (haData.code === 200) setSurahHausa(haData.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -189,45 +224,133 @@ export const QuranFull: React.FC = () => {
                  </p>
                </div>
              )}
+
+             <button 
+               onClick={() => setShowSettings(!showSettings)}
+               className={`p-2 rounded-xl transition-colors shadow-sm border ${showSettings ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'}`}
+             >
+               <Settings size={20} />
+             </button>
            </div>
+
+           <AnimatePresence>
+             {showSettings && (
+               <motion.div 
+                 initial={{ height: 0, opacity: 0 }}
+                 animate={{ height: 'auto', opacity: 1 }}
+                 exit={{ height: 0, opacity: 0 }}
+                 className="overflow-hidden mb-6"
+               >
+                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-6 shadow-sm">
+                   <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Paramètres d'affichage</h3>
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                         <Type size={16} /> Taille du texte
+                       </label>
+                       <div className="flex bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
+                         {['sm', 'md', 'lg', 'xl'].map(size => (
+                           <button
+                             key={size}
+                             onClick={() => setFontSize(size as any)}
+                             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${fontSize === size ? 'bg-white dark:bg-gray-800 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+                           >
+                             {size.toUpperCase()}
+                           </button>
+                         ))}
+                       </div>
+                     </div>
+                     
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                         <AlignJustify size={16} /> Langues
+                       </label>
+                       <div className="flex flex-wrap gap-2">
+                         <button onClick={() => setShowArabic(!showArabic)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showArabic ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                           Arabe
+                         </button>
+                         <button onClick={() => setShowFrench(!showFrench)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showFrench ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                           Français
+                         </button>
+                         <button onClick={() => setShowEnglish(!showEnglish)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showEnglish ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                           English
+                         </button>
+                         <button onClick={() => setShowHausa(!showHausa)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showHausa ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                           Hausa
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
 
            {loadingSurah ? (
              <div className="flex flex-col items-center justify-center py-20">
                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                <p className="text-gray-500">Chargement de la sourate...</p>
              </div>
-           ) : surahArabic && surahFrench && (
+           ) : surahArabic && (
              <div className="space-y-6">
-                {(surahArabic.number !== 1 && surahArabic.number !== 9) && (
+                {(surahArabic.number !== 1 && surahArabic.number !== 9) && showArabic && (
                   <div className="text-center py-8 mb-4 border-b border-gray-100 dark:border-gray-800">
-                    <p className="font-arabic text-4xl text-gray-900 dark:text-white leading-[2] mb-2">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-                    <p className="text-gray-600 dark:text-gray-400 font-serif">Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux.</p>
+                    <p className={`font-arabic ${getArabicSizeClass()} text-gray-900 dark:text-white leading-[2] mb-2`}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
                   </div>
                 )}
                 
                 {surahArabic.ayahs.map((ayah, i) => {
-                  const frAyah = surahFrench.ayahs[i];
+                  const frAyah = surahFrench?.ayahs[i];
+                  const enAyah = surahEnglish?.ayahs[i];
+                  const haAyah = surahHausa?.ayahs[i];
+                  
                   return (
                     <div key={ayah.number} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5 sm:p-8 shadow-sm flex flex-col space-y-6">
                        <div className="flex justify-between items-start">
-                         <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center font-bold text-gray-500 shrink-0">
+                         <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center font-bold text-gray-500 shrink-0 mt-2">
                            {ayah.numberInSurah}
                          </div>
-                         <div className="flex-1 ml-4" dir="rtl">
-                           <p className="font-arabic text-3xl sm:text-4xl leading-[2.2] text-gray-900 dark:text-white text-justify">
-                             {ayah.text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ', '')} 
-                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm mx-2">
-                               {ayah.numberInSurah.toLocaleString('ar-SA')}
-                             </span>
-                           </p>
-                         </div>
+                         {showArabic && (
+                           <div className="flex-1 ml-4" dir="rtl">
+                             <p className={`font-arabic ${getArabicSizeClass()} text-gray-900 dark:text-white text-justify`}>
+                               {ayah.text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ', '')} 
+                               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm mx-2">
+                                 {ayah.numberInSurah.toLocaleString('ar-SA')}
+                               </span>
+                             </p>
+                           </div>
+                         )}
                        </div>
                        
-                       <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                         <p className="text-gray-600 dark:text-gray-300 font-serif leading-relaxed text-base sm:text-lg">
-                           {frAyah.text}
-                         </p>
-                       </div>
+                       {(showFrench || showEnglish || showHausa) && (
+                         <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
+                           {showFrench && frAyah && (
+                             <div>
+                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 block">Français</span>
+                               <p className={`text-gray-600 dark:text-gray-300 font-serif leading-relaxed ${getTranslationSizeClass()}`}>
+                                 {frAyah.text}
+                               </p>
+                             </div>
+                           )}
+                           {showEnglish && enAyah && (
+                             <div>
+                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 block">English</span>
+                               <p className={`text-gray-600 dark:text-gray-300 font-serif leading-relaxed ${getTranslationSizeClass()}`}>
+                                 {enAyah.text}
+                               </p>
+                             </div>
+                           )}
+                           {showHausa && haAyah && (
+                             <div>
+                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 block">Hausa</span>
+                               <p className={`text-gray-600 dark:text-gray-300 font-serif leading-relaxed ${getTranslationSizeClass()}`}>
+                                 {haAyah.text}
+                               </p>
+                             </div>
+                           )}
+                         </div>
+                       )}
                     </div>
                   );
                 })}
