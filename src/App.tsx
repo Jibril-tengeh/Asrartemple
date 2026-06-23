@@ -4,6 +4,11 @@ import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { SecretDetail } from './pages/user/SecretDetail';
+import { ToolsDashboard } from './pages/user/ToolsDashboard';
+import { AbjadCalculator } from './pages/user/tools/AbjadCalculator';
+import { PlanetaryHours } from './pages/user/tools/PlanetaryHours';
+import { Tasbih } from './pages/user/tools/Tasbih';
+import { KhatimGenerator } from './pages/user/tools/KhatimGenerator';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full min-h-[50vh]">
@@ -21,7 +26,11 @@ export default function App() {
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/secret/:id" element={<SecretDetail />} />
           <Route path="/explore" element={<PlaceholderPage title="Explorer" />} />
-          <Route path="/tools" element={<PlaceholderPage title="Outils" />} />
+          <Route path="/tools" element={<ToolsDashboard />} />
+          <Route path="/tools/abjad" element={<AbjadCalculator />} />
+          <Route path="/tools/planetary" element={<PlanetaryHours />} />
+          <Route path="/tools/tasbih" element={<Tasbih />} />
+          <Route path="/tools/khatim" element={<KhatimGenerator />} />
           <Route path="/saved" element={<PlaceholderPage title="Sauvegardés" />} />
           <Route path="/community" element={<PlaceholderPage title="Communauté" />} />
           <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
