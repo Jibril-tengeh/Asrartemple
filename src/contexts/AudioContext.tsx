@@ -81,7 +81,14 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (audioRef.current && currentTrack) {
       audioRef.current.src = currentTrack.url;
-      audioRef.current.play().catch(e => console.error("Audio playback error:", e));
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          if (e.name !== 'AbortError') {
+            console.error("Audio playback error:", e);
+          }
+        });
+      }
     }
   }, [currentTrack]);
 
@@ -106,7 +113,14 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const resume = () => {
     if (audioRef.current && currentTrack) {
-      audioRef.current.play().catch(e => console.error("Audio playback error:", e));
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          if (e.name !== 'AbortError') {
+            console.error("Audio playback error:", e);
+          }
+        });
+      }
     }
   };
 

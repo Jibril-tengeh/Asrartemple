@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
 
 const QURAN_RECITERS = [
-  { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/' },
-  { id: 'sudais', name: 'Abdur Rahman As-Sudais', server: 'https://server11.mp3quran.net/sds/' },
-  { id: 'shuraym', name: 'Saud Al-Shuraim', server: 'https://server7.mp3quran.net/shur/' },
-  { id: 'bukhatir', name: 'Salah Bukhatir', server: 'https://server8.mp3quran.net/bu_khtr/' },
-  { id: 'abkar', name: 'Idris Abkar', server: 'https://server6.mp3quran.net/abkr/' }
+  { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
+  { id: 'sudais', name: 'Abdur Rahman As-Sudais', server: 'https://server11.mp3quran.net/sds/', apiId: 'ar.abdurrahmaansudais' },
+  { id: 'shuraym', name: 'Saud Al-Shuraim', server: 'https://server7.mp3quran.net/shur/', apiId: 'ar.saoodshuraym' },
+  { id: 'husary', name: 'Mahmoud Khalil Al-Husary', server: 'https://server13.mp3quran.net/husr/', apiId: 'ar.husary' },
+  { id: 'maher', name: 'Maher Al Muaiqly', server: 'https://server12.mp3quran.net/maher/', apiId: 'ar.mahermuaiqly' }
 ];
 
 interface Verse {

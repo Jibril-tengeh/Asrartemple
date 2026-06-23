@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones } from 'lucide-react';
+import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
 
 const QURAN_RECITERS = [
-  { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/' },
-  { id: 'sudais', name: 'Abdur Rahman As-Sudais', server: 'https://server11.mp3quran.net/sds/' },
-  { id: 'shuraym', name: 'Saud Al-Shuraim', server: 'https://server7.mp3quran.net/shur/' },
-  { id: 'bukhatir', name: 'Salah Bukhatir', server: 'https://server8.mp3quran.net/bu_khtr/' },
-  { id: 'abkar', name: 'Idris Abkar', server: 'https://server6.mp3quran.net/abkr/' }
+  { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
+  { id: 'sudais', name: 'Abdur Rahman As-Sudais', server: 'https://server11.mp3quran.net/sds/', apiId: 'ar.abdurrahmaansudais' },
+  { id: 'shuraym', name: 'Saud Al-Shuraim', server: 'https://server7.mp3quran.net/shur/', apiId: 'ar.saoodshuraym' },
+  { id: 'husary', name: 'Mahmoud Khalil Al-Husary', server: 'https://server13.mp3quran.net/husr/', apiId: 'ar.husary' },
+  { id: 'maher', name: 'Maher Al Muaiqly', server: 'https://server12.mp3quran.net/maher/', apiId: 'ar.mahermuaiqly' }
 ];
 
 interface SurahMeta {
@@ -112,6 +112,20 @@ export const QuranFull: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (activeSurah) {
+      const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
+      fetch(`https://api.alquran.cloud/v1/surah/${activeSurah}/${reciterApiId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.code === 200) {
+            setSurahArabic(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [selectedReciterId]);
+
   const playAudio = (ayah: Ayah) => {
     if (!ayah.audio) return;
     
@@ -128,15 +142,22 @@ export const QuranFull: React.FC = () => {
     const audio = new Audio(ayah.audio);
     audioRef.current = audio;
     
-    audio.play().then(() => {
-      setIsPlaying(true);
-      setPlayingAyah(ayah.number);
-      
-      // Auto-scroll to active ayah
-      if (ayahRefs.current[ayah.number]) {
-        ayahRefs.current[ayah.number]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }).catch(err => console.error("Audio playback error:", err));
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        setIsPlaying(true);
+        setPlayingAyah(ayah.number);
+        
+        // Auto-scroll to active ayah
+        if (ayahRefs.current[ayah.number]) {
+          ayahRefs.current[ayah.number]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }).catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error("Audio playback error:", err);
+        }
+      });
+    }
 
     audio.onended = () => {
       if (autoPlayNext && surahArabic) {
@@ -170,8 +191,9 @@ export const QuranFull: React.FC = () => {
         setPlayingAyah(null);
       }
 
+      const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
       const [arRes, frRes, enRes, haRes] = await Promise.all([
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/ar.alafasy`),
+        fetch(`https://api.alquran.cloud/v1/surah/${number}/${reciterApiId}`),
         fetch(`https://api.alquran.cloud/v1/surah/${number}/fr.hamidullah`),
         fetch(`https://api.alquran.cloud/v1/surah/${number}/en.sahih`),
         fetch(`https://api.alquran.cloud/v1/surah/${number}/ha.gumi`)
@@ -355,8 +377,8 @@ export const QuranFull: React.FC = () => {
                )}
 
                <button 
-                 onClick={() => setShowSettings(!showSettings)}
-                 className={`p-2 rounded-xl transition-colors shadow-sm border ${showSettings ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'}`}
+                 onClick={() => setShowSettings(true)}
+                 className={`p-2 rounded-xl transition-colors shadow-sm border bg-white border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300`}
                >
                  <Settings size={20} />
                </button>
@@ -365,24 +387,32 @@ export const QuranFull: React.FC = () => {
 
            <AnimatePresence>
              {showSettings && (
-               <motion.div 
-                 initial={{ height: 0, opacity: 0 }}
-                 animate={{ height: 'auto', opacity: 1 }}
-                 exit={{ height: 0, opacity: 0 }}
-                 className="overflow-hidden mb-6"
-               >
-                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-6 shadow-sm">
-                   <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Paramètres d'affichage & Audio</h3>
+               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                 <motion.div 
+                   initial={{ opacity: 0, scale: 0.95 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.95 }}
+                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                 >
+                   <div className="flex items-center justify-between mb-6">
+                     <h3 className="font-bold text-xl text-gray-900 dark:text-white">Paramètres</h3>
+                     <button 
+                       onClick={() => setShowSettings(false)}
+                       className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-700/50 rounded-full transition-colors"
+                     >
+                       <X size={20} />
+                     </button>
+                   </div>
                    
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   <div className="space-y-8">
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                         <Headphones size={16} /> Récitateur (Arrière-plan)
+                       <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                         <Headphones size={18} className="text-emerald-500" /> Récitateur (Arrière-plan & Versets)
                        </label>
                        <select
                          value={selectedReciterId}
                          onChange={(e) => setSelectedReciterId(e.target.value)}
-                         className="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                         className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                        >
                          {QURAN_RECITERS.map(r => (
                            <option key={r.id} value={r.id}>{r.name}</option>
@@ -391,11 +421,11 @@ export const QuranFull: React.FC = () => {
                      </div>
 
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                         <Type size={16} /> Taille du texte
+                       <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                         <Type size={18} className="text-emerald-500" /> Taille du texte
                        </label>
-                       <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
-                         <span className="text-sm font-medium text-gray-500">1</span>
+                       <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+                         <span className="text-sm font-medium text-gray-500">A</span>
                          <input
                            type="range"
                            min="1"
@@ -404,35 +434,35 @@ export const QuranFull: React.FC = () => {
                            onChange={(e) => setFontSize(parseInt(e.target.value, 10))}
                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-emerald-500"
                          />
-                         <span className="text-sm font-medium text-gray-500">40</span>
+                         <span className="text-xl font-bold text-gray-500">A</span>
                        </div>
                      </div>
                      
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                         <AlignJustify size={16} /> Langues
+                       <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                         <AlignJustify size={18} className="text-emerald-500" /> Langues affichées
                        </label>
-                       <div className="flex flex-wrap gap-2">
-                         <button onClick={() => setShowArabic(!showArabic)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showArabic ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                       <div className="flex flex-wrap gap-3">
+                         <button onClick={() => setShowArabic(!showArabic)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${showArabic ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}>
                            Arabe
                          </button>
-                         <button onClick={() => setShowFrench(!showFrench)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showFrench ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                         <button onClick={() => setShowFrench(!showFrench)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${showFrench ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}>
                            Français
                          </button>
-                         <button onClick={() => setShowEnglish(!showEnglish)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showEnglish ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                         <button onClick={() => setShowEnglish(!showEnglish)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${showEnglish ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}>
                            English
                          </button>
-                         <button onClick={() => setShowHausa(!showHausa)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${showHausa ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'}`}>
+                         <button onClick={() => setShowHausa(!showHausa)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${showHausa ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}>
                            Hausa
                          </button>
                        </div>
                      </div>
 
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                         <Volume2 size={16} /> Lecture Audio
+                       <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                         <Volume2 size={18} className="text-emerald-500" /> Lecture Audio (Verset par Verset)
                        </label>
-                       <div className="flex flex-col gap-2">
+                       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
                          <label className="flex items-center gap-3 cursor-pointer">
                            <input 
                              type="checkbox" 
@@ -445,8 +475,8 @@ export const QuranFull: React.FC = () => {
                        </div>
                      </div>
                    </div>
-                 </div>
-               </motion.div>
+                 </motion.div>
+               </div>
              )}
            </AnimatePresence>
 
