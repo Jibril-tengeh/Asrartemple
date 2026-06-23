@@ -1,0 +1,6 @@
+{
+  "name": "AsrarHub",
+  "description": "Application dédiée aux wirds, secrets et ASRAR du Coran.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
