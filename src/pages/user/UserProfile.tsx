@@ -18,7 +18,10 @@ const GamificationBadges = () => {
     const savedStats = localStorage.getItem('asrar_stats');
     if (savedStats) {
       try {
-        setStats(JSON.parse(savedStats));
+        const parsed = JSON.parse(savedStats);
+        if (parsed && typeof parsed === 'object') {
+          setStats(parsed);
+        }
       } catch (e) {
         // ignore
       }
@@ -106,7 +109,12 @@ export const UserProfile: React.FC = () => {
   useEffect(() => {
     const saved = localStorage.getItem('asrar_reminders');
     if (saved) {
-      setReminders(JSON.parse(saved));
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setReminders(parsed);
+        }
+      } catch (e) {}
     } else {
       setReminders([
         { id: '1', time: '05:30', enabled: true, label: 'Wird du Matin' },
@@ -142,11 +150,16 @@ export const UserProfile: React.FC = () => {
   };
 
   const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification('AsrarHub', { body: 'Notifications activées avec succès!' });
+    try {
+      if ('Notification' in window && window.Notification) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          new Notification('AsrarHub', { body: 'Notifications activées avec succès!' });
+        }
       }
+    } catch (e) {
+      console.error("Notification permission error", e);
+      alert("Les notifications ne sont pas supportées ou ont été bloquées.");
     }
   };
 

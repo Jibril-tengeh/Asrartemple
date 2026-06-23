@@ -27,13 +27,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    const savedTheme = (localStorage.getItem('theme') as Theme) || 'system';
+    let savedTheme: Theme = 'system';
+    try {
+      savedTheme = (localStorage.getItem('theme') as Theme) || 'system';
+    } catch (e) {}
     setThemeState(savedTheme);
     updateActualTheme(savedTheme);
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
-      if (localStorage.getItem('theme') === 'system') {
+      let isSystem = false;
+      try {
+        isSystem = localStorage.getItem('theme') === 'system';
+      } catch (e) {}
+      if (isSystem) {
         updateActualTheme('system');
       }
     };
@@ -42,7 +49,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const setTheme = (newTheme: Theme) => {
-    localStorage.setItem('theme', newTheme);
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {}
     setThemeState(newTheme);
     updateActualTheme(newTheme);
   };

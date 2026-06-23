@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square, Plus, Save, Trash2, ListMusic, Repeat } from 'lucide-react';
+import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square, Plus, Save, Trash2, ListMusic, Repeat, Headphones, Pause } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAudio } from '../../../contexts/AudioContext';
+
+const QURAN_RECITERS = [
+  { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/' },
+  { id: 'sudais', name: 'Abdur Rahman As-Sudais', server: 'https://server11.mp3quran.net/sds/' },
+  { id: 'shuraym', name: 'Saud Al-Shuraim', server: 'https://server7.mp3quran.net/shur/' },
+  { id: 'bukhatir', name: 'Salah Bukhatir', server: 'https://server8.mp3quran.net/bu_khtr/' },
+  { id: 'abkar', name: 'Idris Abkar', server: 'https://server6.mp3quran.net/abkr/' }
+];
 
 interface Verse {
   id?: string;
@@ -107,12 +116,72 @@ export const Ruqyah: React.FC = () => {
 
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume } = useAudio();
+  const [selectedReciterId, setSelectedReciterId] = useState(QURAN_RECITERS[0].id);
+
+  const playGlobalRuqyah = () => {
+    if (!selectedType || selectedType.verses.length === 0) return;
+    
+    // Stop local TTS player
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      setIsAutoPlaying(false);
+    }
+
+    const reciter = QURAN_RECITERS.find(r => r.id === selectedReciterId) || QURAN_RECITERS[0];
+    
+    // Map Verses to full surahs or exact ayah tracks for the playlist
+    // Since mp3quran provides full surahs, if a playlist has multiple ayahs from the same surah, 
+    // it's tricky to play exact ayahs from the global server URLs without the exact ayah offsets.
+    // However, playing the Surah containing the first Ruqyah verse or a predefined Surah playlist works best.
+    
+    const tracks = selectedType.verses.map((verse, index) => {
+      // Find surah number from the verse (e.g., Al-Fatihah is 001)
+      // This is a naive heuristic: Ruqyah usually relies on Fatihah(1), Baqarah(2), etc.
+      let surahNumStr = '001';
+      if (verse.title.includes('Baqarah')) surahNumStr = '002';
+      else if (verse.title.includes('Kursi')) surahNumStr = '002';
+      else if (verse.title.includes('Ikhlas')) surahNumStr = '112';
+      else if (verse.title.includes('Falaq')) surahNumStr = '113';
+      else if (verse.title.includes('Nas')) surahNumStr = '114';
+      else if (verse.title.includes('Araf')) surahNumStr = '007';
+      else if (verse.title.includes('Yunus')) surahNumStr = '010';
+      else if (verse.title.includes('Taha')) surahNumStr = '020';
+      
+      const url = `${reciter.server}${surahNumStr}.mp3`;
+      return {
+        id: `ruqyah-${selectedType.id}-${index}-${reciter.id}`,
+        title: `${verse.title} (${selectedType.name})`,
+        artist: reciter.name,
+        url: url
+      };
+    });
+    
+    // Remove duplicates if multiple verses come from the same Surah
+    const uniqueTracks = tracks.filter((t, index, self) => index === self.findIndex((t2) => t2.url === t.url));
+
+    const trackId = uniqueTracks[0].id;
+    
+    if (currentTrack?.id === trackId || currentTrack?.id.startsWith(`ruqyah-${selectedType.id}`)) {
+      if (globalIsPlaying) {
+        globalPause();
+      } else {
+        globalResume();
+      }
+    } else {
+      playPlaylist(uniqueTracks, 0);
+    }
+  };
+
   useEffect(() => {
     const saved = localStorage.getItem('custom_ruqyah_playlists');
     if (saved) {
       try {
         const custom = JSON.parse(saved);
-        setPlaylists([...defaultRuqyahTypes, ...custom]);
+        if (Array.isArray(custom)) {
+          setPlaylists([...defaultRuqyahTypes, ...custom]);
+        }
       } catch (e) {
         console.error("Error loading custom playlists", e);
       }
@@ -246,7 +315,7 @@ export const Ruqyah: React.FC = () => {
     if (!selectedType || selectedType.verses.length === 0) return;
     
     // Gamification
-    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+    let stats; try { stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}'); if (!stats || typeof stats !== 'object') stats = {}; } catch(e) { stats = {}; }
     stats.tools_used = (stats.tools_used || 0) + 1;
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
 
@@ -413,14 +482,41 @@ export const Ruqyah: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleStart}
-                  disabled={!selectedType || selectedType.verses.length === 0}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Play fill="currentColor" size={20} />
-                  Démarrer la Séance
-                </button>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={handleStart}
+                      disabled={!selectedType || selectedType.verses.length === 0}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <Play fill="currentColor" size={20} />
+                      Démarrer la Séance (Interactive)
+                    </button>
+                    
+                    <button
+                      onClick={playGlobalRuqyah}
+                      disabled={!selectedType || selectedType.verses.length === 0}
+                      className={`w-full py-4 rounded-2xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${currentTrack?.id?.startsWith(`ruqyah-${selectedType?.id}`) && globalIsPlaying ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
+                    >
+                      {currentTrack?.id?.startsWith(`ruqyah-${selectedType?.id}`) && globalIsPlaying ? <Pause size={20} /> : <Headphones size={20} />}
+                      Écouter en Arrière-plan
+                    </button>
+                    
+                    {/* Reciter selection */}
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2 uppercase tracking-wider">
+                        <Headphones size={12} /> Récitateur (Arrière-plan)
+                      </label>
+                      <select
+                        value={selectedReciterId}
+                        onChange={(e) => setSelectedReciterId(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {QURAN_RECITERS.map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
               </div>
 
               {selectedType && (

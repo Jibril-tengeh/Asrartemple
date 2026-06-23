@@ -34,7 +34,8 @@ export const AbjadCalculator: React.FC = () => {
     const saved = localStorage.getItem('abjad_history');
     if (saved) {
       try {
-        setHistory(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setHistory(parsed);
       } catch (e) {}
     }
   }, []);

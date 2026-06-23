@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Layers, ArrowLeft, Info, Wand2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { NumberToLetters } from '../../../utils/abjadUtils'; // We'll make sure this exists or just inline it if not accessible
 
 export const RouhaniyyaExtractor: React.FC = () => {
   const [number, setNumber] = useState('');
@@ -46,7 +45,7 @@ export const RouhaniyyaExtractor: React.FC = () => {
     if (isNaN(n) || n <= 0 || n > 1999) return;
 
     // Gamification
-    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+    let stats; try { stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}'); if (!stats || typeof stats !== 'object') stats = {}; } catch(e) { stats = {}; }
     stats.tools_used = (stats.tools_used || 0) + 1;
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
 

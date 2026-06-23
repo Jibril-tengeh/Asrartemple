@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, ArrowRight, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { HelpCircle, ArrowRight, CheckCircle, XCircle, RotateCcw, Sparkles } from 'lucide-react';
 
 const questions = [
   {

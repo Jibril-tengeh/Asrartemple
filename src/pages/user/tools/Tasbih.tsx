@@ -57,34 +57,53 @@ export const Tasbih: React.FC = () => {
 
   useEffect(() => {
     // Load state from local storage
-    const savedCustom = localStorage.getItem('tasbih_custom_zikrs');
-    if (savedCustom) {
-      const parsed = JSON.parse(savedCustom);
-      setCustomZikrs(parsed);
-      setAllZikrs([...DEFAULT_ZIKRS, ...parsed]);
-    }
-
-    const savedTotal = localStorage.getItem('tasbih_lifetime_total');
-    if (savedTotal) setTotalLifetime(parseInt(savedTotal, 10));
-
-    const savedDaily = localStorage.getItem(`tasbih_daily_${new Date().toDateString()}`);
-    if (savedDaily) setDailyTotal(parseInt(savedDaily, 10));
-
-    const savedHistory = localStorage.getItem('tasbih_history');
-    if (savedHistory) setHistory(JSON.parse(savedHistory));
-
-    const savedSettings = localStorage.getItem('tasbih_settings');
-    if (savedSettings) {
-      const { sound, vibe, lastActiveId } = JSON.parse(savedSettings);
-      setSoundEnabled(!!sound);
-      setVibrationEnabled(vibe !== false);
-      if (lastActiveId) {
-        const found = [...DEFAULT_ZIKRS, ...(savedCustom ? JSON.parse(savedCustom) : [])].find(z => z.id === lastActiveId);
-        if (found) {
-          setActiveZikr(found);
-          setTarget(found.target);
+    try {
+      const savedCustom = localStorage.getItem('tasbih_custom_zikrs');
+      if (savedCustom) {
+        const parsed = JSON.parse(savedCustom);
+        if (Array.isArray(parsed)) {
+          setCustomZikrs(parsed);
+          setAllZikrs([...DEFAULT_ZIKRS, ...parsed]);
         }
       }
+
+      const savedTotal = localStorage.getItem('tasbih_lifetime_total');
+      if (savedTotal) setTotalLifetime(parseInt(savedTotal, 10));
+
+      const savedDaily = localStorage.getItem(`tasbih_daily_${new Date().toDateString()}`);
+      if (savedDaily) setDailyTotal(parseInt(savedDaily, 10));
+
+      const savedHistory = localStorage.getItem('tasbih_history');
+      if (savedHistory) {
+        const parsed = JSON.parse(savedHistory);
+        if (Array.isArray(parsed)) setHistory(parsed);
+      }
+
+      const savedSettings = localStorage.getItem('tasbih_settings');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (parsedSettings && typeof parsedSettings === 'object') {
+          const { sound, vibe, lastActiveId } = parsedSettings;
+          setSoundEnabled(!!sound);
+          setVibrationEnabled(vibe !== false);
+          if (lastActiveId) {
+            let customArr = [];
+            if (savedCustom) {
+              try {
+                const parsed = JSON.parse(savedCustom);
+                if (Array.isArray(parsed)) customArr = parsed;
+              } catch (e) {}
+            }
+            const found = [...DEFAULT_ZIKRS, ...customArr].find(z => z.id === lastActiveId);
+            if (found) {
+              setActiveZikr(found);
+              setTarget(found.target);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Tasbih initial state parsing error:", e);
     }
   }, []);
 

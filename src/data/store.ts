@@ -50,9 +50,16 @@ export const initialData: AsrarItem[] = [
 ];
 
 export const getAsrarItems = (): AsrarItem[] => {
-  const stored = localStorage.getItem('asrar_items');
-  if (stored) {
-    return JSON.parse(stored);
+  try {
+    const stored = localStorage.getItem('asrar_items');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Error parsing asrar_items", e);
   }
   localStorage.setItem('asrar_items', JSON.stringify(initialData));
   return initialData;

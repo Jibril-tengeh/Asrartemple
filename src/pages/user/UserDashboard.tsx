@@ -31,13 +31,23 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
 
   useEffect(() => {
     setItems(getAsrarItems());
-    setBookmarks(JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]'));
+    try {
+      const parsed = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
+      setBookmarks(Array.isArray(parsed) ? parsed : []);
+    } catch (e) {
+      setBookmarks([]);
+    }
   }, []);
 
   // Refresh bookmarks when window gets focus (in case they changed it on another page)
   useEffect(() => {
     const handleFocus = () => {
-      setBookmarks(JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]'));
+      try {
+        const parsed = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
+        setBookmarks(Array.isArray(parsed) ? parsed : []);
+      } catch (e) {
+        setBookmarks([]);
+      }
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);

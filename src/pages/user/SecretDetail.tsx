@@ -21,14 +21,24 @@ export const SecretDetail: React.FC = () => {
     const foundItem = items.find(i => i.id === id);
     if (foundItem) {
       setItem(foundItem);
-      const bookmarks = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
-      setIsBookmarked(bookmarks.includes(foundItem.id));
+      try {
+        const parsed = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
+        setIsBookmarked(Array.isArray(parsed) ? parsed.includes(foundItem.id) : false);
+      } catch (e) {
+        setIsBookmarked(false);
+      }
     }
   }, [id]);
 
   const toggleBookmark = () => {
     if (!item) return;
-    const bookmarks = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
+    let bookmarks = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
+      if (Array.isArray(parsed)) bookmarks = parsed;
+    } catch (e) {
+      bookmarks = [];
+    }
     let newBookmarks;
     if (bookmarks.includes(item.id)) {
       newBookmarks = bookmarks.filter((bId: string) => bId !== item.id);

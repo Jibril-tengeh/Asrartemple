@@ -14,7 +14,7 @@ export const SirrAlAsrar: React.FC = () => {
     if (!name || !motherName) return;
     
     // Gamification
-    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+    let stats; try { stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}'); if (!stats || typeof stats !== 'object') stats = {}; } catch(e) { stats = {}; }
     stats.tools_used = (stats.tools_used || 0) + 1;
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
 

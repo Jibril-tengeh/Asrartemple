@@ -5,6 +5,46 @@ import { motion } from 'motion/react';
 
 const tools = [
   {
+    id: 'personal-wird',
+    title: 'Générateur de Wird',
+    description: 'Istikhraj al-Asma: Calculez votre Zikr personnel selon votre poids mystique.',
+    icon: Sparkles,
+    color: 'from-emerald-500 to-teal-600',
+    path: '/tools/personal-wird'
+  },
+  {
+    id: 'lunar-mansions',
+    title: 'Demeures de la Lune',
+    description: 'Manazil al-Qamar: Suivez les 28 demeures astrologiques pour vos opérations.',
+    icon: Compass,
+    color: 'from-indigo-500 to-blue-600',
+    path: '/tools/lunar-mansions'
+  },
+  {
+    id: 'spiritual-compatibility',
+    title: 'Compatibilité Spirituelle',
+    description: 'Hisab al-Tawafuq: Règle d\'Al-Buni pour le mariage et les partenariats.',
+    icon: Scale,
+    color: 'from-rose-500 to-pink-600',
+    path: '/tools/spiritual-compatibility'
+  },
+  {
+    id: 'ilm-jafar',
+    title: 'Oracle de Jafar',
+    description: 'Ilm al-Jafar: Divination suprême par la fracturation des lettres (Taksir).',
+    icon: Key,
+    color: 'from-purple-500 to-indigo-600',
+    path: '/tools/ilm-jafar'
+  },
+  {
+    id: 'grand-oaths',
+    title: 'Grands Serments',
+    description: 'Da\'awat & Azayim: Bibliothèque des invocations majeures.',
+    icon: Shield,
+    color: 'from-amber-500 to-orange-600',
+    path: '/tools/grand-oaths'
+  },
+  {
     id: 'zakat',
     title: 'Calculateur de Zakat',
     description: 'Calculez précisément votre Zakat al-Maal sur diverses richesses.',
@@ -19,6 +59,30 @@ const tools = [
     icon: Scale,
     color: 'from-amber-600 to-red-600',
     path: '/tools/faraid'
+  },
+  {
+    id: 'elemental',
+    title: 'Analyseur Élémentaire',
+    description: 'Tabai\' al-Huruf: Découvrez la nature dominante de votre nom (Feu, Terre, Air, Eau).',
+    icon: Star,
+    color: 'from-red-500 to-orange-600',
+    path: '/tools/elemental'
+  },
+  {
+    id: 'geomancy',
+    title: 'Géomancie Arabe',
+    description: 'Khatt ar-Raml: Générez et interprétez les figures géomantiques pour consulter.',
+    icon: Layers,
+    color: 'from-amber-600 to-yellow-800',
+    path: '/tools/geomancy'
+  },
+  {
+    id: 'letters',
+    title: 'Science des Lettres',
+    description: 'Sirr al-Huruf: Découvrez les mystères associés à chaque lettre arabe.',
+    icon: BookOpen,
+    color: 'from-emerald-500 to-teal-600',
+    path: '/tools/letters'
   },
   {
     id: 'dreams',

@@ -27,7 +27,8 @@ export const DreamJournal: React.FC = () => {
     const saved = localStorage.getItem('asrar_dreams');
     if (saved) {
       try {
-        setDreams(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setDreams(parsed);
       } catch (e) {}
     }
   }, []);
@@ -50,7 +51,7 @@ export const DreamJournal: React.FC = () => {
     localStorage.setItem('asrar_dreams', JSON.stringify(updated));
     
     // Gamification
-    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+    let stats; try { stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}'); if (!stats || typeof stats !== 'object') stats = {}; } catch(e) { stats = {}; }
     stats.tools_used = (stats.tools_used || 0) + 1;
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
 

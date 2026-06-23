@@ -8,6 +8,10 @@
   --font-arabic: "Amiri", serif;
 }
 
+html {
+  font-size: 14px;
+}
+
 body {
   font-family: var(--font-sans);
 }

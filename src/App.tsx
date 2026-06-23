@@ -23,6 +23,14 @@ import { NamesOfAllah } from './pages/user/tools/NamesOfAllah';
 import { RouhaniyyaExtractor } from './pages/user/tools/RouhaniyyaExtractor';
 import { Taksir } from './pages/user/tools/Taksir';
 import { QuranFull } from './pages/user/tools/QuranFull';
+import { ElementalAnalyzer } from './pages/user/tools/ElementalAnalyzer';
+import { Geomancy } from './pages/user/tools/Geomancy';
+import { ScienceOfLetters } from './pages/user/tools/ScienceOfLetters';
+import { PersonalWird } from './pages/user/tools/PersonalWird';
+import { LunarMansions } from './pages/user/tools/LunarMansions';
+import { SpiritualCompatibility } from './pages/user/tools/SpiritualCompatibility';
+import { IlmJafar } from './pages/user/tools/IlmJafar';
+import { GrandOaths } from './pages/user/tools/GrandOaths';
 import { UserProfile } from './pages/user/UserProfile';
 import { Journal } from './pages/user/Journal';
 import { ExploreDashboard } from './pages/user/ExploreDashboard';
@@ -30,6 +38,7 @@ import { Quizz } from './pages/user/explore/Quizz';
 import { Lexique } from './pages/user/explore/Lexique';
 import { CalendarConverter } from './pages/user/explore/CalendarConverter';
 import { AdminSettings } from './pages/admin/AdminSettings';
+import { AudioPlayer } from './components/AudioPlayer';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full min-h-[50vh]">
@@ -41,7 +50,15 @@ export default function App() {
   React.useEffect(() => {
     let lastCheckedMinute = -1;
     const interval = setInterval(() => {
-      const reminders = JSON.parse(localStorage.getItem('asrar_reminders') || '[]');
+      let reminders = [];
+      try {
+        const parsed = JSON.parse(localStorage.getItem('asrar_reminders') || '[]');
+        if (Array.isArray(parsed)) {
+          reminders = parsed;
+        }
+      } catch (e) {
+        console.error("Error parsing reminders", e);
+      }
       const now = new Date();
       const currentMinute = now.getMinutes();
 
@@ -51,8 +68,12 @@ export default function App() {
         
         reminders.forEach((rem: any) => {
           if (rem.enabled && rem.time === currentTimeString) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('AsrarHub', { body: `Il est temps pour: ${rem.label}` });
+            try {
+              if ('Notification' in window && window.Notification && window.Notification.permission === 'granted') {
+                new Notification('AsrarHub', { body: `Il est temps pour: ${rem.label}` });
+              }
+            } catch (e) {
+              console.error("Notification access error", e);
             }
           }
         });
@@ -89,6 +110,14 @@ export default function App() {
           <Route path="/tools/zakat" element={<ZakatCalculator />} />
           <Route path="/tools/faraid" element={<FaraidCalculator />} />
           <Route path="/tools/dreams" element={<DreamJournal />} />
+          <Route path="/tools/elemental" element={<ElementalAnalyzer />} />
+          <Route path="/tools/geomancy" element={<Geomancy />} />
+          <Route path="/tools/letters" element={<ScienceOfLetters />} />
+          <Route path="/tools/personal-wird" element={<PersonalWird />} />
+          <Route path="/tools/lunar-mansions" element={<LunarMansions />} />
+          <Route path="/tools/spiritual-compatibility" element={<SpiritualCompatibility />} />
+          <Route path="/tools/ilm-jafar" element={<IlmJafar />} />
+          <Route path="/tools/grand-oaths" element={<GrandOaths />} />
           <Route path="/tools/99names" element={<NamesOfAllah />} />
           <Route path="/tools/rouhaniyya" element={<RouhaniyyaExtractor />} />
           <Route path="/tools/taksir" element={<Taksir />} />
@@ -101,6 +130,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
         </Routes>
       </main>
+      <AudioPlayer />
       <BottomNav />
     </div>
   );

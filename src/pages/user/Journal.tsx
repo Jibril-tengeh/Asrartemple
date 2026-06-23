@@ -23,7 +23,8 @@ export const Journal: React.FC = () => {
     const saved = localStorage.getItem('asrar_journal');
     if (saved) {
       try {
-        setEntries(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setEntries(parsed);
       } catch (e) {
         console.error('Error parsing journal entries', e);
       }
@@ -46,7 +47,13 @@ export const Journal: React.FC = () => {
     localStorage.setItem('asrar_journal', JSON.stringify(updated));
     
     // Update streaks for gamification
-    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{"journal_entries": 0}');
+    let stats: any = {};
+    try {
+      stats = JSON.parse(localStorage.getItem('asrar_stats') || '{"journal_entries": 0}');
+      if (!stats || typeof stats !== 'object') stats = {};
+    } catch (e) {
+      stats = { journal_entries: 0 };
+    }
     stats.journal_entries = (stats.journal_entries || 0) + 1;
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
 
