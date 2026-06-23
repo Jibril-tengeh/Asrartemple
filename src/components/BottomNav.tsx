@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Wrench, Compass, Bookmark } from 'lucide-react';
+import { Home, Wrench, Compass, Bookmark, Book } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const BottomNav: React.FC = () => {
@@ -10,12 +10,13 @@ export const BottomNav: React.FC = () => {
     { to: '/user/dashboard', icon: Home, label: 'Accueil' },
     { to: '/explore', icon: Compass, label: 'Explorer' },
     { to: '/tools', icon: Wrench, label: 'Outils' },
-    { to: '/saved', icon: Bookmark, label: 'Sauvegardés' },
+    { to: '/journal', icon: Book, label: 'Journal' },
+    { to: '/saved', icon: Bookmark, label: 'Sauvés' },
   ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] z-50">
-      <nav className="flex justify-around items-center px-2 h-16 max-w-md mx-auto">
+      <nav className="flex justify-around items-center px-1 h-16 max-w-md mx-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -31,7 +32,7 @@ export const BottomNav: React.FC = () => {
             {({ isActive }) => (
               <>
                 <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                <span className={`text-[10px] font-medium ${isActive ? 'font-semibold' : ''}`}>
+                <span className={`text-[9px] font-medium ${isActive ? 'font-semibold' : ''}`}>
                   {item.label}
                 </span>
               </>

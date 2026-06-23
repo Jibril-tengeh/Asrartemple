@@ -1,0 +1,286 @@
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useTheme } from '../../contexts/ThemeContext';
+
+interface Reminder {
+  id: string;
+  time: string;
+  enabled: boolean;
+  label: string;
+}
+
+const GamificationBadges = () => {
+  const [stats, setStats] = useState({ journal_entries: 0 });
+
+  useEffect(() => {
+    const savedStats = localStorage.getItem('asrar_stats');
+    if (savedStats) {
+      try {
+        setStats(JSON.parse(savedStats));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
+
+  const badges = [
+    {
+      id: 'initie',
+      name: 'Initié',
+      description: 'A ouvert le journal spirituel (1 entrée)',
+      icon: Award,
+      color: 'text-bronze-500',
+      bg: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
+      earned: stats.journal_entries >= 1
+    },
+    {
+      id: 'regulier',
+      name: 'Régulier',
+      description: 'Maintient la discipline (7 entrées)',
+      icon: Medal,
+      color: 'text-slate-400',
+      bg: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+      earned: stats.journal_entries >= 7
+    },
+    {
+      id: 'devoue',
+      name: 'Dévoué',
+      description: 'Lumière constante (30 entrées)',
+      icon: Star,
+      color: 'text-amber-500',
+      bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+      earned: stats.journal_entries >= 30
+    },
+    {
+      id: 'savant',
+      name: 'Chercheur',
+      description: 'Explore les Asrar (Utilisé 5 outils)',
+      icon: Target,
+      color: 'text-purple-500',
+      bg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
+      earned: (stats.tools_used || 0) >= 5
+    }
+  ];
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+        <Award className="text-amber-500" size={20} />
+        Badges & Accomplissements
+      </h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+        Vos actes constants forgent votre lumière. Ces badges reflètent votre régularité et discipline.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {badges.map(badge => (
+          <div 
+            key={badge.id}
+            className={`flex flex-col items-center text-center gap-2 p-4 rounded-2xl border-2 transition-all ${
+              badge.earned 
+                ? `border-${badge.bg.split(' ')[0].replace('bg-', '')} ${badge.bg}` 
+                : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 grayscale opacity-60'
+            }`}
+          >
+            <badge.icon size={28} className={badge.earned ? "" : "text-gray-400"} />
+            <div>
+              <span className={`block font-bold text-sm ${badge.earned ? '' : 'text-gray-500'}`}>{badge.name}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const UserProfile: React.FC = () => {
+  const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
+  
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [newTime, setNewTime] = useState('06:00');
+  const [newLabel, setNewLabel] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('asrar_reminders');
+    if (saved) {
+      setReminders(JSON.parse(saved));
+    } else {
+      setReminders([
+        { id: '1', time: '05:30', enabled: true, label: 'Wird du Matin' },
+        { id: '2', time: '18:00', enabled: true, label: 'Wird du Soir' }
+      ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (reminders.length > 0) {
+      localStorage.setItem('asrar_reminders', JSON.stringify(reminders));
+    }
+  }, [reminders]);
+
+  const addReminder = () => {
+    if (!newTime || !newLabel) return;
+    const newRem: Reminder = {
+      id: Date.now().toString(),
+      time: newTime,
+      enabled: true,
+      label: newLabel
+    };
+    setReminders([...reminders, newRem]);
+    setNewLabel('');
+  };
+
+  const toggleReminder = (id: string) => {
+    setReminders(reminders.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+  };
+
+  const removeReminder = (id: string) => {
+    setReminders(reminders.filter(r => r.id !== id));
+  };
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        new Notification('AsrarHub', { body: 'Notifications activées avec succès!' });
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center border-2 border-emerald-500 shadow-sm relative shrink-0">
+          <User className="text-emerald-600 dark:text-emerald-300" size={32} />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Profil & Préférences</h1>
+          <p className="text-gray-500 dark:text-gray-400">Gérez vos paramètres et rappels spirituels</p>
+        </div>
+      </div>
+
+      <GamificationBadges />
+
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Bell className="text-emerald-500" size={20} />
+            Rappels Quotidiens
+          </h2>
+          <button 
+            onClick={requestNotificationPermission}
+            className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+          >
+            Activer les notifications push
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+          Configurez des rappels pour vos heures de lecture (Wirds, Zikrs). L'application vous enverra une notification à l'heure souhaitée.
+        </p>
+
+        <div className="space-y-3 mb-6">
+          {reminders.map(rem => (
+            <div key={rem.id} className="flex flex-col sm:flex-row sm:items-center justify-between border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50 dark:bg-gray-800/50 gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`p-2 rounded-xl flex-shrink-0 ${rem.enabled ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500'}`}>
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 className={`font-bold ${rem.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>{rem.time}</h3>
+                  <p className={`text-sm ${rem.enabled ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-600'}`}>{rem.label}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                <button 
+                  onClick={() => removeReminder(rem.id)}
+                  className="text-sm text-red-500 hover:text-red-600 font-medium px-2"
+                >
+                  Supprimer
+                </button>
+                <div 
+                  onClick={() => toggleReminder(rem.id)}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${rem.enabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                >
+                  <motion.div 
+                    className="w-4 h-4 bg-white rounded-full shadow-sm"
+                    animate={{ x: rem.enabled ? 24 : 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-800/30">
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Ajouter un rappel</h4>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="time" 
+              value={newTime}
+              onChange={e => setNewTime(e.target.value)}
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:text-white"
+            />
+            <input 
+              type="text" 
+              placeholder="Ex: Wird du matin"
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:text-white"
+            />
+            <button 
+              onClick={addReminder}
+              disabled={!newLabel}
+              className="bg-emerald-600 text-white rounded-xl px-4 py-2 text-sm font-bold disabled:opacity-50 hover:bg-emerald-700 transition-colors whitespace-nowrap shadow-sm"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Moon className="text-emerald-500" size={20} />
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Apparence & Thème</h2>
+        </div>
+        
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+          Personnalisez l'apparence de l'application. Le mode automatique synchronise l'affichage avec votre système pour un confort optimal jour et nuit.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            onClick={() => setTheme('light')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${theme === 'light' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-600'}`}
+          >
+            <Sun size={24} className={theme === 'light' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'} />
+            <span className={`font-medium text-sm ${theme === 'light' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>Clair</span>
+          </button>
+          
+          <button
+            onClick={() => setTheme('dark')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${theme === 'dark' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-600'}`}
+          >
+            <Moon size={24} className={theme === 'dark' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'} />
+            <span className={`font-medium text-sm ${theme === 'dark' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>Sombre</span>
+          </button>
+
+          <button
+            onClick={() => setTheme('system')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${theme === 'system' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-600'}`}
+          >
+            <Smartphone size={24} className={theme === 'system' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'} />
+            <span className={`font-medium text-sm ${theme === 'system' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>Automatique</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  );
+};

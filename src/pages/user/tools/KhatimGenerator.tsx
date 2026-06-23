@@ -1,32 +1,13 @@
 import React, { useState } from 'react';
-import { Star, ArrowLeft, RefreshCw, Calculator } from 'lucide-react';
+import { Star, ArrowLeft, RefreshCw, Calculator, Grid } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const KhatimGenerator: React.FC = () => {
   const [inputNumber, setInputNumber] = useState('');
   const [grid, setGrid] = useState<number[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Al-Ghazali 3x3 Magic Square standard filling logic (Batad Zahaj Waha)
-  // House sequence: 4-9-2, 3-5-7, 8-1-6 (standard order)
-  // Mathematical logic: 
-  // Let N = Goal.
-  // base = Math.floor((N - 12) / 3)
-  // rem = N % 3
-  
-  // The standard Ghazali square is:
-  // 8  1  6
-  // 3  5  7
-  // 4  9  2
-
-  // Formula for cell i (where standard Ghazali value is V_i):
-  // cell = base + V_i
-  // If we have a remainder, add 1 to the cells where V_i >= (10 - rem).
-  // Wait, the standard "Jabr" (compensation) rule is to add the remainder to the house of the Kasr (fraction).
-  // If rem = 1, insert in House 7, add 1 to houses 7, 8, 9.
-  // If rem = 2, insert in House 4, add 1 to houses 4, 5, 6, 7, 8, 9.
-  
   const generateKhatim = () => {
     const n = parseInt(inputNumber, 10);
     if (isNaN(n)) {
@@ -41,6 +22,12 @@ export const KhatimGenerator: React.FC = () => {
     }
 
     setError(null);
+    
+    // Gamification
+    const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+    stats.tools_used = (stats.tools_used || 0) + 1;
+    localStorage.setItem('asrar_stats', JSON.stringify(stats));
+
     const base = Math.floor((n - 12) / 3);
     const rem = n % 3;
 
@@ -72,8 +59,23 @@ export const KhatimGenerator: React.FC = () => {
     setGrid(newGrid);
   };
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, scale: 0.5, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", bounce: 0.5 } }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none min-h-screen">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link 
@@ -91,62 +93,96 @@ export const KhatimGenerator: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800/50 rounded-2xl p-4 mb-8">
-        <p className="text-sm text-purple-800 dark:text-purple-200">
-          Entrez le Poids Mystique (issu du Calculateur Abjad) pour générer automatiquement son Wafq Muthallath selon la règle originelle d'Al-Ghazali.
+      <div className="bg-purple-900/10 border border-purple-800/30 rounded-3xl p-6 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <p className="text-sm text-purple-800 dark:text-purple-200 font-medium leading-relaxed relative z-10">
+          Entrez le Poids Mystique (Adad) pour générer automatiquement son Wafq Muthallath (Sceau d'Al-Ghazali) via la règle de la fraction (Miftah, Kasr).
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Valeur Numérique Cible (Minimum 15)
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700 mb-8 relative z-20">
+        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
+          Valeur Numérique Cible (Zimām)
         </label>
-        <div className="flex gap-4">
-          <input
-            type="number"
-            value={inputNumber}
-            onChange={(e) => setInputNumber(e.target.value)}
-            placeholder="Ex: 66, 313, 129..."
-            className="flex-1 w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-lg sm:text-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
+        <div className="flex gap-4 items-end">
+          <div className="flex-1">
+             <input
+              type="number"
+              value={inputNumber}
+              onChange={(e) => setInputNumber(e.target.value)}
+              placeholder="Min: 15 (Ex: 66, 313, 129...)"
+              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-lg font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-mono"
+            />
+          </div>
           <button
             onClick={generateKhatim}
-            className="px-6 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-bold transition-transform hover:scale-105 active:scale-95 shadow-sm"
+            className="h-16 px-8 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-800 text-white font-bold transition-transform hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 tracking-wide"
           >
-            Générer
+            <Grid size={20} /> VIVIFIER
           </button>
         </div>
-        {error && <p className="text-red-500 text-sm mt-3 font-medium">{error}</p>}
+        <AnimatePresence>
+          {error && (
+            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="text-red-500 text-sm mt-4 font-bold bg-red-50/50 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-900/50">
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
 
-      {grid && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-md border border-gray-100 dark:border-gray-700 mx-auto max-w-sm"
-        >
-          <div className="text-center mb-6">
-            <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
-              TOTAL: {inputNumber}
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-gray-200 dark:bg-gray-700 p-2 sm:p-3 rounded-2xl">
-            {grid.map((val, idx) => (
-              <div 
-                key={idx} 
-                className="aspect-square bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold text-gray-900 dark:text-white tabular-nums shadow-sm border border-gray-100 dark:border-gray-600"
-              >
-                {val}
+      <AnimatePresence>
+        {grid && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative"
+          >
+            <div className="bg-zinc-900 rounded-3xl p-8 sm:p-10 shadow-2xl border-4 border-zinc-800 mx-auto max-w-md relative overflow-hidden">
+               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+               
+               <div className="text-center mb-8 relative z-10">
+                <span className="inline-block border-2 border-purple-500/50 text-purple-400 px-6 py-2 rounded-full text-sm font-black tracking-[0.3em] bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                  TOTAL : {inputNumber}
+                </span>
               </div>
-            ))}
-          </div>
+              
+              <motion.div 
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-3 gap-3 sm:gap-4 p-4 rounded-2xl relative z-10"
+              >
+                {/* Horizontal & Vertical internal lines simulating ancient draw */}
+                <div className="absolute top-1/3 left-0 right-0 h-1 bg-zinc-800/50 rounded-full"></div>
+                <div className="absolute top-2/3 left-0 right-0 h-1 bg-zinc-800/50 rounded-full"></div>
+                <div className="absolute left-1/3 top-0 bottom-0 w-1 bg-zinc-800/50 rounded-full"></div>
+                <div className="absolute left-2/3 top-0 bottom-0 w-1 bg-zinc-800/50 rounded-full"></div>
 
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6 mt-4">
-            * Toutes les lignes, colonnes et diagonales totalisent {inputNumber}.
-          </p>
-        </motion.div>
-      )}
+                {grid.map((val, idx) => {
+                  return (
+                    <motion.div 
+                      key={idx}
+                      variants={item}
+                      className="aspect-square bg-zinc-800/80 backdrop-blur-sm rounded-xl flex items-center justify-center relative group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+                      <span className="text-2xl sm:text-3xl font-black text-white tabular-nums drop-shadow-md z-10">
+                        {val}
+                      </span>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+
+              <div className="text-center mt-8 relative z-10">
+                 <p className="text-xs text-zinc-500 font-bold tracking-widest uppercase mb-1">Harmonie Parfaite</p>
+                 <p className="text-xs text-zinc-600">Lignes, colonnes et diagonales = {inputNumber}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

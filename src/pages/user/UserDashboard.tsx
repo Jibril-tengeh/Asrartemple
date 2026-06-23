@@ -1,25 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, LayoutGrid, Square, List, Filter, X } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocation, Link } from 'react-router-dom';
 
-export const UserDashboard: React.FC = () => {
+interface Props {
+  initialFilter?: Category | 'all' | 'favoris';
+}
+
+export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   const { t } = useTranslation();
+  const location = useLocation();
   const [items, setItems] = useState<AsrarItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<Category | 'all'>('all');
+  const [filter, setFilter] = useState<Category | 'all' | 'favoris'>(initialFilter);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('grid2');
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter, location.pathname]);
 
   useEffect(() => {
     setItems(getAsrarItems());
+    setBookmarks(JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]'));
+  }, []);
+
+  // Refresh bookmarks when window gets focus (in case they changed it on another page)
+  useEffect(() => {
+    const handleFocus = () => {
+      setBookmarks(JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]'));
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   useEffect(() => {
@@ -31,7 +52,6 @@ export const UserDashboard: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -49,12 +69,17 @@ export const UserDashboard: React.FC = () => {
       item.reference,
       ...(item.benefits || [])
     ].some(field => field?.toLowerCase().includes(q));
-    const matchesFilter = filter === 'all' || item.category === filter;
+    
+    let matchesFilter = false;
+    if (filter === 'all') matchesFilter = true;
+    else if (filter === 'favoris') matchesFilter = bookmarks.includes(item.id);
+    else matchesFilter = item.category === filter;
+
     return matchesSearch && matchesFilter;
   });
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       <div className="mb-6 flex justify-end items-center gap-2 relative min-h-[40px]">
         <AnimatePresence>
           {isSearchOpen && (
@@ -86,6 +111,14 @@ export const UserDashboard: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <Link
+          to="/tools/quran"
+          className={`p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 h-[40px] w-[40px] flex items-center justify-center shadow-sm flex-shrink-0 transition-opacity duration-200 ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          title="Le Saint Coran"
+        >
+          <BookOpen size={18} />
+        </Link>
 
         <button
           onClick={() => setIsSearchOpen(true)}
@@ -120,7 +153,7 @@ export const UserDashboard: React.FC = () => {
                 transition={{ duration: 0.15 }}
                 className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 flex flex-col py-1"
               >
-                {(['all', 'secret', 'wird', 'recette'] as const).map((cat) => (
+                {(['all', 'favoris', 'secret', 'wird', 'recette'] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => {
@@ -133,7 +166,7 @@ export const UserDashboard: React.FC = () => {
                         : 'text-gray-700 dark:text-gray-200'
                       }`}
                   >
-                    <span>{cat === 'all' ? t('all') : cat === 'wird' ? 'Versets' : cat === 'secret' ? 'Secrets' : 'Recettes'}</span>
+                    <span>{cat === 'all' ? t('all') : cat === 'favoris' ? 'Favoris' : cat === 'wird' ? 'Versets' : cat === 'secret' ? 'Secrets' : 'Recettes'}</span>
                     {filter === cat && <span className="text-emerald-500 text-[10px]">●</span>}
                   </button>
                 ))}
