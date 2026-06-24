@@ -1,28 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { 
+  getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
-  signInWithRedirect,
-  getRedirectResult,
   signOut as firebaseSignOut, 
-  onAuthStateChanged,
-  browserLocalPersistence,
-  initializeAuth,
-  indexedDBLocalPersistence,
-  browserPopupRedirectResolver
+  onAuthStateChanged 
 } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { Capacitor } from '@capacitor/core';
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with IndexedDB persistence which is better for Capacitor
-export const auth = initializeAuth(app, {
-  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-  popupRedirectResolver: browserPopupRedirectResolver
-});
-
+export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export const googleProvider = new GoogleAuthProvider();
