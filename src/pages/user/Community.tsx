@@ -38,6 +38,8 @@ export const Community: React.FC = () => {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post)));
+    }, (error) => {
+      console.error("Community onSnapshot error:", error);
     });
 
     return () => unsubscribe();

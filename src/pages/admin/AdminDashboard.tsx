@@ -86,23 +86,23 @@ export const AdminDashboard: React.FC = () => {
     
     const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
       setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
-    });
+    }, (error) => console.error("Admin Users error", error));
 
     const unsubscribeLexique = onSnapshot(collection(db, 'lexique_terms'), (snapshot) => {
       setLexiqueTerms(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Term)));
-    });
+    }, (error) => console.error("Admin Lexique error", error));
 
     const unsubscribeAudios = onSnapshot(collection(db, 'ruqyah_audios'), (snapshot) => {
       setRuqyahAudios(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RuqyahAudio)));
-    });
+    }, (error) => console.error("Admin Audios error", error));
 
     const unsubscribePosts = onSnapshot(query(collection(db, 'community_posts'), orderBy('createdAt', 'desc')), (snapshot) => {
       setCommunityPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommunityPost)));
-    });
+    }, (error) => console.error("Admin Posts error", error));
 
     const unsubscribeNotifs = onSnapshot(query(collection(db, 'notifications'), orderBy('createdAt', 'desc')), (snapshot) => {
       setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
-    });
+    }, (error) => console.error("Admin Notifs error", error));
 
     return () => {
       unsubscribeUsers();

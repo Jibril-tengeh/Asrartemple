@@ -192,6 +192,8 @@ export const Ruqyah: React.FC = () => {
     const q = query(collection(db, 'ruqyah_audios'), where('isActive', '==', true));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setAdminAudios(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.error("Ruqyah onSnapshot error:", error);
     });
     
     if (!selectedType && defaultRuqyahTypes.length > 0) {

@@ -38,6 +38,8 @@ export const Lexique: React.FC = () => {
         }
       });
       setLexiqueData(merged);
+    }, (error) => {
+      console.error("Lexique onSnapshot error:", error);
     });
 
     return () => unsubscribe();

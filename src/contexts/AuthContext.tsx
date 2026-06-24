@@ -11,6 +11,7 @@ interface UserData {
   isBanned: boolean;
   mysteryToolsDisabled: boolean;
   isTrusted: boolean;
+  emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -27,12 +28,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeDoc: (() => void) | null = null;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+        unsubscribeDoc = null;
+      }
+
       if (firebaseUser) {
+        // Enforce email verification (unless we want to allow unverified access to some parts,
+        // but for now, we include it in the user object so UI can react)
+        
         const userRef = doc(db, 'users', firebaseUser.uid);
         
         // Listen to user document changes to update role/ban status in real-time
-        const unsubscribeDoc = onSnapshot(userRef, (docSnap) => {
+        unsubscribeDoc = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             setUser({
@@ -43,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isBanned: data.isBanned || false,
               mysteryToolsDisabled: data.mysteryToolsDisabled || false,
               isTrusted: data.isTrusted || false,
+              emailVerified: firebaseUser.emailVerified
             });
           } else {
             setUser({
@@ -53,19 +65,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isBanned: false,
               mysteryToolsDisabled: false,
               isTrusted: false,
+              emailVerified: firebaseUser.emailVerified
             });
           }
           setLoading(false);
+        }, (error) => {
+          console.error("AuthContext userRef onSnapshot error:", error);
+          setLoading(false);
         });
-
-        return () => unsubscribeDoc();
       } else {
         setUser(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      if (unsubscribeDoc) {
+        unsubscribeDoc();
+      }
+      unsubscribeAuth();
+    };
   }, []);
 
   return (

@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { signInWithGoogle, signOut, db } from '../lib/firebase';
+import { signOut, db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { AuthModal } from './AuthModal';
 
 interface Notification {
   id: string;
@@ -22,6 +23,7 @@ export const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
@@ -52,6 +54,8 @@ export const Header: React.FC = () => {
       const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
+      }, (error) => {
+        console.error("Header notifications onSnapshot error:", error);
       });
       return () => unsubscribe();
     }
@@ -239,7 +243,7 @@ export const Header: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={signInWithGoogle}
+              onClick={() => setAuthModalOpen(true)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 transition-colors"
               aria-label="Sign In"
             >
@@ -248,6 +252,11 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+      
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+      />
     </motion.header>
   );
 };
