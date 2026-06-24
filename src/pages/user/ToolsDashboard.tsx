@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle } from 'lucide-react';
+import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const tools = [
@@ -155,6 +155,14 @@ const tools = [
     icon: Activity,
     color: 'from-emerald-500 to-teal-600',
     path: '/tools/tasbih'
+  },
+  {
+    id: 'daily-dhikr',
+    title: 'Daily Dhikr Tracker',
+    description: 'Définissez des objectifs et suivez votre Dhikr quotidien avec persistance.',
+    icon: Target,
+    color: 'from-emerald-600 to-green-700',
+    path: '/tools/daily-dhikr'
   },
   {
     id: 'khatim',

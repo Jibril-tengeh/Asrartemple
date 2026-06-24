@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { FileText, Search } from 'lucide-react';
+import { db } from '../../../lib/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 
-const lexiqueData = [
+const defaultLexiqueData = [
   { term: "Alif (أ)", category: "Lettres", description: "Première lettre de l'alphabet arabe. Sa valeur numérique est 1. Elle symbolise l'Unicité Divine (Tawhid) et le principe de toute création." },
   { term: "Ba' (ب)", category: "Lettres", description: "Deuxième lettre. Valeur numérique 2. Symbolise le commencement de la création, car le Coran commence par le Bismillah." },
   { term: "Ha' (هـ)", category: "Lettres", description: "Valeur numérique 5. Représente l'Essence Divine (Huwa) et le souffle de vie." },
@@ -16,6 +18,30 @@ const lexiqueData = [
 
 export const Lexique: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [lexiqueData, setLexiqueData] = useState<any[]>(defaultLexiqueData);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'lexique_terms'), (snapshot) => {
+      const dbTerms = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          term: data.word,
+          category: data.category,
+          description: data.definition
+        };
+      });
+      
+      const merged = [...defaultLexiqueData];
+      dbTerms.forEach(dbItem => {
+        if (!merged.find(m => m.term.toLowerCase() === dbItem.term.toLowerCase())) {
+          merged.push(dbItem);
+        }
+      });
+      setLexiqueData(merged);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const filteredData = lexiqueData.filter(item => 
     item.term.toLowerCase().includes(search.toLowerCase()) || 

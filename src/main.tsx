@@ -7,17 +7,20 @@ import './index.css';
 import './i18n';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AudioProvider } from './contexts/AudioContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <HashRouter>
-        <ThemeProvider>
-          <AudioProvider>
-            <App />
-          </AudioProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AudioProvider>
+              <App />
+            </AudioProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </HashRouter>
     </ErrorBoundary>
   </StrictMode>,

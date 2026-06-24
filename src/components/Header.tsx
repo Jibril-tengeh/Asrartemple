@@ -1,16 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Moon, Sun, Languages, User, Sparkles, Users } from 'lucide-react';
+import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { signInWithGoogle, signOut, db } from '../lib/firebase';
+import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+}
 
 export const Header: React.FC = () => {
   const { i18n } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const notifMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,10 +39,23 @@ export const Header: React.FC = () => {
       if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
         setLangMenuOpen(false);
       }
+      if (notifMenuRef.current && !notifMenuRef.current.contains(event.target as Node)) {
+        setNotifMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
+      });
+      return () => unsubscribe();
+    }
+  }, [user]);
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
@@ -62,6 +89,19 @@ export const Header: React.FC = () => {
         
         <div className="flex items-center space-x-2 sm:space-x-3">
           
+          {user?.role === 'admin' && (
+            <Link to="/admin">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 transition-colors"
+                aria-label="Admin Dashboard"
+              >
+                <Shield size={18} />
+              </motion.div>
+            </Link>
+          )}
+
           <Link to="/community">
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -72,6 +112,50 @@ export const Header: React.FC = () => {
               <Users size={18} />
             </motion.div>
           </Link>
+
+          {user && (
+            <div className="relative" ref={notifMenuRef}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+                className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                aria-label="Notifications"
+              >
+                <Bell size={18} />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
+                )}
+              </motion.button>
+              <AnimatePresence>
+                {notifMenuOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 flex flex-col"
+                  >
+                    <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-900 dark:text-white">
+                      Notifications
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-500 text-center">Aucune notification</div>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto">
+                        {notifications.map(notif => (
+                          <div key={notif.id} className="p-3 border-b border-gray-50 dark:border-gray-750 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                            <h4 className="text-xs font-bold text-gray-900 dark:text-white">{notif.title}</h4>
+                            <p className="text-[10px] text-gray-500 mt-0.5">{new Date(notif.date).toLocaleDateString('fr-FR')}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{notif.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           <div className="relative" ref={langMenuRef}>
             <motion.button
@@ -140,6 +224,28 @@ export const Header: React.FC = () => {
               <User className="text-emerald-600 dark:text-emerald-300" size={16} />
             </motion.div>
           </Link>
+
+          {user ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={signOut}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              aria-label="Sign Out"
+            >
+              <LogOut size={18} />
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={signInWithGoogle}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 transition-colors"
+              aria-label="Sign In"
+            >
+              <LogIn size={18} />
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.header>

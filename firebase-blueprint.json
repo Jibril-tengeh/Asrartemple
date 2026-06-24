@@ -1,0 +1,64 @@
+{
+  "project_id": "seraphic-oxide-jcf5x",
+  "authentication": {
+    "enabled": true,
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "enabled": true,
+    "collections": [
+      {
+        "name": "users",
+        "document_id": "userId",
+        "fields": [
+          { "name": "email", "type": "string" },
+          { "name": "name", "type": "string" },
+          { "name": "role", "type": "string" },
+          { "name": "isBanned", "type": "boolean" },
+          { "name": "mysteryToolsDisabled", "type": "boolean" },
+          { "name": "isTrusted", "type": "boolean" },
+          { "name": "createdAt", "type": "timestamp" }
+        ]
+      },
+      {
+        "name": "lexique_terms",
+        "document_id": "auto-generated",
+        "fields": [
+          { "name": "word", "type": "string" },
+          { "name": "definition", "type": "string" },
+          { "name": "category", "type": "string" }
+        ]
+      },
+      {
+        "name": "ruqyah_audios",
+        "document_id": "auto-generated",
+        "fields": [
+          { "name": "title", "type": "string" },
+          { "name": "url", "type": "string" },
+          { "name": "duration", "type": "string" },
+          { "name": "isActive", "type": "boolean" }
+        ]
+      },
+      {
+        "name": "community_posts",
+        "document_id": "auto-generated",
+        "fields": [
+          { "name": "authorId", "type": "string" },
+          { "name": "authorName", "type": "string" },
+          { "name": "content", "type": "string" },
+          { "name": "status", "type": "string" },
+          { "name": "createdAt", "type": "timestamp" }
+        ]
+      },
+      {
+        "name": "notifications",
+        "document_id": "auto-generated",
+        "fields": [
+          { "name": "title", "type": "string" },
+          { "name": "message", "type": "string" },
+          { "name": "createdAt", "type": "timestamp" }
+        ]
+      }
+    ]
+  }
+}

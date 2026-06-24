@@ -37,8 +37,10 @@ import { ExploreDashboard } from './pages/user/ExploreDashboard';
 import { Quizz } from './pages/user/explore/Quizz';
 import { Lexique } from './pages/user/explore/Lexique';
 import { CalendarConverter } from './pages/user/explore/CalendarConverter';
-import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { Community } from './pages/user/Community';
 import { AudioPlayer } from './components/AudioPlayer';
+import { DailyDhikrTracker } from './pages/user/tools/DailyDhikrTracker';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full min-h-[50vh]">
@@ -114,6 +116,7 @@ export default function App() {
           <Route path="/tools/geomancy" element={<Geomancy />} />
           <Route path="/tools/letters" element={<ScienceOfLetters />} />
           <Route path="/tools/personal-wird" element={<PersonalWird />} />
+          <Route path="/tools/daily-dhikr" element={<DailyDhikrTracker />} />
           <Route path="/tools/lunar-mansions" element={<LunarMansions />} />
           <Route path="/tools/spiritual-compatibility" element={<SpiritualCompatibility />} />
           <Route path="/tools/ilm-jafar" element={<IlmJafar />} />
@@ -125,8 +128,8 @@ export default function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
-          <Route path="/community" element={<PlaceholderPage title="Communauté" />} />
-          <Route path="/admin" element={<AdminSettings />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
         </Routes>
       </main>

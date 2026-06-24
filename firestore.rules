@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+    
+    match /lexique_terms/{termId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /ruqyah_audios/{audioId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /community_posts/{postId} {
+      allow read: if request.auth != null && (resource.data.status == 'approved' || request.auth.uid == resource.data.authorId || isAdmin());
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.authorId);
+    }
+    
+    match /notifications/{notifId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+  }
+}

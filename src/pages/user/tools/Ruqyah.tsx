@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square, Plus, Save, Trash2, ListMusic, Repeat, Headphones, Pause } from 'lucide-react';
+import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square, Plus, Save, Trash2, ListMusic, Repeat, Headphones, Pause, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
+
+import { db } from '../../../lib/firebase';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -18,6 +21,7 @@ interface Verse {
   arabic: string;
   phonetic: string;
   translation: string;
+  audioReferences?: string[]; // e.g. ['10:81', '10:82']
 }
 
 interface Playlist {
@@ -37,14 +41,16 @@ const defaultRuqyahTypes: Playlist[] = [
         title: "Sourate Yunus (81-82)",
         arabic: "فَلَمَّا أَلْقَوْا قَالَ مُوسَىٰ مَا جِئْتُم بِهِ السِّحْرُ ۖ إِنَّ اللَّهَ سَيُبْطِلُهُ ۖ إِنَّ اللَّهَ لَا يُصْلِحُ عَمَلَ الْمُفْسِدِينَ * وَيُحِقُّ اللَّهُ الْحَقَّ بِكَلِمَاتِهِ وَلَوْ كَرِهَ الْمُجْرِمُونَ",
         phonetic: "Falamma alqaw qala moosa ma ji'tum bihi assihru inna Allaha sayubtiluhu, inna Allaha la yuslihu a'mala almufsideen...",
-        translation: "Puis, lorsqu'ils eurent jeté, Moïse dit : « Ce que vous avez produit, c'est de la magie ! Certes, Allah l'annulera. Allah ne fait pas prospérer l'œuvre des fauteurs de désordre. »"
+        translation: "Puis, lorsqu'ils eurent jeté, Moïse dit : « Ce que vous avez produit, c'est de la magie ! Certes, Allah l'annulera. Allah ne fait pas prospérer l'œuvre des fauteurs de désordre. »",
+        audioReferences: ['10:81', '10:82']
       },
       {
         id: 'a-117',
         title: "Sourate Al-A'raf (117-119)",
         arabic: "وَأَوْحَيْنَا إِلَىٰ مُوسَىٰ أَنْ أَلْقِ عَصَاكَ ۖ فَإِذَا هِيَ تَلْقَفُ مَا يَأْفِكُونَ * فَوَقَعَ الْحَقُّ وَبَطَلَ مَا كَانُوا يَعْمَلُونَ",
         phonetic: "Wa awhayna ila moosa an alqi 'asaka fa-itha hiya talqafu ma ya'fikoon. Fawaqa'a alhaqqu wabatala ma kanoo ya'maloon.",
-        translation: "Et Nous révélâmes à Moïse : « Jette ton bâton. » Et voilà que celui-ci avalait ce qu'ils avaient fabriqué. La vérité s'est ainsi manifestée et ce qu'ils ont fait fut vain."
+        translation: "Et Nous révélâmes à Moïse : « Jette ton bâton. » Et voilà que celui-ci avalait ce qu'ils avaient fabriqué. La vérité s'est ainsi manifestée et ce qu'ils ont fait fut vain.",
+        audioReferences: ['7:117', '7:118', '7:119']
       }
     ]
   },
@@ -57,14 +63,16 @@ const defaultRuqyahTypes: Playlist[] = [
         title: "Sourate Al-Qalam (51-52)",
         arabic: "وَإِن يَكَادُ الَّذِينَ كَفَرُوا لَيُزْلِقُونَكَ بِأَبْصَارِهِمْ لَمَّا سَمِعُوا الذِّكْرَ وَيَقُولُونَ إِنَّهُ لَمَجْنُونٌ",
         phonetic: "Wa in yakadu allatheena kafaroo layuzliqoonaka bi absarihim lamma sami'oo ath-thikra...",
-        translation: "Peu s'en faut que ceux qui mécroient ne te transpercent par leurs regards, quand ils entendent le Coran, et ils disent : « Il est certes fou ! »"
+        translation: "Peu s'en faut que ceux qui mécroient ne te transpercent par leurs regards, quand ils entendent le Coran, et ils disent : « Il est certes fou ! »",
+        audioReferences: ['68:51', '68:52']
       },
       {
         id: 'muawidhat',
         title: "Al-Mu'awwidhatayn (Falaq & Nas)",
         arabic: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... قُلْ أَعُوذُ بِرَبِّ النَّاسِ...",
         phonetic: "Qul a'outhu birabbi alfalaq... Qul a'outhu birabbi annas...",
-        translation: "Dis : Je cherche protection auprès du Seigneur de l'aube naissante... Dis : Je cherche protection auprès du Seigneur des hommes..."
+        translation: "Dis : Je cherche protection auprès du Seigneur de l'aube naissante... Dis : Je cherche protection auprès du Seigneur des hommes...",
+        audioReferences: ['113:1', '113:2', '113:3', '113:4', '113:5', '114:1', '114:2', '114:3', '114:4', '114:5', '114:6']
       }
     ]
   },
@@ -77,14 +85,16 @@ const defaultRuqyahTypes: Playlist[] = [
         title: "Ayat Al-Kursi (Le Trône)",
         arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ...",
         phonetic: "Allahu la ilaha illa huwa alhayyu alqayyoomu, la ta'khuthuhu sinatun wala nawm...",
-        translation: "Allah ! Point de divinité à part Lui, le Vivant, Celui qui subsiste par lui-même. Ni somnolence ni sommeil ne le saisissent..."
+        translation: "Allah ! Point de divinité à part Lui, le Vivant, Celui qui subsiste par lui-même. Ni somnolence ni sommeil ne le saisissent...",
+        audioReferences: ['2:255']
       },
       {
         id: 'fatiha',
         title: "Sourate Al-Fatiha",
         arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ * الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
         phonetic: "Bismillahi ar-rahmani ar-raheem. Alhamdu lillahi rabbi al'alameen...",
-        translation: "Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux. Louange à Allah, Seigneur de l'univers..."
+        translation: "Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux. Louange à Allah, Seigneur de l'univers...",
+        audioReferences: ['1:1', '1:2', '1:3', '1:4', '1:5', '1:6', '1:7']
       }
     ]
   }
@@ -113,62 +123,54 @@ export const Ruqyah: React.FC = () => {
   const [isBuildingPlaylist, setIsBuildingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistVerses, setNewPlaylistVerses] = useState<Verse[]>([]);
+  
+  // Admin Audios
+  const [adminAudios, setAdminAudios] = useState<any[]>([]);
 
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const localAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume } = useAudio();
+  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume, play } = useAudio();
   const [selectedReciterId, setSelectedReciterId] = useState(QURAN_RECITERS[0].id);
 
   const playGlobalRuqyah = () => {
     if (!selectedType || selectedType.verses.length === 0) return;
     
-    // Stop local TTS player
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsAutoPlaying(false);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (localAudioRef.current) {
+      localAudioRef.current.pause();
+      localAudioRef.current.src = '';
     }
+    setIsPlaying(false);
+    setIsAutoPlaying(false);
 
     const reciter = QURAN_RECITERS.find(r => r.id === selectedReciterId) || QURAN_RECITERS[0];
     
-    // Map Verses to full surahs or exact ayah tracks for the playlist
-    // Since mp3quran provides full surahs, if a playlist has multiple ayahs from the same surah, 
-    // it's tricky to play exact ayahs from the global server URLs without the exact ayah offsets.
-    // However, playing the Surah containing the first Ruqyah verse or a predefined Surah playlist works best.
-    
     const tracks = selectedType.verses.map((verse, index) => {
-      // Find surah number from the verse (e.g., Al-Fatihah is 001)
-      // This is a naive heuristic: Ruqyah usually relies on Fatihah(1), Baqarah(2), etc.
       let surahNumStr = '001';
-      if (verse.title.includes('Baqarah')) surahNumStr = '002';
-      else if (verse.title.includes('Kursi')) surahNumStr = '002';
+      if (verse.title.includes('Baqarah') || verse.title.includes('Kursi')) surahNumStr = '002';
       else if (verse.title.includes('Ikhlas')) surahNumStr = '112';
       else if (verse.title.includes('Falaq')) surahNumStr = '113';
       else if (verse.title.includes('Nas')) surahNumStr = '114';
       else if (verse.title.includes('Araf')) surahNumStr = '007';
       else if (verse.title.includes('Yunus')) surahNumStr = '010';
       else if (verse.title.includes('Taha')) surahNumStr = '020';
+      else if (verse.title.includes('Qalam')) surahNumStr = '068';
       
-      const url = `${reciter.server}${surahNumStr}.mp3`;
       return {
         id: `ruqyah-${selectedType.id}-${index}-${reciter.id}`,
         title: `${verse.title} (${selectedType.name})`,
         artist: reciter.name,
-        url: url
+        url: `${reciter.server}${surahNumStr}.mp3`
       };
     });
     
-    // Remove duplicates if multiple verses come from the same Surah
     const uniqueTracks = tracks.filter((t, index, self) => index === self.findIndex((t2) => t2.url === t.url));
-
     const trackId = uniqueTracks[0].id;
     
     if (currentTrack?.id === trackId || currentTrack?.id.startsWith(`ruqyah-${selectedType.id}`)) {
-      if (globalIsPlaying) {
-        globalPause();
-      } else {
-        globalResume();
-      }
+      if (globalIsPlaying) globalPause();
+      else globalResume();
     } else {
       playPlaylist(uniqueTracks, 0);
     }
@@ -186,15 +188,22 @@ export const Ruqyah: React.FC = () => {
         console.error("Error loading custom playlists", e);
       }
     }
+
+    const q = query(collection(db, 'ruqyah_audios'), where('isActive', '==', true));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setAdminAudios(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
     
-    // Auto-select first
     if (!selectedType && defaultRuqyahTypes.length > 0) {
       setSelectedType(defaultRuqyahTypes[0]);
     }
     
     return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      unsubscribe();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (localAudioRef.current) {
+        localAudioRef.current.pause();
+        localAudioRef.current.src = '';
       }
     };
   }, []);
@@ -231,27 +240,84 @@ export const Ruqyah: React.FC = () => {
     }
   };
 
+  const playAyahSequentially = (references: string[], currentIndex: number, autoContinue: boolean) => {
+    if (currentIndex >= references.length) {
+      setIsPlaying(false);
+      if (autoContinue) {
+        handleAutoContinue();
+      }
+      return;
+    }
+
+    const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
+    const ayahRef = references[currentIndex];
+    
+    fetch(`https://api.alquran.cloud/v1/ayah/${ayahRef}/${reciterApiId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.code === 200 && data.data.audio) {
+          if (!localAudioRef.current) {
+            localAudioRef.current = new Audio();
+          }
+          const audio = localAudioRef.current;
+          audio.src = data.data.audio;
+          audio.onended = () => {
+            playAyahSequentially(references, currentIndex + 1, autoContinue);
+          };
+          audio.onerror = () => {
+            setIsPlaying(false);
+          };
+          setIsPlaying(true);
+          audio.play().catch(console.error);
+        } else {
+          // fallback to next
+          playAyahSequentially(references, currentIndex + 1, autoContinue);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setIsPlaying(false);
+      });
+  };
+
   const playVerse = (autoContinue = false) => {
-    if (!('speechSynthesis' in window) || !selectedType) return;
+    if (!selectedType) return;
     
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (localAudioRef.current) {
+      localAudioRef.current.pause();
+    }
     
-    const utteranceAr = new SpeechSynthesisUtterance(selectedType.verses[activeVerseIndex].arabic);
+    const verse = selectedType.verses[activeVerseIndex];
+    if (verse.audioReferences && verse.audioReferences.length > 0) {
+      playAyahSequentially(verse.audioReferences, 0, autoContinue);
+      return;
+    }
+    
+    // Fallback to TTS if no audio references
+    if (!('speechSynthesis' in window)) return;
+    const utteranceAr = new SpeechSynthesisUtterance(verse.arabic);
     utteranceAr.lang = 'ar-SA';
     utteranceAr.rate = 0.8;
     
     utteranceAr.onstart = () => setIsPlaying(true);
     utteranceAr.onend = () => {
       setIsPlaying(false);
-      // Auto-play logic
-      if (autoContinue) {
-        handleAutoContinue();
-      }
+      if (autoContinue) handleAutoContinue();
     };
     utteranceAr.onerror = () => setIsPlaying(false);
     
     speechRef.current = utteranceAr;
     window.speechSynthesis.speak(utteranceAr);
+  };
+
+  const stopVerse = () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (localAudioRef.current) {
+      localAudioRef.current.pause();
+    }
+    setIsPlaying(false);
+    setIsAutoPlaying(false);
   };
 
   const handleAutoContinue = () => {
@@ -294,13 +360,6 @@ export const Ruqyah: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVerseIndex]);
 
-  const stopVerse = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsAutoPlaying(false);
-    }
-  };
 
   const toggleAutoPlay = () => {
     if (isAutoPlaying) {
@@ -461,6 +520,37 @@ export const Ruqyah: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                  
+                  {adminAudios.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                        <Volume2 size={16} className="text-emerald-500" />
+                        Audios Recommandés (Complets)
+                      </h3>
+                      <div className="space-y-3">
+                        {adminAudios.map(audio => (
+                          <div key={audio.id} className="w-full text-left p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <h4 className="font-bold text-gray-900 dark:text-white">{audio.title}</h4>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-sm text-gray-500 flex items-center gap-1"><Clock size={14} /> {audio.duration}</span>
+                              <button
+                                onClick={() => {
+                                  if (currentTrack?.url === audio.url && globalIsPlaying) {
+                                    globalPause();
+                                  } else {
+                                    playPlaylist([{ id: `admin-${audio.id}`, title: audio.title, artist: "Recommandé", url: audio.url }], 0);
+                                  }
+                                }}
+                                className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-200"
+                              >
+                                {currentTrack?.url === audio.url && globalIsPlaying ? <Pause size={14} /> : <Play fill="currentColor" size={14} />}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>

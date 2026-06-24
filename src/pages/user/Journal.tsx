@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Plus, Calendar, CheckCircle2, ChevronRight, Save } from 'lucide-react';
+import { Book, Plus, Calendar, CheckCircle2, ChevronRight, Save, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface JournalEntry {
@@ -70,6 +70,37 @@ export const Journal: React.FC = () => {
     }
   };
 
+  const exportJournal = () => {
+    if (entries.length === 0) return;
+    
+    let content = "JOURNAL SPIRITUEL\n";
+    content += "=================\n\n";
+    
+    entries.forEach(entry => {
+      content += `Date: ${new Date(entry.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+      if (entry.wirdsCompleted.length > 0) {
+        content += `Wirds: ${entry.wirdsCompleted.join(', ')}\n`;
+      }
+      if (entry.progress) {
+        content += `Progrès: ${entry.progress}\n`;
+      }
+      if (entry.thoughts) {
+        content += `Réflexions: ${entry.thoughts}\n`;
+      }
+      content += "\n----------------------------------------\n\n";
+    });
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Journal_Spirituel_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen">
       <div className="flex items-center justify-between mb-8">
@@ -77,12 +108,22 @@ export const Journal: React.FC = () => {
           <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Journal Spirituel</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Réflexions, wirds et progression</p>
         </div>
-        <button 
-          onClick={() => setIsEditorOpen(true)}
-          className="w-12 h-12 bg-emerald-600 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
-        >
-          <Plus size={24} />
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={exportJournal}
+            disabled={entries.length === 0}
+            className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-sm border border-gray-200 dark:border-gray-700 hover:scale-105 active:scale-95 transition-transform disabled:opacity-50 disabled:pointer-events-none"
+            title="Exporter le journal"
+          >
+            <Download size={20} />
+          </button>
+          <button 
+            onClick={() => setIsEditorOpen(true)}
+            className="w-12 h-12 bg-emerald-600 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
