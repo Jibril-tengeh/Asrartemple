@@ -12,6 +12,8 @@ interface UserData {
   mysteryToolsDisabled: boolean;
   isTrusted: boolean;
   emailVerified: boolean;
+  photoURL?: string | null;
+  coverPhotoURL?: string | null;
 }
 
 interface AuthContextType {
@@ -54,7 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isBanned: data.isBanned || false,
               mysteryToolsDisabled: data.mysteryToolsDisabled || false,
               isTrusted: data.isTrusted || false,
-              emailVerified: firebaseUser.emailVerified
+              emailVerified: firebaseUser.emailVerified,
+              photoURL: data.photoURL || firebaseUser.photoURL || null,
+              coverPhotoURL: data.coverPhotoURL || null
             });
           } else {
             setUser({
@@ -65,7 +69,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isBanned: false,
               mysteryToolsDisabled: false,
               isTrusted: false,
-              emailVerified: firebaseUser.emailVerified
+              emailVerified: firebaseUser.emailVerified,
+              photoURL: firebaseUser.photoURL || null,
+              coverPhotoURL: null
             });
           }
           setLoading(false);

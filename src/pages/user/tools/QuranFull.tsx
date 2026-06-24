@@ -67,7 +67,7 @@ export const QuranFull: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const [selectedReciterId, setSelectedReciterId] = useState(QURAN_RECITERS[0].id);
-  const { playTrack, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume } = useAudio();
+  const { playTrack, playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume } = useAudio();
 
   const [playingAyah, setPlayingAyah] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -227,9 +227,6 @@ export const QuranFull: React.FC = () => {
     }
 
     const reciter = QURAN_RECITERS.find(r => r.id === selectedReciterId) || QURAN_RECITERS[0];
-    const surahNumStr = String(activeSurah).padStart(3, '0');
-    const url = `${reciter.server}${surahNumStr}.mp3`;
-    
     const trackId = `surah-${activeSurah}-${reciter.id}`;
     
     if (currentTrack?.id === trackId) {
@@ -239,12 +236,28 @@ export const QuranFull: React.FC = () => {
         globalResume();
       }
     } else {
-      playTrack({
-        id: trackId,
-        title: `Sourate ${surahArabic.englishName}`,
-        artist: reciter.name,
-        url: url
+      const playlist = surahs.map(s => {
+        const surahNumStr = String(s.number).padStart(3, '0');
+        return {
+          id: `surah-${s.number}-${reciter.id}`,
+          title: `Sourate ${s.englishName}`,
+          artist: reciter.name,
+          url: `${reciter.server}${surahNumStr}.mp3`
+        };
       });
+      const startIndex = surahs.findIndex(s => s.number === activeSurah);
+      
+      if (startIndex !== -1) {
+        playPlaylist(playlist, startIndex);
+      } else {
+        const surahNumStr = String(activeSurah).padStart(3, '0');
+        playTrack({
+          id: trackId,
+          title: `Sourate ${surahArabic.englishName}`,
+          artist: reciter.name,
+          url: `${reciter.server}${surahNumStr}.mp3`
+        });
+      }
     }
   };
 

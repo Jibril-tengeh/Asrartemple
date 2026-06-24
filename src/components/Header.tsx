@@ -225,7 +225,11 @@ export const Header: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center overflow-hidden ring-2 ring-emerald-500/20 cursor-pointer ml-1"
             >
-              <User className="text-emerald-600 dark:text-emerald-300" size={16} />
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="text-emerald-600 dark:text-emerald-300" size={16} />
+              )}
             </motion.div>
           </Link>
 

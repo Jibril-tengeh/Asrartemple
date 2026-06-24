@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target } from 'lucide-react';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { signOut, db, auth } from '../../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 interface Reminder {
   id: string;
@@ -101,6 +105,8 @@ const GamificationBadges = () => {
 export const UserProfile: React.FC = () => {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newTime, setNewTime] = useState('06:00');
@@ -163,17 +169,156 @@ export const UserProfile: React.FC = () => {
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const resizeImage = (file: File, maxWidth: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          } else {
+            reject(new Error('Failed to get canvas context'));
+          }
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'cover') => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+      // We will just use base64 and save it to firestore directly since it's resized and compressed
+      const base64Image = await resizeImage(file, type === 'profile' ? 400 : 1200);
+      
+      const userRef = doc(db, 'users', user.uid);
+      
+      if (type === 'profile') {
+        await updateDoc(userRef, { photoURL: base64Image });
+      } else {
+        await updateDoc(userRef, { coverPhotoURL: base64Image });
+      }
+      
+    } catch (error) {
+      console.error('Error uploading image', error);
+      alert("Erreur lors de l'enregistrement de l'image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error', error);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center border-2 border-emerald-500 shadow-sm relative shrink-0">
-          <User className="text-emerald-600 dark:text-emerald-300" size={32} />
+      
+      {/* Profil Header with Cover */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 mb-8 relative">
+        {/* Cover Photo */}
+        <div className="h-32 sm:h-48 bg-emerald-100 dark:bg-emerald-900/30 relative group">
+          {user?.coverPhotoURL ? (
+            <img src={user.coverPhotoURL} alt="Cover" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center opacity-30">
+              <ImageIcon size={48} className="text-emerald-500" />
+            </div>
+          )}
+          <button 
+            onClick={() => coverInputRef.current?.click()}
+            disabled={uploading}
+            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+          >
+            <Camera size={18} />
+          </button>
         </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Profil & Préférences</h1>
-          <p className="text-gray-500 dark:text-gray-400">Gérez vos paramètres et rappels spirituels</p>
+
+        {/* Profile Info */}
+        <div className="px-6 pb-6 pt-0 relative flex flex-col sm:flex-row items-center sm:items-start sm:justify-between">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 sm:-mt-16 mb-4 sm:mb-0 relative z-10">
+            <div className="relative group">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white dark:bg-gray-800 p-1.5 shadow-sm">
+                <div className="w-full h-full rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center overflow-hidden">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="text-emerald-600 dark:text-emerald-300" size={40} />
+                  )}
+                </div>
+              </div>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <Camera size={16} />
+              </button>
+            </div>
+            
+            <div className="text-center sm:text-left mb-2 sm:mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {user?.name || 'Profil & Préférences'}
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                {user?.email || 'Gérez vos paramètres et rappels spirituels'}
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleLogout}
+            className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-colors text-sm font-medium"
+          >
+            <LogOut size={18} />
+            <span>Déconnexion</span>
+          </button>
         </div>
       </div>
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={(e) => handleImageUpload(e, 'profile')} 
+        accept="image/*" 
+        className="hidden" 
+      />
+      <input 
+        type="file" 
+        ref={coverInputRef} 
+        onChange={(e) => handleImageUpload(e, 'cover')} 
+        accept="image/*" 
+        className="hidden" 
+      />
 
       <GamificationBadges />
 

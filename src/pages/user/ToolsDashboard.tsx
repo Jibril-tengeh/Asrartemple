@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle, Target } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle, Target, Lightbulb, ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const tools = [
   {
@@ -224,6 +224,73 @@ const tools = [
 ];
 
 export const ToolsDashboard: React.FC = () => {
+  const [showGuide, setShowGuide] = useState(false);
+  const [guideStep, setGuideStep] = useState(0);
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('hasSeenMysticToolsGuide');
+    if (!hasSeenGuide) {
+      setShowGuide(true);
+    }
+  }, []);
+
+  const closeGuide = () => {
+    setShowGuide(false);
+    localStorage.setItem('hasSeenMysticToolsGuide', 'true');
+  };
+
+  const guideSteps = [
+    {
+      title: "Bienvenue dans les Outils Mystiques",
+      description: "Ce tableau de bord regroupe des outils professionnels pour l'étude et la pratique spirituelle. Suivez ce guide pour découvrir comment les utiliser efficacement.",
+      icon: Compass,
+      color: "text-emerald-500",
+      bg: "bg-emerald-100 dark:bg-emerald-900/30"
+    },
+    {
+      title: "Calculateur Abjad",
+      description: "Le calcul du poids mystique (Adad) est la base de toute opération. Utilisez cet outil pour convertir vos noms ou invocations en nombres selon différentes méthodes (Maghrébi, Machriqi).",
+      icon: Calculator,
+      color: "text-blue-500",
+      bg: "bg-blue-100 dark:bg-blue-900/30"
+    },
+    {
+      title: "Générateur de Khatim",
+      description: "Une fois le poids mystique connu, entrez-le dans le générateur de Khatim pour créer un carré magique (Wafq) 3x3 équilibré, prêt pour vos travaux spirituels.",
+      icon: Hexagon,
+      color: "text-purple-500",
+      bg: "bg-purple-100 dark:bg-purple-900/30"
+    },
+    {
+      title: "Extraction des Noms (Istikhraj)",
+      description: "Utilisez les outils 'Générateur de Wird' ou 'Noms Divins Personnels' pour découvrir les Noms d'Allah qui correspondent exactement à votre poids mystique.",
+      icon: Sparkles,
+      color: "text-amber-500",
+      bg: "bg-amber-100 dark:bg-amber-900/30"
+    },
+    {
+      title: "Noms Divins et Coran",
+      description: "Explorez les 99 Noms d'Allah et leurs secrets. Utilisez le Coran pour vos récitations (Tilawa) et trouvez les versets appropriés à vos intentions.",
+      icon: Star,
+      color: "text-indigo-500",
+      bg: "bg-indigo-100 dark:bg-indigo-900/30"
+    },
+    {
+      title: "Ruqyah et Soins",
+      description: "Découvrez des versets et invocations pour la protection, la guérison et le traitement contre les maux mystiques avec des récitations ciblées.",
+      icon: Shield,
+      color: "text-rose-500",
+      bg: "bg-rose-100 dark:bg-rose-900/30"
+    },
+    {
+      title: "Compteur de Zikr",
+      description: "Une fois votre recette ou secret établi, utilisez notre Tasbih intelligent pour compter vos invocations avec précision tout en vous concentrant.",
+      icon: Target,
+      color: "text-cyan-500",
+      bg: "bg-cyan-100 dark:bg-cyan-900/30"
+    }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       <div className="mb-8">
@@ -235,6 +302,89 @@ export const ToolsDashboard: React.FC = () => {
           Des outils puissants et professionnels réservés aux initiés de la science des secrets.
         </p>
       </div>
+
+      <AnimatePresence>
+        {showGuide && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
+            >
+              <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="font-bold text-gray-900 dark:text-white">Guide de Démarrage</h3>
+                <button 
+                  onClick={closeGuide}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 sm:p-8 flex-1 min-h-[250px] flex flex-col items-center justify-center text-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={guideStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className={`w-20 h-20 rounded-2xl ${guideSteps[guideStep].bg} ${guideSteps[guideStep].color} flex items-center justify-center mb-6 shadow-sm`}>
+                      {React.createElement(guideSteps[guideStep].icon, { size: 40 })}
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                      {guideSteps[guideStep].title}
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {guideSteps[guideStep].description}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  {guideSteps.map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`w-2 h-2 rounded-full transition-all ${i === guideStep ? 'bg-emerald-500 w-4' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setGuideStep(Math.max(0, guideStep - 1))}
+                    disabled={guideStep === 0}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 transition-colors"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  {guideStep < guideSteps.length - 1 ? (
+                    <button 
+                      onClick={() => setGuideStep(guideStep + 1)}
+                      className="flex items-center gap-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                    >
+                      Suivant
+                      <ChevronRight size={16} />
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={closeGuide}
+                      className="flex items-center gap-1 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                    >
+                      Commencer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {tools.map((tool, index) => {

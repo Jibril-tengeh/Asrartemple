@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getStorage } from 'firebase/storage';
 import { 
   getAuth, 
   GoogleAuthProvider, 
@@ -17,6 +18,7 @@ import firebaseConfig from '../../firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 });
@@ -77,7 +79,11 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const sendVerificationEmail = async (user: User) => {
-  await firebaseSendEmailVerification(user);
+  const actionCodeSettings = {
+    url: window.location.origin,
+    handleCodeInApp: false,
+  };
+  await firebaseSendEmailVerification(user, actionCodeSettings);
 };
 
 export const signOut = () => {
