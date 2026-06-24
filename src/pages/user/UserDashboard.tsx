@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Search, LayoutGrid, Square, List, Filter, X, BookOpen } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const location = useLocation();
   const [items, setItems] = useState<AsrarItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

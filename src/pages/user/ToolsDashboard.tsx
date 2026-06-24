@@ -4,93 +4,24 @@ import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, 
 import { motion, AnimatePresence } from 'motion/react';
 
 const tools = [
+  // Simple Tools
   {
-    id: 'personal-wird',
-    title: 'Générateur de Wird',
-    description: 'Istikhraj al-Asma: Calculez votre Zikr personnel selon votre poids mystique.',
+    id: 'abjad',
+    title: 'Calculateur Abjad',
+    description: 'Calculez la valeur numérique mystique de vos noms et wirds.',
+    icon: Calculator,
+    color: 'from-blue-500 to-indigo-600',
+    path: '/tools/abjad',
+    level: 'simple'
+  },
+  {
+    id: 'asma',
+    title: 'Noms Divins Personnels',
+    description: 'Découvrez vos noms divins correspondants au poids mystique de votre nom.',
     icon: Sparkles,
-    color: 'from-emerald-500 to-teal-600',
-    path: '/tools/personal-wird'
-  },
-  {
-    id: 'lunar-mansions',
-    title: 'Demeures de la Lune',
-    description: 'Manazil al-Qamar: Suivez les 28 demeures astrologiques pour vos opérations.',
-    icon: Compass,
-    color: 'from-indigo-500 to-blue-600',
-    path: '/tools/lunar-mansions'
-  },
-  {
-    id: 'spiritual-compatibility',
-    title: 'Compatibilité Spirituelle',
-    description: 'Hisab al-Tawafuq: Règle d\'Al-Buni pour le mariage et les partenariats.',
-    icon: Scale,
-    color: 'from-rose-500 to-pink-600',
-    path: '/tools/spiritual-compatibility'
-  },
-  {
-    id: 'ilm-jafar',
-    title: 'Oracle de Jafar',
-    description: 'Ilm al-Jafar: Divination suprême par la fracturation des lettres (Taksir).',
-    icon: Key,
-    color: 'from-purple-500 to-indigo-600',
-    path: '/tools/ilm-jafar'
-  },
-  {
-    id: 'grand-oaths',
-    title: 'Grands Serments',
-    description: 'Da\'awat & Azayim: Bibliothèque des invocations majeures.',
-    icon: Shield,
-    color: 'from-amber-500 to-orange-600',
-    path: '/tools/grand-oaths'
-  },
-  {
-    id: 'zakat',
-    title: 'Calculateur de Zakat',
-    description: 'Calculez précisément votre Zakat al-Maal sur diverses richesses.',
-    icon: Coins,
-    color: 'from-yellow-500 to-amber-600',
-    path: '/tools/zakat'
-  },
-  {
-    id: 'faraid',
-    title: 'Calculateur de Faraid',
-    description: 'Calculez les parts d\'héritage selon la jurisprudence islamique.',
-    icon: Scale,
-    color: 'from-amber-600 to-red-600',
-    path: '/tools/faraid'
-  },
-  {
-    id: 'elemental',
-    title: 'Analyseur Élémentaire',
-    description: 'Tabai\' al-Huruf: Découvrez la nature dominante de votre nom (Feu, Terre, Air, Eau).',
-    icon: Star,
-    color: 'from-red-500 to-orange-600',
-    path: '/tools/elemental'
-  },
-  {
-    id: 'geomancy',
-    title: 'Géomancie Arabe',
-    description: 'Khatt ar-Raml: Générez et interprétez les figures géomantiques pour consulter.',
-    icon: Layers,
-    color: 'from-amber-600 to-yellow-800',
-    path: '/tools/geomancy'
-  },
-  {
-    id: 'letters',
-    title: 'Science des Lettres',
-    description: 'Sirr al-Huruf: Découvrez les mystères associés à chaque lettre arabe.',
-    icon: BookOpen,
-    color: 'from-emerald-500 to-teal-600',
-    path: '/tools/letters'
-  },
-  {
-    id: 'dreams',
-    title: 'Journal des Rêves',
-    description: 'Analysez et documentez vos rêves avec interprétations.',
-    icon: Moon,
-    color: 'from-blue-700 to-indigo-900',
-    path: '/tools/dreams'
+    color: 'from-indigo-500 to-cyan-600',
+    path: '/tools/asma',
+    level: 'simple'
   },
   {
     id: '99names',
@@ -98,55 +29,17 @@ const tools = [
     description: 'Recherchez, étudiez et comprenez les Noms Sublimes (Asma al-Husna).',
     icon: ListTodo,
     color: 'from-cyan-500 to-blue-600',
-    path: '/tools/99names'
+    path: '/tools/99names',
+    level: 'simple'
   },
   {
-    id: 'rouhaniyya',
-    title: 'Extracteur Rouhaniyya',
-    description: 'Extraction des esprits célestes ou terrestres basés sur les Noms et le Poids.',
-    icon: Layers,
-    color: 'from-fuchsia-600 to-purple-800',
-    path: '/tools/rouhaniyya'
-  },
-  {
-    id: 'taksir',
-    title: 'Taksir (Brisures)',
-    description: 'Générez des matrices de Taksir et des cassures de lettres.',
-    icon: Shuffle,
-    color: 'from-orange-500 to-rose-600',
-    path: '/tools/taksir'
-  },
-  {
-    id: 'sirr',
-    title: 'Sirr Al-Asrar',
-    description: 'Analyse ésotérique absolue : éléments, auras, et khuddam.',
-    icon: Eye,
-    color: 'from-violet-700 to-purple-900',
-    path: '/tools/sirr'
-  },
-  {
-    id: 'zairja',
-    title: 'Oracle Zairja',
-    description: 'La machine ancestrale des soufis pour prédire et éclaircir les questions mystiques.',
-    icon: Hexagon,
-    color: 'from-zinc-700 to-black',
-    path: '/tools/zairja'
-  },
-  {
-    id: 'abjad',
-    title: 'Calculateur Abjad',
-    description: 'Calculez la valeur numérique mystique de vos noms et wirds.',
-    icon: Calculator,
-    color: 'from-blue-500 to-indigo-600',
-    path: '/tools/abjad'
-  },
-  {
-    id: 'planetary',
-    title: 'Heures Planétaires',
-    description: 'Déterminez les heures spirituelles propices pour vos invocations.',
-    icon: Clock,
-    color: 'from-amber-500 to-orange-600',
-    path: '/tools/planetary'
+    id: 'quran',
+    title: 'Le Saint Coran',
+    description: "Lecture et méditation sur le Coran, l'outil fondamental de tout Asrar.",
+    icon: BookOpen,
+    color: 'from-emerald-600 to-teal-800',
+    path: '/tools/quran',
+    level: 'simple'
   },
   {
     id: 'tasbih',
@@ -154,7 +47,8 @@ const tools = [
     description: 'Un compteur de zikr intelligent pour suivre vos récitations quotidiennes.',
     icon: Activity,
     color: 'from-emerald-500 to-teal-600',
-    path: '/tools/tasbih'
+    path: '/tools/tasbih',
+    level: 'simple'
   },
   {
     id: 'daily-dhikr',
@@ -162,7 +56,153 @@ const tools = [
     description: 'Définissez des objectifs et suivez votre Dhikr quotidien avec persistance.',
     icon: Target,
     color: 'from-emerald-600 to-green-700',
-    path: '/tools/daily-dhikr'
+    path: '/tools/daily-dhikr',
+    level: 'simple'
+  },
+  {
+    id: 'planetary',
+    title: 'Heures Planétaires',
+    description: 'Déterminez les heures spirituelles propices pour vos invocations.',
+    icon: Clock,
+    color: 'from-amber-500 to-orange-600',
+    path: '/tools/planetary',
+    level: 'simple'
+  },
+  {
+    id: 'zakat',
+    title: 'Calculateur de Zakat',
+    description: 'Calculez précisément votre Zakat al-Maal sur diverses richesses.',
+    icon: Coins,
+    color: 'from-yellow-500 to-amber-600',
+    path: '/tools/zakat',
+    level: 'simple'
+  },
+  {
+    id: 'faraid',
+    title: 'Calculateur de Faraid',
+    description: 'Calculez les parts d\'héritage selon la jurisprudence islamique.',
+    icon: Scale,
+    color: 'from-amber-600 to-red-600',
+    path: '/tools/faraid',
+    level: 'simple'
+  },
+  {
+    id: 'dreams',
+    title: 'Journal des Rêves',
+    description: 'Analysez et documentez vos rêves avec interprétations.',
+    icon: Moon,
+    color: 'from-blue-700 to-indigo-900',
+    path: '/tools/dreams',
+    level: 'simple'
+  },
+  // Advanced Tools
+  {
+    id: 'personal-wird',
+    title: 'Générateur de Wird',
+    description: 'Istikhraj al-Asma: Calculez votre Zikr personnel selon votre poids mystique.',
+    icon: Sparkles,
+    color: 'from-emerald-500 to-teal-600',
+    path: '/tools/personal-wird',
+    level: 'advanced'
+  },
+  {
+    id: 'lunar-mansions',
+    title: 'Demeures de la Lune',
+    description: 'Manazil al-Qamar: Suivez les 28 demeures astrologiques pour vos opérations.',
+    icon: Compass,
+    color: 'from-indigo-500 to-blue-600',
+    path: '/tools/lunar-mansions',
+    level: 'advanced'
+  },
+  {
+    id: 'spiritual-compatibility',
+    title: 'Compatibilité Spirituelle',
+    description: 'Hisab al-Tawafuq: Règle d\'Al-Buni pour le mariage et les partenariats.',
+    icon: Scale,
+    color: 'from-rose-500 to-pink-600',
+    path: '/tools/spiritual-compatibility',
+    level: 'advanced'
+  },
+  {
+    id: 'ilm-jafar',
+    title: 'Oracle de Jafar',
+    description: 'Ilm al-Jafar: Divination suprême par la fracturation des lettres (Taksir).',
+    icon: Key,
+    color: 'from-purple-500 to-indigo-600',
+    path: '/tools/ilm-jafar',
+    level: 'advanced'
+  },
+  {
+    id: 'grand-oaths',
+    title: 'Grands Serments',
+    description: 'Da\'awat & Azayim: Bibliothèque des invocations majeures.',
+    icon: Shield,
+    color: 'from-amber-500 to-orange-600',
+    path: '/tools/grand-oaths',
+    level: 'advanced'
+  },
+  {
+    id: 'elemental',
+    title: 'Analyseur Élémentaire',
+    description: 'Tabai\' al-Huruf: Découvrez la nature dominante de votre nom (Feu, Terre, Air, Eau).',
+    icon: Star,
+    color: 'from-red-500 to-orange-600',
+    path: '/tools/elemental',
+    level: 'advanced'
+  },
+  {
+    id: 'geomancy',
+    title: 'Géomancie Arabe',
+    description: 'Khatt ar-Raml: Générez et interprétez les figures géomantiques pour consulter.',
+    icon: Layers,
+    color: 'from-amber-600 to-yellow-800',
+    path: '/tools/geomancy',
+    level: 'advanced'
+  },
+  {
+    id: 'letters',
+    title: 'Science des Lettres',
+    description: 'Sirr al-Huruf: Découvrez les mystères associés à chaque lettre arabe.',
+    icon: BookOpen,
+    color: 'from-emerald-500 to-teal-600',
+    path: '/tools/letters',
+    level: 'advanced'
+  },
+  {
+    id: 'rouhaniyya',
+    title: 'Extracteur Rouhaniyya',
+    description: 'Extraction des esprits célestes ou terrestres basés sur les Noms et le Poids.',
+    icon: Layers,
+    color: 'from-fuchsia-600 to-purple-800',
+    path: '/tools/rouhaniyya',
+    level: 'advanced'
+  },
+  {
+    id: 'taksir',
+    title: 'Taksir (Brisures)',
+    description: 'Générez des matrices de Taksir et des cassures de lettres.',
+    icon: Shuffle,
+    color: 'from-orange-500 to-rose-600',
+    path: '/tools/taksir',
+    level: 'advanced'
+  },
+  {
+    id: 'sirr',
+    title: 'Sirr Al-Asrar',
+    description: 'Analyse ésotérique absolue : éléments, auras, et khuddam.',
+    icon: Eye,
+    color: 'from-violet-700 to-purple-900',
+    path: '/tools/sirr',
+    level: 'advanced'
+  },
+  {
+    id: 'zairja',
+    title: 'Oracle Zairja',
+    description: 'La machine ancestrale des soufis pour prédire et éclaircir les questions mystiques.',
+    icon: Hexagon,
+    color: 'from-zinc-700 to-black',
+    path: '/tools/zairja',
+    level: 'advanced'
   },
   {
     id: 'khatim',
@@ -171,7 +211,8 @@ const tools = [
     icon: Star,
     color: 'from-purple-500 to-pink-600',
     path: '/tools/khatim',
-    comingSoon: false
+    comingSoon: false,
+    level: 'advanced'
   },
   {
     id: 'ruqyah',
@@ -179,23 +220,8 @@ const tools = [
     description: 'Séances de traitement spirituel intensif avec répétitions ciblées (7 à 1000).',
     icon: Shield,
     color: 'from-blue-600 to-indigo-700',
-    path: '/tools/ruqyah'
-  },
-  {
-    id: 'compatibility',
-    title: 'Compatibilité Spirituelle',
-    description: 'Évaluez la compatibilité selon la science des lettres (Ilm al-Huruf) pour les unions.',
-    icon: Users,
-    color: 'from-rose-500 to-pink-600',
-    path: '/tools/compatibility'
-  },
-  {
-    id: 'asma',
-    title: 'Noms Divins Personnels',
-    description: 'Découvrez vos noms divins correspondants au poids mystique de votre nom.',
-    icon: Sparkles,
-    color: 'from-indigo-500 to-cyan-600',
-    path: '/tools/asma'
+    path: '/tools/ruqyah',
+    level: 'advanced'
   },
   {
     id: 'talsam',
@@ -203,7 +229,8 @@ const tools = [
     description: 'Créez des mots de pouvoir et talsams chiffrés pour encapsuler vos invocations.',
     icon: Key,
     color: 'from-slate-600 to-gray-900',
-    path: '/tools/talsam'
+    path: '/tools/talsam',
+    level: 'advanced'
   },
   {
     id: 'istikhara',
@@ -211,21 +238,42 @@ const tools = [
     description: "Tirage du sort spirituel basé sur le Saint Coran et la science d'Abjad.",
     icon: Compass,
     color: 'from-teal-500 to-emerald-600',
-    path: '/tools/istikhara'
+    path: '/tools/istikhara',
+    level: 'advanced'
   },
   {
-    id: 'quran',
-    title: 'Le Saint Coran',
-    description: "Lecture et méditation sur le Coran, l'outil fondamental de tout Asrar.",
+    id: 'khouddam',
+    title: 'Extracteur de Khouddam',
+    description: 'Calculez et invoquez les entités spirituelles angéliques et terrestres (A\'il et Yush) liées à un nom.',
+    icon: Sparkles,
+    color: 'from-amber-600 to-red-800',
+    path: '/tools/khouddam',
+    level: 'advanced'
+  },
+  {
+    id: 'awfaq',
+    title: 'Générateur de Awfaq',
+    description: 'Créez des carrés magiques complexes (Muthallath, Murabba) avec alignement planétaire et intentions.',
+    icon: Hexagon,
+    color: 'from-fuchsia-600 to-pink-800',
+    path: '/tools/awfaq',
+    level: 'advanced'
+  },
+  {
+    id: 'quranic-faal',
+    title: 'Istikhara Coranique (Faal)',
+    description: 'Méthode mystique de consultation du Coran pour la divination et la guidance (Tirage de sort).',
     icon: BookOpen,
-    color: 'from-emerald-600 to-teal-800',
-    path: '/tools/quran'
+    color: 'from-blue-700 to-indigo-900',
+    path: '/tools/quranic-faal',
+    level: 'advanced'
   }
 ];
 
 export const ToolsDashboard: React.FC = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('hasSeenMysticToolsGuide');
@@ -291,6 +339,8 @@ export const ToolsDashboard: React.FC = () => {
     }
   ];
 
+  const displayedTools = tools.filter(tool => tool.level === activeTab);
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       <div className="mb-8">
@@ -301,6 +351,22 @@ export const ToolsDashboard: React.FC = () => {
         <p className="text-gray-500 dark:text-gray-400 mt-2">
           Des outils puissants et professionnels réservés aux initiés de la science des secrets.
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8">
+        <button
+          onClick={() => setActiveTab('simple')}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'simple' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+        >
+          Outils Simples
+        </button>
+        <button
+          onClick={() => setActiveTab('advanced')}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'advanced' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+        >
+          Outils Avancés
+        </button>
       </div>
 
       <AnimatePresence>
@@ -387,7 +453,7 @@ export const ToolsDashboard: React.FC = () => {
       </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        {tools.map((tool, index) => {
+        {displayedTools.map((tool, index) => {
           const content = (
             <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${!tool.comingSoon ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
               {/* Background Decoration */}

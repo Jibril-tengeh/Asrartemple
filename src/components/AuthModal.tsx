@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { X, Mail, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, sendVerificationEmail, auth } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

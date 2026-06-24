@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ListTodo, ArrowLeft, Search, Info, BookOpen, PlayCircle, Grid, Sparkles, X, ChevronRight, Hash } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { ListTodo, ArrowLeft, Search, Info, BookOpen, PlayCircle, Grid, Sparkles, X, ChevronRight, Hash, ChevronDown, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Augmented mock list of Asma al-Husna
 const asmaListData = [
   { ar: "الله", tr: "Allah", fr: "Le Dieu Absolu", abjad: 66, ref: "Nom suprême (Ism al-A'dham)", quranOptions: { count: 2698, surah: "Al-Fatihah", verse: "1", excerptAr: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", excerptFr: "Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux.", context: "Le nom suprême de l'Essence (Dhat). Il contient l'énergie de tous les autres noms. Il invoque la globalité de la Présence divine." } },
-  { ar: "الرَّحْمَانُ", tr: "Ar-Rahmān", fr: "Le Très Miséricordieux", abjad: 298, ref: "Miséricorde générale", quranOptions: { count: 57, surah: "Ta-Ha", verse: "5", excerptAr: "الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ", excerptFr: "Le Tout Miséricordieux S'est établi [Istawa] sur le Trône.", context: "Indique la souveraineté par l'Amour. La grâce de Rahman irrigue chaque atome de la création, indépendamment du mérite, maintenant l'axe du cosmos en pur équilibre." } },
+  { ar: "الرَّحْمٰنُ", tr: "Ar-Rahmān", fr: "Le Très Miséricordieux", abjad: 298, ref: "Miséricorde générale", quranOptions: { count: 57, surah: "Ta-Ha", verse: "5", excerptAr: "الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ", excerptFr: "Le Tout Miséricordieux S'est établi [Istawa] sur le Trône.", context: "Indique la souveraineté par l'Amour. La grâce de Rahman irrigue chaque atome de la création, indépendamment du mérite, maintenant l'axe du cosmos en pur équilibre." } },
   { ar: "الرَّحِيمُ", tr: "Ar-Rahīm", fr: "Le Tout Miséricordieux", abjad: 258, ref: "Miséricorde spécifique", quranOptions: { count: 114, surah: "Al-Ahzab", verse: "43", excerptAr: "وَكَانَ بِالْمُؤْمِنِينَ رَحِيمًا", excerptFr: "Et Il est Miséricordieux envers les croyants.", context: "Une miséricorde chirurgicale, continue et protectrice. Rahim pardonne les fautes et récompense les actes. C'est le flux bienveillant agissant dans le monde de la causalité." } },
   { ar: "الْمَلِكُ", tr: "Al-Malik", fr: "Le Souverain", abjad: 90, ref: "Domination absolue", quranOptions: { count: 5, surah: "Ta-Ha", verse: "114", excerptAr: "فَتَعَالَى اللَّهُ الْمَلِكُ الْحَقُّ", excerptFr: "Que soit exalté Allah, le vrai Souverain !", context: "Révèle la maîtrise totale de l'Être Exalté sur les cieux et la terre. Invoquer Al-Malik libère le cœur de la soumission aux créatures, affirmant qu'aucune force n'agit hors de Sa permission." } },
   { ar: "الْقُدُّوسُ", tr: "Al-Quddūs", fr: "L'Infiniment Saint", abjad: 170, ref: "Pureté", quranOptions: { count: 2, surah: "Al-Jumu'ah", verse: "1", excerptAr: "يُسَبِّحُ لِلَّهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ الْمَلِكِ الْقُدُّوسِ", excerptFr: "Ce qui est dans les cieux et ce qui est sur la terre glorifient Allah, le Souverain, le Pur...", context: "Le nom de l'aseptisation spirituelle. Al-Quddus transcende toute imperfection. Dans ce verset, la création vibre pour L'exalter car Sa pureté désintègre toutes souillures sombres ou chaotiques." } },
@@ -76,11 +77,14 @@ const generateVifiq4x4 = (total: number) => {
 };
 
 export const NamesOfAllah: React.FC = () => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modal states
   const [viewState, setViewState] = useState<'list' | 'quran' | 'zikr' | 'khatim' | 'counts'>('list');
   const [activeName, setActiveName] = useState<typeof asmaListData[0] | null>(null);
+  const [showOtherVerses, setShowOtherVerses] = useState(false);
+  const [expandedVerseId, setExpandedVerseId] = useState<number | null>(null);
   
   // Zikr state
   const [zikrCount, setZikrCount] = useState(0);
@@ -92,6 +96,54 @@ export const NamesOfAllah: React.FC = () => {
     localStorage.setItem('asrar_stats', JSON.stringify(stats));
   }, []);
 
+  const [quranData, setQuranData] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    // Pre-fetch quran data
+    fetch('/quran.json')
+      .then(res => res.json())
+      .then(data => setQuranData(data))
+      .catch(console.error);
+  }, []);
+
+  const realOccurrences = React.useMemo(() => {
+    if (!activeName || quranData.length === 0) return [];
+    
+    try {
+      const searchWord = activeName.ar.replace(/[\u064B-\u065F\u0670]/g, '').replace(/\u0671/g, '\u0627');
+      const matches = [];
+      
+      for (const surah of quranData) {
+        for (const ayah of surah.ayahs) {
+          const cleanAyah = (ayah.arClean || ayah.ar).replace(/[\u064B-\u065F\u0670]/g, '').replace(/\u0671/g, '\u0627');
+          // Simple string includes for now, but we can make it word-boundary if needed.
+          // Since some names are very common prefixes/suffixes, let's use a regex with basic Arabic word boundaries if we want to be exact.
+          // However, includes is fine for now if it gives acceptable results.
+          if (cleanAyah.includes(searchWord)) {
+            matches.push({
+              ...ayah,
+              surahName: surah.name,
+              surahTransliteration: surah.transliteration,
+              surahNumber: surah.id
+            });
+          }
+        }
+      }
+      return matches;
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }, [activeName, quranData]);
+
+  const toggleVerse = (match: any) => {
+    if (expandedVerseId === match.id) {
+      setExpandedVerseId(null);
+    } else {
+      setExpandedVerseId(match.id);
+    }
+  };
+
   const filtered = asmaListData.filter(a => 
     a.tr.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.fr.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -101,6 +153,8 @@ export const NamesOfAllah: React.FC = () => {
   const openModal = (type: 'quran' | 'zikr' | 'khatim' | 'counts', item: typeof asmaListData[0]) => {
     setActiveName(item);
     setViewState(type);
+    setShowOtherVerses(false);
+    setExpandedVerseId(null);
     if (type === 'zikr') setZikrCount(0);
   };
 
@@ -108,6 +162,8 @@ export const NamesOfAllah: React.FC = () => {
     setViewState('list');
     setActiveName(null);
   };
+
+  const totalOccurrences = quranData.length > 0 ? realOccurrences.length : activeName?.quranOptions?.count || 0;
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen relative">
@@ -118,9 +174,9 @@ export const NamesOfAllah: React.FC = () => {
         <div>
            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <ListTodo className="text-cyan-500" />
-            Les Noms Divins (Asma al-Husna)
+            {t('namesOfAllah.title')}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Étude détaillée et Poids Abjad</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('namesOfAllah.subtitle')}</p>
         </div>
       </div>
 
@@ -130,7 +186,7 @@ export const NamesOfAllah: React.FC = () => {
         </div>
         <input
           type="text"
-          placeholder="Rechercher un Nom (traductions, nombre abjad...)"
+          placeholder={t('namesOfAllah.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl pl-12 pr-4 py-4 text-gray-900 dark:text-white font-bold placeholder-gray-400 focus:outline-none focus:border-cyan-500 transition-colors shadow-sm"
@@ -150,7 +206,7 @@ export const NamesOfAllah: React.FC = () => {
             <div className="p-5 sm:p-6 flex-1 flex flex-col items-center text-center">
               <div className="w-full flex justify-between items-start mb-4">
                 <span className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20 px-2 py-1 rounded-lg">
-                  Abjad: {name.abjad}
+                  {t('namesOfAllah.abjad')}: {name.abjad}
                 </span>
               </div>
 
@@ -162,28 +218,28 @@ export const NamesOfAllah: React.FC = () => {
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">{name.fr}</p>
               
               <div className="w-full mt-auto pt-4 border-t border-gray-100 dark:border-gray-750 text-left">
-                <span className="text-xs text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest block mb-1">Khassiyya & Symbole</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest block mb-1">{t('namesOfAllah.khassiyya')}</span>
                 <p className="text-sm text-gray-700 dark:text-gray-300 italic">{name.ref}</p>
               </div>
             </div>
 
             {/* Action Bar */}
             <div className="border-t border-gray-100 dark:border-gray-700 grid grid-cols-4 bg-gray-50 dark:bg-gray-900/50">
-              <button onClick={() => openModal('quran', name)} className="p-3 text-gray-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title="Citations Coraniques">
+              <button onClick={() => openModal('quran', name)} className="p-3 text-gray-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title={t('namesOfAllah.quran')}>
                 <BookOpen size={18} />
-                <span className="text-[10px] font-bold uppercase">Coran</span>
+                <span className="text-[10px] font-bold uppercase">{t('namesOfAllah.quran')}</span>
               </button>
-              <button onClick={() => openModal('zikr', name)} className="p-3 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title="Démarrer le Zikr">
+              <button onClick={() => openModal('zikr', name)} className="p-3 text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title={t('namesOfAllah.zikr')}>
                 <PlayCircle size={18} />
-                <span className="text-[10px] font-bold uppercase">Zikr</span>
+                <span className="text-[10px] font-bold uppercase">{t('namesOfAllah.zikr')}</span>
               </button>
-              <button onClick={() => openModal('khatim', name)} className="p-3 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title="Construire le Khatim">
+              <button onClick={() => openModal('khatim', name)} className="p-3 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex flex-col items-center gap-1 transition-colors border-r border-gray-100 dark:border-gray-700" title={t('namesOfAllah.khatim')}>
                 <Grid size={18} />
-                <span className="text-[10px] font-bold uppercase">Khatim</span>
+                <span className="text-[10px] font-bold uppercase">{t('namesOfAllah.khatim')}</span>
               </button>
-              <button onClick={() => openModal('counts', name)} className="p-3 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex flex-col items-center gap-1 transition-colors" title="Bénéfices des nombres">
+              <button onClick={() => openModal('counts', name)} className="p-3 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex flex-col items-center gap-1 transition-colors" title={t('namesOfAllah.counts')}>
                 <Sparkles size={18} />
-                <span className="text-[10px] font-bold uppercase">Nombres</span>
+                <span className="text-[10px] font-bold uppercase">{t('namesOfAllah.counts')}</span>
               </button>
             </div>
           </motion.div>
@@ -191,7 +247,7 @@ export const NamesOfAllah: React.FC = () => {
       </div>
       
       {filtered.length === 0 && (
-         <div className="text-center py-12 text-gray-500">Aucun Nom trouvé pour cette recherche.</div>
+         <div className="text-center py-12 text-gray-500">{t('namesOfAllah.noResult')}</div>
       )}
 
       {/* OVERLAYS / MODALS */}
@@ -226,44 +282,154 @@ export const NamesOfAllah: React.FC = () => {
                 {/* QURAN VIEW */}
                 {viewState === 'quran' && (
                   <div className="space-y-6">
-                    <div className="bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/50 rounded-2xl p-6 text-center">
+                    <div className="bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/50 rounded-2xl p-6 text-center shadow-sm">
                       <BookOpen size={48} className="mx-auto text-cyan-500 mb-4" />
-                      <h4 className="text-sm font-bold uppercase tracking-widest text-cyan-800 dark:text-cyan-200 mb-1">Citations Coraniques</h4>
-                      <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">{activeName.quranOptions.count} <span className="text-base font-medium text-gray-500">Mentions</span></p>
+                      <h4 className="text-sm font-bold uppercase tracking-widest text-cyan-800 dark:text-cyan-200 mb-1">Occurrences dans le Coran entier</h4>
+                      <p className="text-4xl font-black text-gray-900 dark:text-white mb-2">{totalOccurrences} <span className="text-base font-medium text-gray-500">Fois</span></p>
                       <p className="text-gray-600 dark:text-gray-400 font-medium text-sm">
-                        Décompte d'apparition du Nom dans le Texte Sacré.
+                        Décompte d'apparition du Nom {activeName.ar} dans le Texte Sacré.
                       </p>
                     </div>
 
-                    {activeName.quranOptions.count > 0 ? (
-                      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-5">
-                        <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-                          <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                             <BookOpen size={16} className="text-cyan-500" />
-                             Sourate {activeName.quranOptions.surah}
-                          </span>
-                          <span className="bg-cyan-100 dark:bg-cyan-900/50 text-cyan-800 dark:text-cyan-300 px-3 py-1 rounded-lg text-sm font-bold">Verset {activeName.quranOptions.verse}</span>
+                    {totalOccurrences > 0 ? (
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl space-y-6">
+                        
+                        {/* Benefits Section */}
+                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/10 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800/30 shadow-sm relative overflow-hidden">
+                             <Sparkles className="text-indigo-500/10 absolute -right-4 -top-4" size={100} />
+                             <h4 className="text-[11px] uppercase font-bold text-indigo-800 dark:text-indigo-300 mb-4 tracking-widest flex items-center gap-2">
+                               <Sparkles size={16} />
+                               Bénéfices Esotériques Profonds (Asrar)
+                             </h4>
+                             <div className="space-y-3 relative z-10">
+                               <p className="text-sm font-medium text-indigo-900/90 dark:text-indigo-100/90 leading-relaxed text-justify">
+                                 {(activeName as any).quranOptions.context}
+                               </p>
+                               <div className="w-8 h-px bg-indigo-200 dark:bg-indigo-800/50 my-2"></div>
+                               <p className="text-sm font-medium text-indigo-900/90 dark:text-indigo-100/90 leading-relaxed text-justify">
+                                 La récitation spirituelle de <strong>{activeName.tr}</strong> agit en profondeur sur l'âme. Elle détruit les barrières du doute, ouvre les centres spirituels (Lata'if) correspondants et attire irrésistiblement les grâces qui lui sont liées. C'est un bouclier divin et un aimant à miséricorde, transformant radicalement les états intérieurs et les situations extérieures de celui qui s'y attache avec pureté et constance. Son empreinte énergétique rectifie le destin de l'invocateur.
+                               </p>
+                             </div>
                         </div>
-                        
-                        {(activeName as any).quranOptions.excerptAr && (
-                           <div className="text-center p-4 border-b border-gray-100 dark:border-gray-700 pb-6">
-                             <h5 className="text-xs uppercase font-bold text-gray-400 dark:text-gray-500 mb-4 tracking-widest">Extrait Révélation</h5>
-                             <p className="font-arabic text-3xl sm:text-4xl text-gray-900 dark:text-white leading-[1.8] mb-4">{(activeName as any).quranOptions.excerptAr}</p>
-                             <p className="text-gray-600 dark:text-gray-300 font-serif italic text-sm px-4">" {(activeName as any).quranOptions.excerptFr} "</p>
+
+                        {/* Verses Section */}
+                        <div>
+                           <h4 className="text-xs uppercase font-bold text-gray-500 dark:text-gray-400 mb-4 tracking-widest pl-2">Versets et Sourates</h4>
+                           <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                             {/* Primary verse */}
+                             <div className="p-5 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                               <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-gray-800">
+                                  <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                     <BookOpen size={16} className="text-cyan-500" />
+                                     Sourate {realOccurrences.length > 0 ? realOccurrences[0].surahName : activeName.quranOptions.surah}
+                                  </span>
+                                  <span className="bg-cyan-100 dark:bg-cyan-900/50 text-cyan-800 dark:text-cyan-300 px-3 py-1 rounded-lg text-xs font-bold">Verset {realOccurrences.length > 0 ? realOccurrences[0].inSurah : activeName.quranOptions.verse}</span>
+                               </div>
+                               {realOccurrences.length > 0 ? (
+                                  <>
+                                    <p className="font-arabic text-2xl sm:text-3xl text-gray-900 dark:text-white leading-[2] mb-4 text-center" dir="rtl">{realOccurrences[0].ar}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 font-serif italic text-sm text-center leading-relaxed">" {realOccurrences[0].fr} "</p>
+                                  </>
+                               ) : (
+                                  <>
+                                    <p className="font-arabic text-2xl sm:text-3xl text-gray-900 dark:text-white leading-[2] mb-4 text-center" dir="rtl">{(activeName as any).quranOptions.excerptAr}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 font-serif italic text-sm text-center leading-relaxed">" {(activeName as any).quranOptions.excerptFr} "</p>
+                                  </>
+                               )}
+                             </div>
+
+                             {/* Other mentions simulated */}
+                             {totalOccurrences > 1 && (
+                               <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900/50 dark:to-gray-900 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 overflow-hidden">
+                                 <button 
+                                   onClick={() => setShowOtherVerses(!showOtherVerses)}
+                                   className="w-full p-4 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                 >
+                                   <div className="flex items-center gap-3">
+                                     <Eye size={18} className="text-cyan-500" />
+                                     <span className="text-sm font-bold">Voir toutes les occurrences {realOccurrences.length > 0 && `(${realOccurrences.length})`}</span>
+                                   </div>
+                                   <ChevronDown size={18} className={`transition-transform duration-300 ${showOtherVerses ? 'rotate-180' : ''}`} />
+                                 </button>
+                                 
+                                 <AnimatePresence>
+                                   {showOtherVerses && (
+                                     <motion.div
+                                       initial={{ height: 0, opacity: 0 }}
+                                       animate={{ height: 'auto', opacity: 1 }}
+                                       exit={{ height: 0, opacity: 0 }}
+                                       className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                                     >
+                                       <div className="p-4 space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
+                                         {quranData.length === 0 && (
+                                           <div className="text-center p-4">
+                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto"></div>
+                                             <p className="text-sm text-gray-500 mt-2">Chargement des données du Coran...</p>
+                                           </div>
+                                         )}
+                                         {quranData.length > 0 && realOccurrences.length === 0 && (
+                                           <div className="text-center p-4">
+                                             <p className="text-sm text-gray-500">
+                                               Aucune occurrence exacte trouvée, ou la limite d'affichage est dépassée.
+                                             </p>
+                                           </div>
+                                         )}
+                                         {quranData.length > 0 && realOccurrences.map((occurrence) => {
+                                           const isExpanded = expandedVerseId === occurrence.id;
+                                           return (
+                                             <div key={occurrence.id} className="rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 transition-all">
+                                               <button 
+                                                 onClick={() => toggleVerse(occurrence)}
+                                                 className="w-full flex justify-between items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                               >
+                                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                   Sourate {occurrence.surahName} ({occurrence.surahTransliteration})
+                                                 </span>
+                                                 <div className="flex items-center gap-2">
+                                                   <span className="text-xs bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 px-2 py-1 rounded font-bold">
+                                                     Verset {occurrence.inSurah}
+                                                   </span>
+                                                   <ChevronDown size={14} className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                                 </div>
+                                               </button>
+                                               <AnimatePresence>
+                                                 {isExpanded && (
+                                                   <motion.div
+                                                     initial={{ height: 0, opacity: 0 }}
+                                                     animate={{ height: 'auto', opacity: 1 }}
+                                                     exit={{ height: 0, opacity: 0 }}
+                                                     className="border-t border-gray-100 dark:border-gray-800"
+                                                   >
+                                                     <div className="p-4 space-y-3">
+                                                       <p className="font-arabic text-xl sm:text-2xl text-gray-900 dark:text-white leading-[2] text-center" dir="rtl">
+                                                         {occurrence.ar}
+                                                       </p>
+                                                       <p className="text-gray-600 dark:text-gray-400 font-serif italic text-sm text-center leading-relaxed">
+                                                         "{occurrence.fr}"
+                                                       </p>
+                                                     </div>
+                                                   </motion.div>
+                                                 )}
+                                               </AnimatePresence>
+                                             </div>
+                                           );
+                                         })}
+                                       </div>
+                                       <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
+                                         <span className="text-[11px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg block leading-relaxed">
+                                           <strong>Secret initiatique :</strong> Extraire toutes ces occurrences (Ayat) pour les réciter ensemble constitue le "Khatm Al-Akbar" (Grand Sceau) de ce Nom divin, libérant la totalité de son pouvoir de manifestation.
+                                         </span>
+                                       </div>
+                                     </motion.div>
+                                   )}
+                                 </AnimatePresence>
+                               </div>
+                             )}
                            </div>
-                        )}
-                        
-                        {(activeName as any).quranOptions.context && (
-                           <div className="bg-indigo-50 dark:bg-indigo-900/10 p-5 rounded-xl border-l-4 border-indigo-500">
-                             <h4 className="text-[11px] uppercase font-bold text-indigo-800 dark:text-indigo-300 mb-2 tracking-widest">Exégèse et Mystère Éloquent (Tafsir de ce Nom)</h4>
-                             <p className="text-sm font-medium text-indigo-900/80 dark:text-indigo-100/80 leading-relaxed text-justify">
-                               {(activeName as any).quranOptions.context}
-                             </p>
-                           </div>
-                        )}
+                        </div>
                       </div>
                     ) : (
-                      <p className="text-center text-gray-500 italic bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl">Ce Nom est traditionnellement dérivé du Hadith prophétique ou ne figure pas explicitement sous cette forme lexicale exacte directe (Ism Fa'il / Sifat) dans le Coran, ou sa fréquence est groupée avec d'autres dérivations grammaticales.</p>
+                      <p className="text-center text-gray-500 italic bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl">Ce Nom est traditionnellement dérivé du Hadith prophétique ou ne figure pas explicitement sous cette forme lexicale exacte directe dans le Coran.</p>
                     )}
                   </div>
                 )}

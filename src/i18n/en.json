@@ -1,0 +1,35 @@
+{
+  "welcome": "Welcome to AsrarHub",
+  "selectRole": "Please select your role (USER or ADMIN) by prompting to generate the rest.",
+  "userDashboard": "Dashboard",
+  "all": "All",
+  "wirds": "Wirds",
+  "secrets": "Quran Secrets",
+  "recettes": "Recipes",
+  "search": "Search for a secret, wird or recipe...",
+  "viewDetail": "View Details",
+  "favorites": "Favorites",
+  "benefits": "Benefits",
+  "content": "Content & Practice",
+  "reference": "Reference",
+  "back": "Back",
+  "nav": {
+    "home": "Home",
+    "explore": "Explore",
+    "tools": "Tools",
+    "journal": "Journal",
+    "saved": "Saved"
+  },
+  "namesOfAllah": {
+    "title": "Divine Names (Asma al-Husna)",
+    "subtitle": "Detailed Study & Abjad Weight",
+    "searchPlaceholder": "Search a Name (translations, abjad number...)",
+    "noResult": "No Name found for this search.",
+    "quran": "Quran",
+    "zikr": "Dhikr",
+    "khatim": "Khatim",
+    "counts": "Numbers",
+    "abjad": "Abjad",
+    "khassiyya": "Khassiyya & Symbol"
+  }
+}

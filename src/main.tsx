@@ -4,10 +4,10 @@ import {createRoot} from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
-import './i18n';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AudioProvider } from './contexts/AudioContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 createRoot(document.getElementById('root')!).render(
@@ -15,11 +15,13 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <HashRouter>
         <AuthProvider>
-          <ThemeProvider>
-            <AudioProvider>
-              <App />
-            </AudioProvider>
-          </ThemeProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <AudioProvider>
+                <App />
+              </AudioProvider>
+            </ThemeProvider>
+          </LanguageProvider>
         </AuthProvider>
       </HashRouter>
     </ErrorBoundary>

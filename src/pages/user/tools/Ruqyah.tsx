@@ -3,7 +3,7 @@ import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square,
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 import { db } from '../../../lib/firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -109,7 +109,7 @@ const allVersesInfo = Array.from(
 const repetitions = [1, 3, 7, 11, 21, 33, 41, 71, 73, 77, 100, 111, 313, 666, 786, 1000];
 
 export const Ruqyah: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { language } = useLanguage();
   const [playlists, setPlaylists] = useState<Playlist[]>(defaultRuqyahTypes);
   const [selectedType, setSelectedType] = useState<Playlist | null>(null);
   const [selectedRepetition, setSelectedRepetition] = useState(7);
@@ -533,7 +533,7 @@ export const Ruqyah: React.FC = () => {
                       </h3>
                       <div className="space-y-3">
                         {adminAudios.map(audio => {
-                          const lang = i18n.language as 'fr' | 'en' | 'ha';
+                          const lang = language;
                           const title = audio[`title_${lang}`] || audio.title;
                           return (
                           <div key={audio.id} className="w-full text-left p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">

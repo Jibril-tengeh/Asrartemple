@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { ArrowLeft, BookOpen, Star, Sparkles, ScrollText, Bookmark, BookType } from 'lucide-react';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem } from '../../types';
@@ -8,7 +8,7 @@ import { AsrarItem } from '../../types';
 export const SecretDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [item, setItem] = useState<AsrarItem | null>(null);
   
   const [readingMode, setReadingMode] = useState(false);

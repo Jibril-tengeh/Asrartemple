@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -103,7 +103,7 @@ const GamificationBadges = () => {
 };
 
 export const UserProfile: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();

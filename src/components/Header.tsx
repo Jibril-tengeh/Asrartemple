@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,7 +17,7 @@ interface Notification {
 }
 
 export const Header: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
@@ -61,8 +61,8 @@ export const Header: React.FC = () => {
     }
   }, [user]);
 
-  const changeLanguage = (lang: string) => {
-    i18n.changeLanguage(lang);
+  const changeLanguage = (lang: 'fr' | 'en' | 'ha') => {
+    setLanguage(lang);
     setLangMenuOpen(false);
   };
 
@@ -140,14 +140,14 @@ export const Header: React.FC = () => {
                     className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 flex flex-col"
                   >
                     <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-900 dark:text-white">
-                      Notifications
+                      {language === 'fr' ? 'Notifications' : language === 'ha' ? 'Sanarwa' : 'Notifications'}
                     </div>
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-sm text-gray-500 text-center">Aucune notification</div>
+                      <div className="p-4 text-sm text-gray-500 text-center">{language === 'fr' ? 'Aucune notification' : language === 'ha' ? 'Babu sanarwa' : 'No notifications'}</div>
                     ) : (
                       <div className="max-h-60 overflow-y-auto">
                         {notifications.map(notif => {
-                          const lang = i18n.language as 'fr' | 'en' | 'ha';
+                          const lang = language;
                           const title = (notif as any)[`title_${lang}`] || notif.title;
                           const message = (notif as any)[`message_${lang}`] || notif.message;
                           return (
@@ -186,24 +186,24 @@ export const Header: React.FC = () => {
                 >
                   <button 
                     onClick={() => changeLanguage('fr')} 
-                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${i18n.language === 'fr' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
+                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${language === 'fr' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
                   >
                     <span>Français</span>
-                    {i18n.language === 'fr' && <span className="text-emerald-500 text-xs">●</span>}
+                    {language === 'fr' && <span className="text-emerald-500 text-xs">●</span>}
                   </button>
                   <button 
                     onClick={() => changeLanguage('en')} 
-                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${i18n.language === 'en' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
+                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${language === 'en' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
                   >
                     <span>English</span>
-                    {i18n.language === 'en' && <span className="text-emerald-500 text-xs">●</span>}
+                    {language === 'en' && <span className="text-emerald-500 text-xs">●</span>}
                   </button>
                   <button 
                     onClick={() => changeLanguage('ha')} 
-                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${i18n.language === 'ha' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
+                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${language === 'ha' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
                   >
                     <span>Hausa</span>
-                    {i18n.language === 'ha' && <span className="text-emerald-500 text-xs">●</span>}
+                    {language === 'ha' && <span className="text-emerald-500 text-xs">●</span>}
                   </button>
                 </motion.div>
               )}

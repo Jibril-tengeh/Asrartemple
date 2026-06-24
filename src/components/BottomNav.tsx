@@ -1,17 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, Wrench, Compass, Bookmark, Book } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const BottomNav: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   const navItems = [
-    { to: '/user/dashboard', icon: Home, label: 'Accueil' },
-    { to: '/explore', icon: Compass, label: 'Explorer' },
-    { to: '/tools', icon: Wrench, label: 'Outils' },
-    { to: '/journal', icon: Book, label: 'Journal' },
-    { to: '/saved', icon: Bookmark, label: 'Sauvés' },
+    { to: '/user/dashboard', icon: Home, label: t('nav.home') },
+    { to: '/explore', icon: Compass, label: t('nav.explore') },
+    { to: '/tools', icon: Wrench, label: t('nav.tools') },
+    { to: '/journal', icon: Book, label: t('nav.journal') },
+    { to: '/saved', icon: Bookmark, label: t('nav.saved') },
   ];
 
   return (

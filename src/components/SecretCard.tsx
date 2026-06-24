@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { BookOpen, Sparkles, ScrollText } from 'lucide-react';
 import { AsrarItem } from '../types';
 
@@ -12,7 +12,7 @@ interface SecretCardProps {
 }
 
 export const SecretCard: React.FC<SecretCardProps> = ({ item, layoutMode = 'grid2' }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   
   const CategoryIcon = item.category === 'secret' ? BookOpen : item.category === 'recette' ? Sparkles : ScrollText;
   const categoryLabel = t(item.category === 'secret' ? 'secrets' : item.category === 'recette' ? 'recettes' : 'wirds');

@@ -1,0 +1,35 @@
+{
+  "welcome": "Barka da zuwa AsrarHub",
+  "selectRole": "Da fatan za a zaɓi rawar ku (USER ko ADMIN).",
+  "userDashboard": "Allon gudanarwa",
+  "all": "Duka",
+  "wirds": "Wuridai",
+  "secrets": "Sirrin Alqur'ani",
+  "recettes": "Layi",
+  "search": "Bincika sirri, wuridi ko layi...",
+  "viewDetail": "Duba cikakkun bayanai",
+  "favorites": "Wadanda aka fi so",
+  "benefits": "Amfani",
+  "content": "Abun ciki & Aiki",
+  "reference": "Magana",
+  "back": "Baya",
+  "nav": {
+    "home": "Gida",
+    "explore": "Bincika",
+    "tools": "Kayan Aiki",
+    "journal": "Littafi",
+    "saved": "Ajiye"
+  },
+  "namesOfAllah": {
+    "title": "Sunayen Allah (Asma al-Husna)",
+    "subtitle": "Cikakken Nazari & Abjad",
+    "searchPlaceholder": "Nemi Suna (fassara, lambar abjad...)",
+    "noResult": "Ba a sami Suna ba.",
+    "quran": "Alkur'ani",
+    "zikr": "Zikiri",
+    "khatim": "Hatimi",
+    "counts": "Lambobi",
+    "abjad": "Abjad",
+    "khassiyya": "Khassiyya & Alama"
+  }
+}

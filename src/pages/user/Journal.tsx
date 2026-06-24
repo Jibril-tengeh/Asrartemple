@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Plus, Calendar, CheckCircle2, ChevronRight, Save, Download } from 'lucide-react';
+import { Book, Plus, Calendar, CheckCircle2, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface JournalEntry {
@@ -70,60 +70,11 @@ export const Journal: React.FC = () => {
     }
   };
 
-  const exportJournal = () => {
-    if (entries.length === 0) return;
-    
-    let content = "JOURNAL SPIRITUEL\n";
-    content += "=================\n\n";
-    
-    entries.forEach(entry => {
-      content += `Date: ${new Date(entry.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
-      if (entry.wirdsCompleted.length > 0) {
-        content += `Wirds: ${entry.wirdsCompleted.join(', ')}\n`;
-      }
-      if (entry.progress) {
-        content += `Progrès: ${entry.progress}\n`;
-      }
-      if (entry.thoughts) {
-        content += `Réflexions: ${entry.thoughts}\n`;
-      }
-      content += "\n----------------------------------------\n\n";
-    });
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Journal_Spirituel_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Journal Spirituel</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Réflexions, wirds et progression</p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={exportJournal}
-            disabled={entries.length === 0}
-            className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-sm border border-gray-200 dark:border-gray-700 hover:scale-105 active:scale-95 transition-transform disabled:opacity-50 disabled:pointer-events-none"
-            title="Exporter le journal"
-          >
-            <Download size={20} />
-          </button>
-          <button 
-            onClick={() => setIsEditorOpen(true)}
-            className="w-12 h-12 bg-emerald-600 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
-          >
-            <Plus size={24} />
-          </button>
-        </div>
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen relative">
+      <div className="mb-8">
+        <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Journal Spirituel</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Réflexions, wirds et progression</p>
       </div>
 
       <AnimatePresence>
@@ -146,9 +97,9 @@ export const Journal: React.FC = () => {
                     onChange={(e) => setWirdInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addWird()}
                     placeholder="Ex: Hizb al-Bahr (1x)"
-                    className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+                    className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                   />
-                  <button onClick={addWird} className="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-sm">Ajouter</button>
+                  <button onClick={addWird} className="shrink-0 bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-sm hover:bg-emerald-200 transition-colors">Ajouter</button>
                 </div>
                 {currentWirds.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -253,6 +204,25 @@ export const Journal: React.FC = () => {
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {!isEditorOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ 
+              y: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
+              opacity: { duration: 0.2 },
+              scale: { duration: 0.2 }
+            }}
+            onClick={() => setIsEditorOpen(true)}
+            className="fixed right-4 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-14 h-14 sm:w-16 sm:h-16 bg-emerald-500/20 backdrop-blur-md rounded-full text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-emerald-500/30 hover:bg-emerald-500/40 transition-colors"
+          >
+            <Plus size={32} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

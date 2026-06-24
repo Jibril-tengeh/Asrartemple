@@ -9,7 +9,6 @@ import { AbjadCalculator } from './pages/user/tools/AbjadCalculator';
 import { PlanetaryHours } from './pages/user/tools/PlanetaryHours';
 import { Tasbih } from './pages/user/tools/Tasbih';
 import { KhatimGenerator } from './pages/user/tools/KhatimGenerator';
-import { Compatibility } from './pages/user/tools/Compatibility';
 import { Asma } from './pages/user/tools/Asma';
 import { Talsam } from './pages/user/tools/Talsam';
 import { Istikhara } from './pages/user/tools/Istikhara';
@@ -31,6 +30,9 @@ import { LunarMansions } from './pages/user/tools/LunarMansions';
 import { SpiritualCompatibility } from './pages/user/tools/SpiritualCompatibility';
 import { IlmJafar } from './pages/user/tools/IlmJafar';
 import { GrandOaths } from './pages/user/tools/GrandOaths';
+import { KhouddamExtractor } from './pages/user/tools/KhouddamExtractor';
+import { AwfaqAdvanced } from './pages/user/tools/AwfaqAdvanced';
+import { QuranicFaal } from './pages/user/tools/QuranicFaal';
 import { UserProfile } from './pages/user/UserProfile';
 import { Journal } from './pages/user/Journal';
 import { ExploreDashboard } from './pages/user/ExploreDashboard';
@@ -102,7 +104,6 @@ export default function App() {
           <Route path="/tools/planetary" element={<PlanetaryHours />} />
           <Route path="/tools/tasbih" element={<Tasbih />} />
           <Route path="/tools/khatim" element={<KhatimGenerator />} />
-          <Route path="/tools/compatibility" element={<Compatibility />} />
           <Route path="/tools/asma" element={<Asma />} />
           <Route path="/tools/talsam" element={<Talsam />} />
           <Route path="/tools/istikhara" element={<Istikhara />} />
@@ -125,6 +126,9 @@ export default function App() {
           <Route path="/tools/rouhaniyya" element={<RouhaniyyaExtractor />} />
           <Route path="/tools/taksir" element={<Taksir />} />
           <Route path="/tools/quran" element={<QuranFull />} />
+          <Route path="/tools/khouddam" element={<KhouddamExtractor />} />
+          <Route path="/tools/awfaq" element={<AwfaqAdvanced />} />
+          <Route path="/tools/quranic-faal" element={<QuranicFaal />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
