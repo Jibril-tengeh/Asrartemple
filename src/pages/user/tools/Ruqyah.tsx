@@ -3,6 +3,7 @@ import { Shield, ArrowLeft, Play, RotateCcw, CheckCircle, Info, Volume2, Square,
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
+import { useTranslation } from 'react-i18next';
 
 import { db } from '../../../lib/firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -108,6 +109,7 @@ const allVersesInfo = Array.from(
 const repetitions = [1, 3, 7, 11, 21, 33, 41, 71, 73, 77, 100, 111, 313, 666, 786, 1000];
 
 export const Ruqyah: React.FC = () => {
+  const { i18n } = useTranslation();
   const [playlists, setPlaylists] = useState<Playlist[]>(defaultRuqyahTypes);
   const [selectedType, setSelectedType] = useState<Playlist | null>(null);
   const [selectedRepetition, setSelectedRepetition] = useState(7);
@@ -530,9 +532,12 @@ export const Ruqyah: React.FC = () => {
                         Audios Recommandés (Complets)
                       </h3>
                       <div className="space-y-3">
-                        {adminAudios.map(audio => (
+                        {adminAudios.map(audio => {
+                          const lang = i18n.language as 'fr' | 'en' | 'ha';
+                          const title = audio[`title_${lang}`] || audio.title;
+                          return (
                           <div key={audio.id} className="w-full text-left p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                            <h4 className="font-bold text-gray-900 dark:text-white">{audio.title}</h4>
+                            <h4 className="font-bold text-gray-900 dark:text-white">{title}</h4>
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-sm text-gray-500 flex items-center gap-1"><Clock size={14} /> {audio.duration}</span>
                               <button
@@ -540,7 +545,7 @@ export const Ruqyah: React.FC = () => {
                                   if (currentTrack?.url === audio.url && globalIsPlaying) {
                                     globalPause();
                                   } else {
-                                    playPlaylist([{ id: `admin-${audio.id}`, title: audio.title, artist: "Recommandé", url: audio.url }], 0);
+                                    playPlaylist([{ id: `admin-${audio.id}`, title: title, artist: "Recommandé", url: audio.url }], 0);
                                   }
                                 }}
                                 className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-200"
@@ -549,7 +554,8 @@ export const Ruqyah: React.FC = () => {
                               </button>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

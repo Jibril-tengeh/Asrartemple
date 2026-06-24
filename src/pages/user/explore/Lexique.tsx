@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { FileText, Search } from 'lucide-react';
 import { db } from '../../../lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { useTranslation } from 'react-i18next';
 
 const defaultLexiqueData = [
   { term: "Alif (أ)", category: "Lettres", description: "Première lettre de l'alphabet arabe. Sa valeur numérique est 1. Elle symbolise l'Unicité Divine (Tawhid) et le principe de toute création." },
@@ -17,6 +18,7 @@ const defaultLexiqueData = [
 ];
 
 export const Lexique: React.FC = () => {
+  const { i18n } = useTranslation();
   const [search, setSearch] = useState('');
   const [lexiqueData, setLexiqueData] = useState<any[]>(defaultLexiqueData);
 
@@ -24,10 +26,11 @@ export const Lexique: React.FC = () => {
     const unsubscribe = onSnapshot(collection(db, 'lexique_terms'), (snapshot) => {
       const dbTerms = snapshot.docs.map(doc => {
         const data = doc.data();
+        const lang = i18n.language as 'fr' | 'en' | 'ha';
         return {
-          term: data.word,
+          term: data[`word_${lang}`] || data.word,
           category: data.category,
-          description: data.definition
+          description: data[`definition_${lang}`] || data.definition
         };
       });
       
@@ -43,7 +46,7 @@ export const Lexique: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [i18n.language]);
 
   const filteredData = lexiqueData.filter(item => 
     item.term.toLowerCase().includes(search.toLowerCase()) || 

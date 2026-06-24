@@ -41,12 +41,33 @@ const en = {
   },
 };
 
+// Hausa translations
+const ha = {
+  translation: {
+    welcome: 'Barka da zuwa AsrarHub',
+    selectRole: 'Da fatan za a zaɓi matsayinku (MAI AMFANI ko ADMIN).',
+    userDashboard: 'Lambar kulawa',
+    all: 'Duka',
+    wirds: 'Wirdai',
+    secrets: 'Sirrin Alkur\'ani',
+    recettes: 'Asirai',
+    search: 'Nemo sirri, wird ko asiri...',
+    viewDetail: 'Duba Cikakkun bayanai',
+    favorites: 'Wadanda aka fi so',
+    benefits: 'Amfani',
+    content: 'Abun ciki & Aiki',
+    reference: 'Magana',
+    back: 'Baya'
+  },
+};
+
 i18n
   .use(initReactI18next)
   .init({
     resources: {
       fr,
       en,
+      ha,
     },
     lng: 'fr',
     fallbackLng: 'en',

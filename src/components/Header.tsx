@@ -146,13 +146,18 @@ export const Header: React.FC = () => {
                       <div className="p-4 text-sm text-gray-500 text-center">Aucune notification</div>
                     ) : (
                       <div className="max-h-60 overflow-y-auto">
-                        {notifications.map(notif => (
+                        {notifications.map(notif => {
+                          const lang = i18n.language as 'fr' | 'en' | 'ha';
+                          const title = (notif as any)[`title_${lang}`] || notif.title;
+                          const message = (notif as any)[`message_${lang}`] || notif.message;
+                          return (
                           <div key={notif.id} className="p-3 border-b border-gray-50 dark:border-gray-750 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                            <h4 className="text-xs font-bold text-gray-900 dark:text-white">{notif.title}</h4>
-                            <p className="text-[10px] text-gray-500 mt-0.5">{new Date(notif.date).toLocaleDateString('fr-FR')}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{notif.message}</p>
+                            <h4 className="text-xs font-bold text-gray-900 dark:text-white">{title}</h4>
+                            <p className="text-[10px] text-gray-500 mt-0.5">{new Date(notif.date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US')}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{message}</p>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </motion.div>
@@ -192,6 +197,13 @@ export const Header: React.FC = () => {
                   >
                     <span>English</span>
                     {i18n.language === 'en' && <span className="text-emerald-500 text-xs">●</span>}
+                  </button>
+                  <button 
+                    onClick={() => changeLanguage('ha')} 
+                    className={`px-4 py-2 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-between items-center ${i18n.language === 'ha' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10' : 'text-gray-700 dark:text-gray-200'}`}
+                  >
+                    <span>Hausa</span>
+                    {i18n.language === 'ha' && <span className="text-emerald-500 text-xs">●</span>}
                   </button>
                 </motion.div>
               )}

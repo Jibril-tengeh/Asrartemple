@@ -56,21 +56,35 @@ export const AdminDashboard: React.FC = () => {
 
   // Content State (Mocking Lexique Content Management)
   const [lexiqueTerms, setLexiqueTerms] = useState<Term[]>([]);
-  const [newTerm, setNewTerm] = useState<Partial<Term>>({ word: '', definition: '', category: 'Général' });
+  const [newTerm, setNewTerm] = useState<any>({ 
+    word_fr: '', definition_fr: '', 
+    word_en: '', definition_en: '', 
+    word_ha: '', definition_ha: '', 
+    category: 'Général' 
+  });
 
   // Users State
   const [users, setUsers] = useState<User[]>([]);
 
   // Ruqyah Audio State
   const [ruqyahAudios, setRuqyahAudios] = useState<RuqyahAudio[]>([]);
-  const [newAudio, setNewAudio] = useState<Partial<RuqyahAudio>>({ title: '', url: '', duration: '' });
+  const [newAudio, setNewAudio] = useState<any>({ 
+    title_fr: '', title_en: '', title_ha: '', 
+    url: '', duration: '' 
+  });
 
   // Community State
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
 
   // Notifications State
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [newNotification, setNewNotification] = useState<Partial<Notification>>({ title: '', message: '' });
+  const [newNotification, setNewNotification] = useState<any>({ 
+    title_fr: '', message_fr: '',
+    title_en: '', message_en: '',
+    title_ha: '', message_ha: ''
+  });
+
+  const [activeLangTab, setActiveLangTab] = useState<'fr' | 'en' | 'ha'>('fr');
 
   // Mock Stats
   const stats = [
@@ -120,14 +134,25 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleAddTerm = async () => {
-    if (!newTerm.word || !newTerm.definition) return;
+    if (!newTerm.word_fr || !newTerm.definition_fr) return;
     try {
       await addDoc(collection(db, 'lexique_terms'), {
-        word: newTerm.word,
-        definition: newTerm.definition,
+        word: newTerm.word_fr,
+        word_fr: newTerm.word_fr,
+        word_en: newTerm.word_en,
+        word_ha: newTerm.word_ha,
+        definition: newTerm.definition_fr,
+        definition_fr: newTerm.definition_fr,
+        definition_en: newTerm.definition_en,
+        definition_ha: newTerm.definition_ha,
         category: newTerm.category || 'Général'
       });
-      setNewTerm({ word: '', definition: '', category: 'Général' });
+      setNewTerm({ 
+        word_fr: '', definition_fr: '', 
+        word_en: '', definition_en: '', 
+        word_ha: '', definition_ha: '', 
+        category: 'Général' 
+      });
     } catch (error) {
       console.error("Error adding term", error);
     }
@@ -172,15 +197,21 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleAddAudio = async () => {
-    if (!newAudio.title || !newAudio.url) return;
+    if (!newAudio.title_fr || !newAudio.url) return;
     try {
       await addDoc(collection(db, 'ruqyah_audios'), {
-        title: newAudio.title,
+        title: newAudio.title_fr,
+        title_fr: newAudio.title_fr,
+        title_en: newAudio.title_en,
+        title_ha: newAudio.title_ha,
         url: newAudio.url,
         duration: newAudio.duration || 'Inconnue',
         isActive: true
       });
-      setNewAudio({ title: '', url: '', duration: '' });
+      setNewAudio({ 
+        title_fr: '', title_en: '', title_ha: '', 
+        url: '', duration: '' 
+      });
     } catch (error) {
       console.error("Error adding audio", error);
     }
@@ -221,15 +252,25 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleAddNotification = async () => {
-    if (!newNotification.title || !newNotification.message) return;
+    if (!newNotification.title_fr || !newNotification.message_fr) return;
     try {
       await addDoc(collection(db, 'notifications'), {
-        title: newNotification.title,
-        message: newNotification.message,
+        title: newNotification.title_fr,
+        title_fr: newNotification.title_fr,
+        title_en: newNotification.title_en,
+        title_ha: newNotification.title_ha,
+        message: newNotification.message_fr,
+        message_fr: newNotification.message_fr,
+        message_en: newNotification.message_en,
+        message_ha: newNotification.message_ha,
         date: new Date().toISOString(),
         createdAt: new Date()
       });
-      setNewNotification({ title: '', message: '' });
+      setNewNotification({ 
+        title_fr: '', message_fr: '',
+        title_en: '', message_en: '',
+        title_ha: '', message_ha: ''
+      });
     } catch (error) {
       console.error("Error adding notification", error);
     }
@@ -424,16 +465,39 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  const renderLanguageTabs = () => (
+    <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+      {[
+        { id: 'fr', label: 'Français' },
+        { id: 'en', label: 'English' },
+        { id: 'ha', label: 'Hausa' }
+      ].map(lang => (
+        <button
+          key={lang.id}
+          onClick={() => setActiveLangTab(lang.id as any)}
+          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+            activeLangTab === lang.id
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+              : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          {lang.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const renderRuqyah = () => (
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 className="font-bold text-gray-900 dark:text-white mb-4">Publier un Audio Ruqyah</h3>
+        {renderLanguageTabs()}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
-            placeholder="Titre de l'audio"
-            value={newAudio.title}
-            onChange={(e) => setNewAudio({...newAudio, title: e.target.value})}
+            placeholder={`Titre de l'audio (${activeLangTab.toUpperCase()})`}
+            value={newAudio[`title_${activeLangTab}`] || ''}
+            onChange={(e) => setNewAudio({...newAudio, [`title_${activeLangTab}`]: e.target.value})}
             className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
           <input
@@ -455,7 +519,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
         <button
           onClick={handleAddAudio}
-          disabled={!newAudio.title || !newAudio.url}
+          disabled={!newAudio.title_fr || !newAudio.url}
           className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
         >
           <Plus size={18} /> Publier l'audio
@@ -539,12 +603,13 @@ export const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 className="font-bold text-gray-900 dark:text-white mb-4">Ajouter au Lexique</h3>
+        {renderLanguageTabs()}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
-            placeholder="Mot / Terme"
-            value={newTerm.word}
-            onChange={(e) => setNewTerm({...newTerm, word: e.target.value})}
+            placeholder={`Mot / Terme (${activeLangTab.toUpperCase()})`}
+            value={newTerm[`word_${activeLangTab}`] || ''}
+            onChange={(e) => setNewTerm({...newTerm, [`word_${activeLangTab}`]: e.target.value})}
             className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
           <input
@@ -556,14 +621,14 @@ export const AdminDashboard: React.FC = () => {
           />
         </div>
         <textarea
-          placeholder="Définition"
-          value={newTerm.definition}
-          onChange={(e) => setNewTerm({...newTerm, definition: e.target.value})}
+          placeholder={`Définition (${activeLangTab.toUpperCase()})`}
+          value={newTerm[`definition_${activeLangTab}`] || ''}
+          onChange={(e) => setNewTerm({...newTerm, [`definition_${activeLangTab}`]: e.target.value})}
           className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-24 resize-none mb-4"
         />
         <button
           onClick={handleAddTerm}
-          disabled={!newTerm.word || !newTerm.definition}
+          disabled={!newTerm.word_fr || !newTerm.definition_fr}
           className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
         >
           <Plus size={18} /> Ajouter le terme
@@ -642,23 +707,24 @@ export const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 className="font-bold text-gray-900 dark:text-white mb-4">Envoyer une Notification Globale</h3>
+        {renderLanguageTabs()}
         <div className="space-y-4 mb-6">
           <input
             type="text"
-            placeholder="Titre de la notification"
-            value={newNotification.title}
-            onChange={(e) => setNewNotification({...newNotification, title: e.target.value})}
+            placeholder={`Titre de la notification (${activeLangTab.toUpperCase()})`}
+            value={newNotification[`title_${activeLangTab}`] || ''}
+            onChange={(e) => setNewNotification({...newNotification, [`title_${activeLangTab}`]: e.target.value})}
             className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
           <textarea
-            placeholder="Message (ex: Un nouvel audio de Ruqyah a été ajouté)"
-            value={newNotification.message}
-            onChange={(e) => setNewNotification({...newNotification, message: e.target.value})}
+            placeholder={`Message (${activeLangTab.toUpperCase()})`}
+            value={newNotification[`message_${activeLangTab}`] || ''}
+            onChange={(e) => setNewNotification({...newNotification, [`message_${activeLangTab}`]: e.target.value})}
             className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-24 resize-none"
           />
           <button
             onClick={handleAddNotification}
-            disabled={!newNotification.title || !newNotification.message}
+            disabled={!newNotification.title_fr || !newNotification.message_fr}
             className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
           >
             <Plus size={18} /> Envoyer la notification

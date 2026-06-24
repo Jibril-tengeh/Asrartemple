@@ -257,7 +257,7 @@ export const UserProfile: React.FC = () => {
           <button 
             onClick={() => coverInputRef.current?.click()}
             disabled={uploading}
-            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
+            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-100"
           >
             <Camera size={18} />
           </button>

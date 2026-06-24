@@ -274,18 +274,18 @@ export const Asma: React.FC = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 border border-gray-100 dark:border-gray-700 shadow-sm mb-8">
         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Votre Valeur Numérique (PM)</label>
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <input
             type="number"
             value={val}
             onChange={(e) => setVal(e.target.value)}
             placeholder="Entrez un nombre (Ex: 129)"
-            className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 min-w-0 w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={searchNames}
             disabled={!val}
-            className="h-16 px-8 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white font-bold transition-transform hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+            className="shrink-0 h-[56px] sm:h-16 px-5 sm:px-8 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white font-bold transition-transform hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
           >
             <Search size={20} /> <span className="hidden sm:inline">Calculer</span>
           </button>
