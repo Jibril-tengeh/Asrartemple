@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { signOut, db, auth } from '../../lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 interface Reminder {
@@ -172,6 +172,8 @@ export const UserProfile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [localPhoto, setLocalPhoto] = useState<string | null>(null);
+  const [localCover, setLocalCover] = useState<string | null>(null);
 
   const resizeImage = (file: File, maxWidth: number): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -187,13 +189,20 @@ export const UserProfile: React.FC = () => {
             height = Math.round((height * maxWidth) / width);
             width = maxWidth;
           }
+          if (height > maxWidth) {
+            width = Math.round((width * maxWidth) / height);
+            height = maxWidth;
+          }
           
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           if (ctx) {
+            // Fill with white background to prevent transparent pngs from turning black
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
           } else {
             reject(new Error('Failed to get canvas context'));
           }
@@ -212,20 +221,30 @@ export const UserProfile: React.FC = () => {
 
     try {
       setUploading(true);
+      
+      // Set local preview immediately
+      const objectUrl = URL.createObjectURL(file);
+      if (type === 'profile') setLocalPhoto(objectUrl);
+      else setLocalCover(objectUrl);
+
       // We will just use base64 and save it to firestore directly since it's resized and compressed
-      const base64Image = await resizeImage(file, type === 'profile' ? 400 : 1200);
+      const base64Image = await resizeImage(file, type === 'profile' ? 256 : 800);
+
       
       const userRef = doc(db, 'users', user.uid);
       
       if (type === 'profile') {
-        await updateDoc(userRef, { photoURL: base64Image });
+        await setDoc(userRef, { photoURL: base64Image }, { merge: true });
       } else {
-        await updateDoc(userRef, { coverPhotoURL: base64Image });
+        await setDoc(userRef, { coverPhotoURL: base64Image }, { merge: true });
       }
       
-    } catch (error) {
+      // Reset input so the same file can be selected again
+      event.target.value = '';
+      
+    } catch (error: any) {
       console.error('Error uploading image', error);
-      alert("Erreur lors de l'enregistrement de l'image.");
+      alert("Erreur lors de l'enregistrement de l'image: " + (error.message || ''));
     } finally {
       setUploading(false);
     }
@@ -247,8 +266,8 @@ export const UserProfile: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 mb-8 relative">
         {/* Cover Photo */}
         <div className="h-32 sm:h-48 bg-emerald-100 dark:bg-emerald-900/30 relative group">
-          {user?.coverPhotoURL ? (
-            <img src={user.coverPhotoURL} alt="Cover" className="w-full h-full object-cover" />
+          {(localCover || user?.coverPhotoURL) ? (
+            <img src={localCover || user?.coverPhotoURL || ''} alt="Cover" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center opacity-30">
               <ImageIcon size={48} className="text-emerald-500" />
@@ -257,9 +276,9 @@ export const UserProfile: React.FC = () => {
           <button 
             onClick={() => coverInputRef.current?.click()}
             disabled={uploading}
-            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-100"
+            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-100 disabled:opacity-50"
           >
-            <Camera size={18} />
+            {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={18} />}
           </button>
         </div>
 
@@ -269,8 +288,8 @@ export const UserProfile: React.FC = () => {
             <div className="relative group">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white dark:bg-gray-800 p-1.5 shadow-sm">
                 <div className="w-full h-full rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center overflow-hidden">
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                  {(localPhoto || user?.photoURL) ? (
+                    <img src={localPhoto || user?.photoURL || ''} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <User className="text-emerald-600 dark:text-emerald-300" size={40} />
                   )}
@@ -279,9 +298,9 @@ export const UserProfile: React.FC = () => {
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600 hover:bg-gray-50 transition-colors"
+                className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                <Camera size={16} />
+                {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={16} />}
               </button>
             </div>
             

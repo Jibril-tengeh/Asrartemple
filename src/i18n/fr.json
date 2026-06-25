@@ -426,5 +426,25 @@
     "hijriMatch": "Correspondance Hégirienne",
     "monthOf": "Mois de",
     "conversionError": "Erreur de conversion"
+  },
+  "onboarding": {
+    "langSelect": "Choisis ta langue avant de continuer.",
+    "continue": "Continuer",
+    "getStarted": "Commencer l'exploration",
+    "skip": "Passer",
+    "s1_title": "Bienvenue sur AsrarHub",
+    "s1_desc": "Votre compagnon spirituel numérique. Explorez les secrets mystiques, suivez vos pratiques et élevez votre âme.",
+    "s2_title": "Outils Mystiques Avancés",
+    "s2_desc": "Calculez le poids Abjad, trouvez les heures planétaires, et dévoilez les secrets des lettres et des nombres.",
+    "s3_title": "Journal Spirituel Personnel",
+    "s3_desc": "Gardez une trace de vos Wirds quotidiens, de vos rêves et de vos réflexions intimes en toute sécurité.",
+    "s4_title": "Maîtrise du Temps et de la Lune",
+    "s4_desc": "Synchronisez-vous avec les demeures lunaires et les calendriers spirituels pour des pratiques optimales.",
+    "s5_title": "Sagesse et Apprentissage",
+    "s5_desc": "Plongez dans un lexique ésotérique profond, testez vos connaissances et apprenez des maîtres soufis.",
+    "s6_title": "Une Communauté de Chercheurs",
+    "s6_desc": "Connectez-vous avec d'autres esprits en quête de lumière. Partagez, apprenez et grandissez ensemble.",
+    "s7_title": "Prêt à commencer ?",
+    "s7_desc": "Rejoignez-nous maintenant. La porte des secrets est ouverte pour ceux qui cherchent avec sincérité."
   }
 }

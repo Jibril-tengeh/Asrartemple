@@ -426,5 +426,25 @@
     "hijriMatch": "Daidaiton Hijira",
     "monthOf": "Watan",
     "conversionError": "Kuskuren Canzawa"
+  },
+  "onboarding": {
+    "langSelect": "Zabi yarenka kafin ka ci gaba.",
+    "continue": "Cigaba",
+    "getStarted": "Fara bincike",
+    "skip": "Tsallake",
+    "s1_title": "Barka da zuwa AsrarHub",
+    "s1_desc": "Abokin tafiyarku ta ruhaniya na dijital. Bincika asirin ɓoye, bi diddigin ayyukanku, kuma ɗaukaka ruhinku.",
+    "s2_title": "Manyan Kayan Aikin Asiri",
+    "s2_desc": "Lissafa ƙimar Abjad, nemo lokutan taurari, kuma bayyana asirin haruffa da lambobi.",
+    "s3_title": "Littafin Ruhaniya na Sirri",
+    "s3_desc": "Ci gaba da lura da Wirdinku na yau da kullun, mafarkai, da tunani na sirri a tsanake.",
+    "s4_title": "Kula da Lokaci da Wata",
+    "s4_desc": "Tafi tare da matakan wata da kalandodin ruhaniya don ayyuka mafi kyau.",
+    "s5_title": "Hikima da Ilimi",
+    "s5_desc": "Shiga cikin ƙamus na asiri, gwada iliminku, kuma koya daga malamai Sufaye.",
+    "s6_title": "Al'ummar Masu Nema",
+    "s6_desc": "Haɗa tare da wasu masu neman haske. Raba, koya, kuma ku haɓaka tare.",
+    "s7_title": "Shirye don farawa?",
+    "s7_desc": "Kasance da mu yanzu. Ƙofar asiri a buɗe take ga waɗanda ke nema da gaskiya."
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell } from 'lucide-react';
+import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell, Store } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut, db } from '../lib/firebase';

@@ -44,6 +44,10 @@ import { Community } from './pages/user/Community';
 import { AudioPlayer } from './components/AudioPlayer';
 import { DailyDhikrTracker } from './pages/user/tools/DailyDhikrTracker';
 
+import { Onboarding } from './pages/Onboarding';
+
+import { Store } from './pages/user/Store';
+
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full min-h-[50vh]">
     <h2 className="text-2xl font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
@@ -51,6 +55,10 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 );
 
 export default function App() {
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(
+    localStorage.getItem('hasCompletedOnboarding') === 'true'
+  );
+
   React.useEffect(() => {
     let lastCheckedMinute = -1;
     const interval = setInterval(() => {
@@ -87,6 +95,13 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  if (!hasCompletedOnboarding) {
+    return <Onboarding onComplete={() => {
+      localStorage.setItem('hasCompletedOnboarding', 'true');
+      setHasCompletedOnboarding(true);
+    }} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
       <Header />
@@ -96,6 +111,7 @@ export default function App() {
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/secret/:id" element={<SecretDetail />} />
           <Route path="/explore" element={<ExploreDashboard />} />
+          <Route path="/store" element={<Store />} />
           <Route path="/explore/quizz" element={<Quizz />} />
           <Route path="/explore/lexique" element={<Lexique />} />
           <Route path="/explore/calendar" element={<CalendarConverter />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
@@ -121,6 +121,14 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <Link
+          to="/store"
+          className={`p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 h-[40px] w-[40px] flex items-center justify-center shadow-sm flex-shrink-0 transition-opacity duration-200 ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          title="Store"
+        >
+          <Store size={18} />
+        </Link>
 
         <Link
           to="/tools/quran"

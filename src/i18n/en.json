@@ -426,5 +426,25 @@
     "hijriMatch": "Hijri Match",
     "monthOf": "Month of",
     "conversionError": "Conversion Error"
+  },
+  "onboarding": {
+    "langSelect": "Choose your language before continuing.",
+    "continue": "Continue",
+    "getStarted": "Start exploring",
+    "skip": "Skip",
+    "s1_title": "Welcome to AsrarHub",
+    "s1_desc": "Your digital spiritual companion. Explore mystical secrets, track your practices, and elevate your soul.",
+    "s2_title": "Advanced Mystical Tools",
+    "s2_desc": "Calculate Abjad values, find planetary hours, and unveil the secrets of letters and numbers.",
+    "s3_title": "Personal Spiritual Journal",
+    "s3_desc": "Keep track of your daily Wirds, dreams, and intimate reflections securely.",
+    "s4_title": "Time and Lunar Mastery",
+    "s4_desc": "Synchronize with lunar mansions and spiritual calendars for optimal practices.",
+    "s5_title": "Wisdom and Learning",
+    "s5_desc": "Dive into a deep esoteric lexicon, test your knowledge, and learn from Sufi masters.",
+    "s6_title": "A Community of Seekers",
+    "s6_desc": "Connect with other minds seeking light. Share, learn, and grow together.",
+    "s7_title": "Ready to begin?",
+    "s7_desc": "Join us now. The door of secrets is open for those who seek with sincerity."
   }
 }

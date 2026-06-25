@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Target, Plus, Trash2, CheckCircle2, RotateCcw } from 'lucide-react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface DhikrGoal {
   id: string;

@@ -61,7 +61,9 @@ export const QuranFull: React.FC = () => {
   const [surahHausa, setSurahHausa] = useState<SurahData | null>(null);
   const [loadingSurah, setLoadingSurah] = useState(false);
 
-  const [fontSize, setFontSize] = useState<number>(20);
+  const [fontSize, setFontSize] = useState<number>(() => {
+    return window.innerWidth < 768 ? 14 : 20;
+  });
   const [showArabic, setShowArabic] = useState(true);
   const [showFrench, setShowFrench] = useState(true);
   const [showEnglish, setShowEnglish] = useState(false);

@@ -109,7 +109,7 @@ const allVersesInfo = Array.from(
 const repetitions = [1, 3, 7, 11, 21, 33, 41, 71, 73, 77, 100, 111, 313, 666, 786, 1000];
 
 export const Ruqyah: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [playlists, setPlaylists] = useState<Playlist[]>(defaultRuqyahTypes);
   const [selectedType, setSelectedType] = useState<Playlist | null>(null);
   const [selectedRepetition, setSelectedRepetition] = useState(7);
