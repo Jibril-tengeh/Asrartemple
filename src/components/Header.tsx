@@ -71,10 +71,10 @@ export const Header: React.FC = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-md ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent ${
         scrolled 
-          ? 'bg-white/80 dark:bg-gray-900/80 shadow-sm border-b border-gray-200 dark:border-gray-800 py-3' 
-          : 'bg-white dark:bg-gray-900 border-b border-transparent py-4'
+          ? 'py-3' 
+          : 'py-4'
       } px-6`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">

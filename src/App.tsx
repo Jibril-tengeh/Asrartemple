@@ -105,7 +105,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
       <Header />
-      <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20">
+      <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20 pt-20">
         <Routes>
           <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
           <Route path="/user/dashboard" element={<UserDashboard />} />
