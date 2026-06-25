@@ -2,6 +2,16 @@
   "welcome": "Bienvenue sur AsrarHub",
   "selectRole": "Veuillez sélectionner le rôle (USER ou ADMIN) en promptant pour générer la suite.",
   "userDashboard": "Tableau de bord",
+  "dashboardContent": {
+    "announcement": "Annonce",
+    "announcementTitle": "Nouvelles mises à jour disponibles !",
+    "announcementText": "Découvrez la nouvelle version des outils d'AsrarHub. Le Saint Coran est désormais disponible avec une option de téléchargement pour une lecture hors ligne fluide et rapide.",
+    "topContributors": "Top Contributeurs",
+    "countryMorocco": "Maroc",
+    "countryMali": "Mali",
+    "badgeSage": "Sage",
+    "badgeScholar": "Érudit"
+  },
   "all": "Tout",
   "wirds": "Wirds",
   "secrets": "Secrets du Coran",

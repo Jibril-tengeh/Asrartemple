@@ -2,6 +2,16 @@
   "welcome": "Welcome to AsrarHub",
   "selectRole": "Please select your role (USER or ADMIN) by prompting to generate the rest.",
   "userDashboard": "Dashboard",
+  "dashboardContent": {
+    "announcement": "Announcement",
+    "announcementTitle": "New updates available!",
+    "announcementText": "Discover the new version of AsrarHub tools. The Holy Quran is now available with a download option for smooth and fast offline reading.",
+    "topContributors": "Top Contributors",
+    "countryMorocco": "Morocco",
+    "countryMali": "Mali",
+    "badgeSage": "Sage",
+    "badgeScholar": "Scholar"
+  },
   "all": "All",
   "wirds": "Wirds",
   "secrets": "Quran Secrets",

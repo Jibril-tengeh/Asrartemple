@@ -2,6 +2,16 @@
   "welcome": "Barka da zuwa AsrarHub",
   "selectRole": "Da fatan za a zaɓi rawar ku (USER ko ADMIN).",
   "userDashboard": "Allon gudanarwa",
+  "dashboardContent": {
+    "announcement": "Sanarwa",
+    "announcementTitle": "Sababbin abubuwa sun samu!",
+    "announcementText": "Gano sabon sigar kayan aikin AsrarHub. Al-Kur'ani Mai Girma yanzu yana nan tare da zaɓin saukewa don karatu ba tare da intanet ba cikin sauƙi da sauri.",
+    "topContributors": "Mafi Yawancin Masu Taimako",
+    "countryMorocco": "Morocco",
+    "countryMali": "Mali",
+    "badgeSage": "Malami",
+    "badgeScholar": "Masanin"
+  },
   "all": "Duka",
   "wirds": "Wuridai",
   "secrets": "Sirrin Alqur'ani",

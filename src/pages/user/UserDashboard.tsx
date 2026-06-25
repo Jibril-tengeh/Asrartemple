@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
@@ -90,6 +90,64 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
+      {/* Banner Section */}
+      <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Annonce Board */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-900 dark:to-teal-900 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden text-white">
+          <div className="absolute top-0 right-0 p-4 opacity-20">
+            <Megaphone size={100} />
+          </div>
+          <div className="relative z-10 flex flex-col h-full justify-center">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider backdrop-blur-sm">{t('dashboardContent.announcement', 'Annonce')}</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('dashboardContent.announcementTitle', 'Nouvelles mises à jour disponibles !')}</h3>
+            <p className="text-emerald-50 dark:text-emerald-100 max-w-lg text-sm sm:text-base">
+              {t('dashboardContent.announcementText', 'Découvrez la nouvelle version des outils d\'AsrarHub. Le Saint Coran est désormais disponible avec une option de téléchargement pour une lecture hors ligne fluide et rapide.')}
+            </p>
+          </div>
+        </div>
+
+        {/* Top Contributors */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Trophy className="text-amber-500" size={18} /> {t('dashboardContent.topContributors', 'Top Contributeurs')}
+            </h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
+                AH
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Ahmad Hassan</h4>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <MapPin size={10} /> <span>{t('dashboardContent.countryMorocco', 'Maroc')}</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md"><ShieldCheck size={10}/> {t('dashboardContent.badgeSage', 'Sage')}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
+                MK
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Moussa Koné</h4>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <MapPin size={10} /> <span>{t('dashboardContent.countryMali', 'Mali')}</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-md"><Award size={10}/> {t('dashboardContent.badgeScholar', 'Érudit')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 flex justify-end items-center gap-2 relative min-h-[40px]">
         <AnimatePresence>
           {isSearchOpen && (

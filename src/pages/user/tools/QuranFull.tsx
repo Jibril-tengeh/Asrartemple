@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X } from 'lucide-react';
+import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
+import { get, set } from 'idb-keyval';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -62,7 +63,7 @@ export const QuranFull: React.FC = () => {
   const [loadingSurah, setLoadingSurah] = useState(false);
 
   const [fontSize, setFontSize] = useState<number>(() => {
-    return window.innerWidth < 768 ? 14 : 20;
+    return window.innerWidth < 768 ? 8 : 20;
   });
   const [showArabic, setShowArabic] = useState(true);
   const [showFrench, setShowFrench] = useState(true);
@@ -76,8 +77,69 @@ export const QuranFull: React.FC = () => {
   const [playingAyah, setPlayingAyah] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoPlayNext, setAutoPlayNext] = useState(true);
+  const ROQYA_REPEAT_COUNTS = [0, 3, 7, 11, 21, 33, 41, 70, 71, 73, 111, 313, 666, 777, 786, 1000, 1111];
+  const [repeatCount, setRepeatCount] = useState<number>(0);
+  const repeatLeftRef = useRef<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ayahRefs = useRef<{[key: number]: HTMLDivElement | null}>({});
+  
+  const [downloadingOffline, setDownloadingOffline] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+
+  const fetchWithCache = async (url: string) => {
+    try {
+      const cached = await get(url);
+      if (cached) return cached;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.code === 200) {
+        await set(url, data);
+      }
+      return data;
+    } catch (err) {
+      const cached = await get(url);
+      if (cached) return cached;
+      throw err;
+    }
+  };
+
+  const downloadForOffline = async () => {
+    setDownloadingOffline(true);
+    setDownloadProgress(0);
+    try {
+      const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
+      const editions = [
+        reciterApiId,
+        'fr.hamidullah',
+        'en.sahih',
+        'ha.gumi'
+      ];
+      
+      const metaData = await fetchWithCache('https://api.alquran.cloud/v1/surah');
+      
+      for (let s = 1; s <= 114; s++) {
+        // Fetch each surah for each edition
+        const promises = editions.map(edition => 
+          fetchWithCache(`https://api.alquran.cloud/v1/surah/${s}/${edition}`)
+        );
+        
+        // Wait for all editions of the current surah to finish
+        await Promise.all(promises);
+        
+        // Update progress
+        setDownloadProgress(Math.round((s / 114) * 100));
+      }
+      
+      alert('Téléchargement terminé. Le Coran est maintenant disponible hors ligne.');
+    } catch (err) {
+      console.error('Download error:', err);
+      alert('Erreur lors du téléchargement. Veuillez vérifier votre connexion.');
+    } finally {
+      setDownloadingOffline(false);
+      setDownloadProgress(0);
+    }
+  };
 
   const getArabicStyle = () => {
     return { fontSize: `${15 + fontSize}px`, lineHeight: '2.2' };
@@ -90,9 +152,8 @@ export const QuranFull: React.FC = () => {
   useEffect(() => {
     const fetchSurahs = async () => {
       try {
-        const response = await fetch('https://api.alquran.cloud/v1/surah');
-        const data = await response.json();
-        if (data.code === 200) {
+        const data = await fetchWithCache('https://api.alquran.cloud/v1/surah');
+        if (data && data.code === 200) {
           setSurahs(data.data);
         } else {
           setError('Erreur lors du chargement des sourates.');
@@ -119,10 +180,9 @@ export const QuranFull: React.FC = () => {
   useEffect(() => {
     if (activeSurah) {
       const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
-      fetch(`https://api.alquran.cloud/v1/surah/${activeSurah}/${reciterApiId}`)
-        .then(res => res.json())
+      fetchWithCache(`https://api.alquran.cloud/v1/surah/${activeSurah}/${reciterApiId}`)
         .then(data => {
-          if (data.code === 200) {
+          if (data && data.code === 200) {
             setSurahArabic(data.data);
           }
         })
@@ -130,17 +190,22 @@ export const QuranFull: React.FC = () => {
     }
   }, [selectedReciterId]);
 
-  const playAudio = (ayah: Ayah) => {
+  const playAudio = (ayah: Ayah, isRepeat = false) => {
     if (!ayah.audio) return;
     
     if (audioRef.current) {
       audioRef.current.pause();
     }
 
-    if (playingAyah === ayah.number && isPlaying) {
+    if (!isRepeat && playingAyah === ayah.number && isPlaying) {
       setIsPlaying(false);
       setPlayingAyah(null);
+      repeatLeftRef.current = 0;
       return;
+    }
+
+    if (!isRepeat) {
+      repeatLeftRef.current = repeatCount > 0 ? repeatCount - 1 : 0;
     }
 
     const audio = new Audio(ayah.audio);
@@ -153,7 +218,7 @@ export const QuranFull: React.FC = () => {
         setPlayingAyah(ayah.number);
         
         // Auto-scroll to active ayah
-        if (ayahRefs.current[ayah.number]) {
+        if (ayahRefs.current[ayah.number] && !isRepeat) {
           ayahRefs.current[ayah.number]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }).catch(err => {
@@ -164,11 +229,17 @@ export const QuranFull: React.FC = () => {
     }
 
     audio.onended = () => {
+      if (repeatLeftRef.current > 0) {
+        repeatLeftRef.current -= 1;
+        playAudio(ayah, true);
+        return;
+      }
+
       if (autoPlayNext && surahArabic) {
         const currentIndex = surahArabic.ayahs.findIndex(a => a.number === ayah.number);
         if (currentIndex !== -1 && currentIndex < surahArabic.ayahs.length - 1) {
           const nextAyah = surahArabic.ayahs[currentIndex + 1];
-          playAudio(nextAyah);
+          playAudio(nextAyah, false);
         } else {
           setIsPlaying(false);
           setPlayingAyah(null);
@@ -196,22 +267,17 @@ export const QuranFull: React.FC = () => {
       }
 
       const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
-      const [arRes, frRes, enRes, haRes] = await Promise.all([
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/${reciterApiId}`),
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/fr.hamidullah`),
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/en.sahih`),
-        fetch(`https://api.alquran.cloud/v1/surah/${number}/ha.gumi`)
+      const [arData, frData, enData, haData] = await Promise.all([
+        fetchWithCache(`https://api.alquran.cloud/v1/surah/${number}/${reciterApiId}`),
+        fetchWithCache(`https://api.alquran.cloud/v1/surah/${number}/fr.hamidullah`),
+        fetchWithCache(`https://api.alquran.cloud/v1/surah/${number}/en.sahih`),
+        fetchWithCache(`https://api.alquran.cloud/v1/surah/${number}/ha.gumi`)
       ]);
       
-      const arData = await arRes.json();
-      const frData = await frRes.json();
-      const enData = await enRes.json();
-      const haData = await haRes.json();
-      
-      if (arData.code === 200) setSurahArabic(arData.data);
-      if (frData.code === 200) setSurahFrench(frData.data);
-      if (enData.code === 200) setSurahEnglish(enData.data);
-      if (haData.code === 200) setSurahHausa(haData.data);
+      if (arData && arData.code === 200) setSurahArabic(arData.data);
+      if (frData && frData.code === 200) setSurahFrench(frData.data);
+      if (enData && enData.code === 200) setSurahEnglish(enData.data);
+      if (haData && haData.code === 200) setSurahHausa(haData.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -359,46 +425,67 @@ export const QuranFull: React.FC = () => {
                  </p>
                </div>
              )}
-
-             <div className="flex flex-wrap items-center justify-center gap-2">
-               {surahArabic && (
-                 <>
-                   <button 
-                     onClick={() => {
-                       if (isPlaying && playingAyah) {
-                         if (audioRef.current) audioRef.current.pause();
-                         setIsPlaying(false);
-                         setPlayingAyah(null);
-                       } else if (surahArabic.ayahs.length > 0) {
-                         playAudio(surahArabic.ayahs[0]);
-                       }
-                     }}
-                     className={`px-3 py-2 rounded-xl transition-colors shadow-sm border flex items-center gap-2 text-sm font-medium ${isPlaying ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'}`}
-                     title={isPlaying ? "Mettre en pause la lecture par verset" : "Lecture par verset (suivie)"}
-                   >
-                     {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-                     <span className="hidden sm:inline">Verset</span>
-                   </button>
-                   
-                   <button 
-                     onClick={playGlobalSurah}
-                     className={`px-3 py-2 rounded-xl transition-colors shadow-sm border flex items-center gap-2 text-sm font-medium ${currentTrack?.id === `surah-${activeSurah}-${selectedReciterId}` && globalIsPlaying ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-gray-200 text-gray-700 hover:text-emerald-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-emerald-400'}`}
-                     title="Écouter la sourate en arrière-plan"
-                   >
-                     {currentTrack?.id === `surah-${activeSurah}-${selectedReciterId}` && globalIsPlaying ? <Pause size={18} /> : <Headphones size={18} />}
-                     <span className="hidden sm:inline">Arrière-plan</span>
-                   </button>
-                 </>
-               )}
-
-               <button 
-                 onClick={() => setShowSettings(true)}
-                 className={`p-2 rounded-xl transition-colors shadow-sm border bg-white border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300`}
-               >
-                 <Settings size={20} />
-               </button>
-             </div>
            </div>
+
+           {/* Floating Action Bar */}
+           <motion.div 
+             initial={{ opacity: 0, y: 50, x: '-50%' }}
+             animate={{ opacity: 1, y: 0, x: '-50%' }}
+             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+             className="fixed bottom-6 left-1/2 z-50 flex items-center justify-center gap-2 p-2 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-xl"
+           >
+             {surahArabic && (
+               <>
+                 <button 
+                   onClick={() => {
+                     if (isPlaying && playingAyah) {
+                       if (audioRef.current) audioRef.current.pause();
+                       setIsPlaying(false);
+                       setPlayingAyah(null);
+                     } else if (surahArabic.ayahs.length > 0) {
+                       playAudio(surahArabic.ayahs[0]);
+                     }
+                   }}
+                   className={`p-3 rounded-xl transition-all shadow-sm flex items-center justify-center ${isPlaying ? 'bg-emerald-500 text-white' : 'bg-white/50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800'}`}
+                   title={isPlaying ? "Mettre en pause la lecture par verset" : "Lecture par verset (suivie)"}
+                 >
+                   {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                 </button>
+                 
+                 <button 
+                   onClick={playGlobalSurah}
+                   className={`p-3 rounded-xl transition-all shadow-sm flex items-center justify-center ${currentTrack?.id === `surah-${activeSurah}-${selectedReciterId}` && globalIsPlaying ? 'bg-emerald-600 text-white' : 'bg-white/50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+                   title="Écouter la sourate en arrière-plan"
+                 >
+                   {currentTrack?.id === `surah-${activeSurah}-${selectedReciterId}` && globalIsPlaying ? <Pause size={20} /> : <Headphones size={20} />}
+                 </button>
+               </>
+             )}
+
+             <button 
+               onClick={downloadForOffline}
+               disabled={downloadingOffline || downloadProgress === 100}
+               className={`p-3 rounded-xl transition-all shadow-sm flex items-center justify-center ${downloadProgress === 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-white/50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+               title="Télécharger le Coran pour hors ligne"
+             >
+               {downloadProgress > 0 && downloadProgress < 100 ? (
+                 <span className="text-[10px] font-bold w-5 h-5 flex items-center justify-center leading-none">{downloadProgress}%</span>
+               ) : downloadProgress === 100 ? (
+                 <Check size={20} />
+               ) : downloadingOffline ? (
+                 <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+               ) : (
+                 <Download size={20} />
+               )}
+             </button>
+
+             <button 
+               onClick={() => setShowSettings(true)}
+               className={`p-3 rounded-xl transition-all shadow-sm flex items-center justify-center bg-white/50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800`}
+             >
+               <Settings size={20} />
+             </button>
+           </motion.div>
 
            <AnimatePresence>
              {showSettings && (
@@ -470,6 +557,28 @@ export const QuranFull: React.FC = () => {
                          <button onClick={() => setShowHausa(!showHausa)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${showHausa ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}>
                            Hausa
                          </button>
+                       </div>
+                     </div>
+
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                         <Volume2 size={18} className="text-emerald-500" /> Mode Roqya (Répétition)
+                       </label>
+                       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+                         <div className="flex flex-col gap-3">
+                           <p className="text-sm text-gray-600 dark:text-gray-400">Répéter chaque verset (utile pour la roqya et la mémorisation) :</p>
+                           <div className="flex flex-wrap gap-2">
+                             {ROQYA_REPEAT_COUNTS.map(count => (
+                               <button
+                                 key={count}
+                                 onClick={() => setRepeatCount(count)}
+                                 className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-colors ${repeatCount === count ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:border-emerald-300'}`}
+                               >
+                                 {count === 0 ? 'Aucune' : `${count}x`}
+                               </button>
+                             ))}
+                           </div>
+                         </div>
                        </div>
                      </div>
 
