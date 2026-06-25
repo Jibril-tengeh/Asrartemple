@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ArrowLeft, RefreshCw, Volume2, VolumeX, Settings, Target, Save, History as HistoryIcon, Plus, Trash2, Check, ChevronDown, ChevronRight, BarChart2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Zikr {
@@ -34,6 +35,7 @@ interface SessionHistory {
 }
 
 export const Tasbih: React.FC = () => {
+  const { t } = useLanguage();
   const [customZikrs, setCustomZikrs] = useState<Zikr[]>([]);
   const [allZikrs, setAllZikrs] = useState<Zikr[]>(DEFAULT_ZIKRS);
   
@@ -450,7 +452,7 @@ export const Tasbih: React.FC = () => {
            
           <div className="flex justify-center pb-4">
              <button onClick={() => setActiveTab('main')} className="px-6 py-3 bg-emerald-500 text-white rounded-full font-bold shadow-sm shadow-emerald-500/30">
-               Retour au compteur
+               {t("common.back")} au compteur
              </button>
           </div>
         </motion.div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Flame, Droplets, Wind, Mountain, ArrowLeft, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 const ELEMENTS = {
@@ -47,6 +48,7 @@ const ELEMENTS = {
 };
 
 export const ElementalAnalyzer: React.FC = () => {
+  const { t } = useLanguage();
   const [input, setInput] = useState('');
   
   const analyze = () => {
@@ -74,15 +76,13 @@ export const ElementalAnalyzer: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium mb-4">
           <ArrowLeft className="mr-2" size={20} />
-          Retour aux Outils
+          {t("common.backToTools")}
         </Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Flame className="text-red-500" />
           Analyseur Élémentaire (Tabai' al-Huruf)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Découvrez la nature élémentaire d'un nom ou d'un vœu pour savoir comment orienter votre pratique spirituelle (Feu, Terre, Air, Eau).
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.elemental.description")}</p>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm mb-8">

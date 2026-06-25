@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Key, ArrowLeft, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 export const Talsam: React.FC = () => {
+  const { t } = useLanguage();
   const [intention, setIntention] = useState('');
   const [talsam, setTalsam] = useState('');
 
@@ -41,7 +43,7 @@ export const Talsam: React.FC = () => {
             <Key className="text-slate-600" />
             Générateur de Talsam
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Noms de pouvoir (Rouhâniyât) cryptés</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.talsam.description")}</p>
         </div>
       </div>
 

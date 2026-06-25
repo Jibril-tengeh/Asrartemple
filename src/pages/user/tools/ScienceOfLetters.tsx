@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Type, ArrowLeft, Moon, Star, Wind, Flame, Droplets, Mountain, Key, Shield, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 const LETTERS_DATA = [
@@ -35,6 +36,7 @@ const LETTERS_DATA = [
 ];
 
 export const ScienceOfLetters: React.FC = () => {
+  const { t } = useLanguage();
   const [selectedLetter, setSelectedLetter] = useState<any | null>(null);
 
   const getElementIcon = (element: string) => {
@@ -52,15 +54,13 @@ export const ScienceOfLetters: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium mb-4">
           <ArrowLeft className="mr-2" size={20} />
-          Retour aux Outils
+          {t("common.backToTools")}
         </Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Type className="text-emerald-500" />
           Science des Lettres (Sirr al-Huruf)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Dictionnaire interactif profond pour les 28 lettres de l'alphabet arabe. Découvrez leurs anges, démons, encens et secrets mystiques.
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.letters.description")}</p>
       </div>
 
       <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-3 mb-8" dir="rtl">

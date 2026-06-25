@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Shield, Key, Search, ArrowLeft, RefreshCw, Sparkles, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 import { calculateAbjadValue } from '../../../utils/abjad';
 import { ASMA_AL_HUSNA } from '../../../utils/asmaData';
@@ -12,6 +13,7 @@ interface MatchResult {
 }
 
 export const PersonalWird: React.FC = () => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [motherName, setMotherName] = useState('');
   const [result, setResult] = useState<MatchResult | null>(null);
@@ -81,15 +83,13 @@ export const PersonalWird: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium transition-colors">
           <ArrowLeft size={20} className="mr-2" />
-          Retour au tableau de bord
+          {t("common.back")} au tableau de bord
         </Link>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Sparkles className="text-emerald-500" size={32} />
           Générateur de Wird Personnalisé (Istikhraj)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Calculez votre Poids Mystique (Abjad) et découvrez le Zikr spécifique qui correspond exactement à votre essence.
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.personal-wird.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -143,7 +143,7 @@ export const PersonalWird: React.FC = () => {
                 ) : (
                   <>
                     <Key size={20} />
-                    Calculer mon Wird
+                    {t("common.calculate")} mon Wird
                   </>
                 )}
               </button>

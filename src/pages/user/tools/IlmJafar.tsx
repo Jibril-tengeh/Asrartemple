@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Key, ArrowLeft, RefreshCw, Sparkles, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 const JAFAR_RESPONSES = [
@@ -14,6 +15,7 @@ const JAFAR_RESPONSES = [
 ];
 
 export const IlmJafar: React.FC = () => {
+  const { t } = useLanguage();
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<{
     original: string[];
@@ -69,15 +71,13 @@ export const IlmJafar: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4 font-medium transition-colors">
           <ArrowLeft size={20} className="mr-2" />
-          Retour au tableau de bord
+          {t("common.back")} au tableau de bord
         </Link>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Key className="text-purple-500" size={32} />
           Oracle de l'Imam Ali (Ilm al-Jafar)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          La science de divination suprême par l'extraction et la fracturation des lettres (Taksir).
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.ilm-jafar.description")}</p>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">

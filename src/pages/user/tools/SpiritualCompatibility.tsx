@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Scale, Users, Heart, ArrowLeft, RefreshCw, Flame, Droplets, Wind, Mountain, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 import { calculateAbjadValue } from '../../../utils/abjad';
 
@@ -24,6 +25,7 @@ const BUNI_RESULTS: Record<number, { title: string, desc: string, type: 'good' |
 };
 
 export const SpiritualCompatibility: React.FC = () => {
+  const { t } = useLanguage();
   const [name1, setName1] = useState('');
   const [name2, setName2] = useState('');
   const [result, setResult] = useState<{
@@ -89,15 +91,13 @@ export const SpiritualCompatibility: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-rose-600 hover:text-rose-700 mb-4 font-medium transition-colors">
           <ArrowLeft size={20} className="mr-2" />
-          Retour au tableau de bord
+          {t("common.back")} au tableau de bord
         </Link>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Scale className="text-rose-500" size={32} />
           Compatibilité Spirituelle (Tawafuq)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          La Règle de l'Imam Al-Buni pour analyser l'entente entre deux personnes (Mariage, Affaires, Partenariat).
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.spiritual-compatibility.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -150,7 +150,7 @@ export const SpiritualCompatibility: React.FC = () => {
                 ) : (
                   <>
                     <Scale size={20} />
-                    Calculer le Tawafuq
+                    {t("common.calculate")} le Tawafuq
                   </>
                 )}
               </button>
@@ -165,7 +165,7 @@ export const SpiritualCompatibility: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              {/* Résultat Principal */}
+              {/* {t("common.result")} Principal */}
               <div className={`rounded-2xl p-6 shadow-md border ${
                 BUNI_RESULTS[result.remainder].type === 'good' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
                 BUNI_RESULTS[result.remainder].type === 'bad' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :

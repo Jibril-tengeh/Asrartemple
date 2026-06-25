@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle, Target, Lightbulb, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const tools = [
   // Simple Tools
@@ -271,6 +272,7 @@ const tools = [
 ];
 
 export const ToolsDashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
@@ -346,10 +348,10 @@ export const ToolsDashboard: React.FC = () => {
       <div className="mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Compass className="text-emerald-500" />
-          Outils Mystiques
+          {t('toolsDashboard.title')}
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Des outils puissants et professionnels réservés aux initiés de la science des secrets.
+          {t('toolsDashboard.description')}
         </p>
       </div>
 
@@ -359,13 +361,13 @@ export const ToolsDashboard: React.FC = () => {
           onClick={() => setActiveTab('simple')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'simple' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          Outils Simples
+          {t('toolsDashboard.simpleTools')}
         </button>
         <button
           onClick={() => setActiveTab('advanced')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'advanced' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          Outils Avancés
+          {t('toolsDashboard.advancedTools')}
         </button>
       </div>
 
@@ -465,7 +467,7 @@ export const ToolsDashboard: React.FC = () => {
                     <tool.icon size={20} />
                   </div>
                   <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
-                    {tool.title}
+                    {t(`tools.${tool.id}.title`) !== `tools.${tool.id}.title` ? t(`tools.${tool.id}.title`) : tool.title}
                     {tool.comingSoon && (
                       <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
                         Bientôt
@@ -475,7 +477,7 @@ export const ToolsDashboard: React.FC = () => {
                 </div>
                 
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors line-clamp-3">
-                  {tool.description}
+                  {t(`tools.${tool.id}.description`) !== `tools.${tool.id}.description` ? t(`tools.${tool.id}.description`) : tool.description}
                 </p>
               </div>
             </div>

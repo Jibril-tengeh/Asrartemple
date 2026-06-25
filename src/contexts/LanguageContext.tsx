@@ -8,7 +8,7 @@ type Language = 'fr' | 'en' | 'ha';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, defaultValue?: string) => string;
 }
 
 const translations: Record<Language, any> = {
@@ -39,25 +39,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('language', lang);
   };
 
-  const t = (key: string): string => {
+  const t = (key: string, defaultValue?: string): string => {
     const keys = key.split('.');
     let value = translations[language];
     for (const k of keys) {
-      if (value[k] === undefined) {
+      if (!value || value[k] === undefined) {
         // Fallback to English if key doesn't exist
         let fallbackValue = translations['en'];
         for (const fbK of keys) {
           if (fallbackValue && fallbackValue[fbK] !== undefined) {
             fallbackValue = fallbackValue[fbK];
           } else {
-            return key; // return key if not found
+            return defaultValue || key; // return defaultValue or key if not found
           }
         }
-        return fallbackValue as unknown as string;
+        return (fallbackValue as unknown as string) || defaultValue || key;
       }
       value = value[k];
     }
-    return value as unknown as string;
+    return (value as unknown as string) || defaultValue || key;
   };
 
   useEffect(() => {

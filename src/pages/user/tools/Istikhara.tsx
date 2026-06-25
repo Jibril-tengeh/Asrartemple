@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Compass, ArrowLeft, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 export const Istikhara: React.FC = () => {
+  const { t } = useLanguage();
   const [intention, setIntention] = useState('');
   const [result, setResult] = useState<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -58,7 +60,7 @@ export const Istikhara: React.FC = () => {
             <Compass className="text-teal-500" />
             Istikhara Numérique
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Consultation spirituelle basée sur l'Abjad</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.istikhara.description")}</p>
         </div>
       </div>
 

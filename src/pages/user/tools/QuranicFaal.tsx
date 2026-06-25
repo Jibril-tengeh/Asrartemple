@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, BookOpen, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Selected verses for Quranic Istikhara/Faal based on traditional tables
@@ -15,6 +16,7 @@ const faalOutcomes = [
 ];
 
 export const QuranicFaal: React.FC = () => {
+  const { t } = useLanguage();
   const [intention, setIntention] = useState('');
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState<typeof faalOutcomes[0] | null>(null);
@@ -47,7 +49,7 @@ export const QuranicFaal: React.FC = () => {
             <BookOpen className="text-blue-600" />
             Istikhara Coranique (Faal)
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">Consultation mystique par l'ouverture du Saint Coran</p>
+          <p className="text-gray-500 dark:text-gray-400">{t("tools.quranic-faal.description")}</p>
         </div>
       </div>
 

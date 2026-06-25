@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Star, ArrowLeft, RefreshCw, Calculator, Grid, Type } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { calculateAbjadValue } from '../../../utils/abjad';
 
 export const KhatimGenerator: React.FC = () => {
+  const { t } = useLanguage();
   const [inputText, setInputText] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '4x4'>('3x3');
   const [grid, setGrid] = useState<number[][] | null>(null);
@@ -114,7 +116,7 @@ export const KhatimGenerator: React.FC = () => {
             <Star className="text-purple-500" />
             Générateur de Khatim Dynamique
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Créez des carrés magiques parfaits (Awfaq)</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.khatim.description")}</p>
         </div>
       </div>
 

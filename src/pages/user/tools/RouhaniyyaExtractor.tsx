@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Layers, ArrowLeft, Info, Wand2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const RouhaniyyaExtractor: React.FC = () => {
+  const { t } = useLanguage();
   const [number, setNumber] = useState('');
   const [result, setResult] = useState<{ celestial: string, terrestrial: string, letters: string } | null>(null);
 
@@ -75,7 +77,7 @@ export const RouhaniyyaExtractor: React.FC = () => {
             <Layers className="text-fuchsia-500" />
             Extracteur Rouhaniyya
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Extraction des Serviteurs Spirituels (Khuddam)</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.rouhaniyya.description")}</p>
         </div>
       </div>
 

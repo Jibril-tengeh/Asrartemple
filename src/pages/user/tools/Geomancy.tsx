@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Compass, ArrowLeft, RefreshCw, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Geomancy logic simplified
@@ -13,6 +14,7 @@ const HOUSES = [
 ];
 
 export const Geomancy: React.FC = () => {
+  const { t } = useLanguage();
   const [figures, setFigures] = useState<number[][]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -72,15 +74,13 @@ export const Geomancy: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium mb-4">
           <ArrowLeft className="mr-2" size={20} />
-          Retour aux Outils
+          {t("common.backToTools")}
         </Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Layers className="text-amber-500" />
           Géomancie (Khatt ar-Raml)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Consultation géomantique par le tracé sur le sable.
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.geomancy.description")}</p>
       </div>
 
       <div className="flex justify-center mb-12">
@@ -90,7 +90,7 @@ export const Geomancy: React.FC = () => {
           className="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold py-4 px-8 rounded-2xl shadow-sm flex items-center gap-2 transition-all"
         >
           <RefreshCw size={20} className={isGenerating ? "animate-spin" : ""} />
-          {isGenerating ? "Consultation du sable..." : "Générer le thème"}
+          {isGenerating ? "Consultation du sable..." : t("common.generate") + " le thème"}
         </button>
       </div>
 

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Coins, ArrowLeft, RefreshCw, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const ZakatCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [gold, setGold] = useState('');
   const [silver, setSilver] = useState('');
   const [cash, setCash] = useState('');

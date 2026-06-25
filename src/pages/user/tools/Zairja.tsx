@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Hexagon, ArrowLeft, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Zairja: React.FC = () => {
+  const { t } = useLanguage();
   const [question, setQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [answer, setAnswer] = useState<{ crypted: string; clear: string } | null>(null);
@@ -78,7 +80,7 @@ export const Zairja: React.FC = () => {
             <Hexagon className="text-zinc-600 dark:text-zinc-400" />
             Oracle Zairja
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">L'intelligence artificielle millénaire des soufis</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.zairja.description")}</p>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Book, Plus, Calendar, CheckCircle2, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface JournalEntry {
   id: string;
@@ -12,6 +13,7 @@ interface JournalEntry {
 }
 
 export const Journal: React.FC = () => {
+  const { t, language } = useLanguage();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [currentThoughts, setCurrentThoughts] = useState('');
@@ -73,8 +75,8 @@ export const Journal: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen relative">
       <div className="mb-8">
-        <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Journal Spirituel</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Réflexions, wirds et progression</p>
+        <h1 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">{t('journal.title')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('journal.subtitle')}</p>
       </div>
 
       <AnimatePresence>
@@ -85,21 +87,21 @@ export const Journal: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700 mb-8"
           >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Nouvelle Entrée</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t('journal.newEntry')}</h2>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Wirds accomplis</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('journal.wirdsCompleted')}</label>
                 <div className="flex gap-2 mb-2">
                   <input
                     type="text"
                     value={wirdInput}
                     onChange={(e) => setWirdInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addWird()}
-                    placeholder="Ex: Hizb al-Bahr (1x)"
+                    placeholder={t('journal.wirdsPlaceholder')}
                     className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                   />
-                  <button onClick={addWird} className="shrink-0 bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-sm hover:bg-emerald-200 transition-colors">Ajouter</button>
+                  <button onClick={addWird} className="shrink-0 bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-sm hover:bg-emerald-200 transition-colors">{t('common.add')}</button>
                 </div>
                 {currentWirds.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -113,22 +115,22 @@ export const Journal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Progrès Asrar & Études</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('journal.progressLabel')}</label>
                 <input
                   type="text"
                   value={currentProgress}
                   onChange={(e) => setCurrentProgress(e.target.value)}
-                  placeholder="Ex: Étude du Khassiyya de la Fatiha terminée."
+                  placeholder={t('journal.progressPlaceholder')}
                   className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Réflexions & États (Ahwal)</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t('journal.thoughtsLabel')}</label>
                 <textarea
                   value={currentThoughts}
                   onChange={(e) => setCurrentThoughts(e.target.value)}
-                  placeholder="Vos pensées, rêves, ou états spirituels..."
+                  placeholder={t('journal.thoughtsPlaceholder')}
                   className="w-full h-32 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 resize-none"
                 ></textarea>
               </div>
@@ -138,13 +140,13 @@ export const Journal: React.FC = () => {
                   onClick={() => setIsEditorOpen(false)}
                   className="px-5 py-2.5 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button 
                   onClick={saveEntry}
                   className="px-5 py-2.5 rounded-xl font-bold bg-emerald-600 text-white flex items-center gap-2 hover:bg-emerald-700 transition-colors"
                 >
-                  <Save size={18} /> Sauvegarder
+                  <Save size={18} /> {t('common.save')}
                 </button>
               </div>
             </div>
@@ -156,8 +158,8 @@ export const Journal: React.FC = () => {
         {entries.length === 0 && !isEditorOpen && (
           <div className="text-center py-12">
             <Book size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Votre journal est vide.</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Commencez à noter vos accomplissements spirituels.</p>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">{t('journal.emptyJournal')}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('journal.emptyJournalSub')}</p>
           </div>
         )}
 
@@ -170,12 +172,12 @@ export const Journal: React.FC = () => {
           >
             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium mb-4">
               <Calendar size={16} />
-              {new Date(entry.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date(entry.date).toLocaleDateString(language === 'ha' ? 'ha-NG' : (language === 'en' ? 'en-US' : 'fr-FR'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
             
             {entry.wirdsCompleted.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">Wirds</h4>
+                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.wirdsLabel')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {entry.wirdsCompleted.map((wird, idx) => (
                     <span key={idx} className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-800/30">
@@ -188,14 +190,14 @@ export const Journal: React.FC = () => {
 
             {entry.progress && (
               <div className="mb-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
-                 <h4 className="text-xs uppercase tracking-widest font-bold text-blue-500 mb-1">Études</h4>
+                 <h4 className="text-xs uppercase tracking-widest font-bold text-blue-500 mb-1">{t('journal.studies')}</h4>
                  <p className="text-sm text-gray-800 dark:text-gray-200">{entry.progress}</p>
               </div>
             )}
 
             {entry.thoughts && (
               <div>
-                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">Réflexions</h4>
+                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.reflections')}</h4>
                 <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-serif">
                   {entry.thoughts}
                 </p>

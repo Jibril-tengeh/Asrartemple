@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, ArrowLeft, RefreshCw, Copy, Check, ChevronDown, ChevronUp, History, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Simplified Abjad table mapping (Standard/Eastern)
@@ -22,6 +23,7 @@ const abjadMaghribi: Record<string, number> = {
 };
 
 export const AbjadCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [text, setText] = useState('');
   const [copied, setCopied] = useState(false);
   const [showWords, setShowWords] = useState(false);
@@ -119,7 +121,7 @@ export const AbjadCalculator: React.FC = () => {
               <Calculator className="text-blue-500" />
               Abjad
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Calculateur de valeur numérique</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.abjad.subtitle")}</p>
           </div>
         </div>
       </div>
@@ -133,7 +135,7 @@ export const AbjadCalculator: React.FC = () => {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Ex: بسم الله الرحمن الرحيم"
+            placeholder={t("tools.abjad.inputPlaceholder")}
             dir="rtl"
             rows={4}
             className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-xl sm:text-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-arabic"
@@ -150,14 +152,14 @@ export const AbjadCalculator: React.FC = () => {
                 className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
               >
                 <Save size={14} />
-                <span className="hidden sm:inline">Sauvegarder</span>
+                <span className="hidden sm:inline">{t("tools.abjad.save")}</span>
               </button>
               <button
                 onClick={() => setText('')}
                 className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw size={14} />
-                <span className="hidden sm:inline">Effacer</span>
+                <span className="hidden sm:inline">{t("tools.abjad.clear")}</span>
               </button>
             </div>
           </div>
@@ -171,7 +173,7 @@ export const AbjadCalculator: React.FC = () => {
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-4 sm:p-5 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
-              <span className="text-blue-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">Mashriq</span>
+              <span className="text-blue-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">{t("tools.abjad.mashriq")}</span>
               <div className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 tabular-nums">
                 {totalMashriqi}
               </div>
@@ -181,7 +183,7 @@ export const AbjadCalculator: React.FC = () => {
                   className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors text-xs sm:text-sm font-medium w-full sm:w-auto"
                 >
                   {copied ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
-                  {copied ? 'Copié' : 'Copier'}
+                  {copied ? t('tools.abjad.copied') : t('tools.abjad.copy')}
                 </button>
               )}
             </div>
@@ -191,7 +193,7 @@ export const AbjadCalculator: React.FC = () => {
           <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-4 sm:p-5 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
-              <span className="text-emerald-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">Maghribi</span>
+              <span className="text-emerald-100 text-xs sm:text-sm font-medium uppercase tracking-widest mb-2">{t("tools.abjad.maghribi")}</span>
               <div className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 tabular-nums">
                 {totalMaghribi}
               </div>
@@ -201,7 +203,7 @@ export const AbjadCalculator: React.FC = () => {
                   className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors text-xs sm:text-sm font-medium w-full sm:w-auto"
                 >
                   {copied ? <Check size={16} className="text-green-300" /> : <Copy size={16} />}
-                  {copied ? 'Copié' : 'Copier'}
+                  {copied ? t('tools.abjad.copied') : t('tools.abjad.copy')}
                 </button>
               )}
             </div>
@@ -217,7 +219,7 @@ export const AbjadCalculator: React.FC = () => {
                 onClick={() => setShowWords(!showWords)}
                 className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Adad par Mots</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("tools.abjad.adadByWords")}</h3>
                 {showWords ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
               </button>
               
@@ -235,11 +237,11 @@ export const AbjadCalculator: React.FC = () => {
                           <span className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-arabic">{item.word}</span>
                           <div className="flex gap-3 text-xs w-full justify-center">
                             <div className="flex flex-col items-center">
-                              <span className="text-gray-400 text-[10px]">Orient.</span>
+                              <span className="text-gray-400 text-[10px]">{t("tools.abjad.oriental")}</span>
                               <span className="text-blue-600 dark:text-blue-400 font-bold">{item.valMashriqi}</span>
                             </div>
                             <div className="flex flex-col items-center">
-                              <span className="text-gray-400 text-[10px]">Occid.</span>
+                              <span className="text-gray-400 text-[10px]">{t("tools.abjad.occidental")}</span>
                               <span className="text-emerald-600 dark:text-emerald-400 font-bold">{item.valMaghribi}</span>
                             </div>
                           </div>
@@ -257,7 +259,7 @@ export const AbjadCalculator: React.FC = () => {
                 onClick={() => setShowLetters(!showLetters)}
                 className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Adad par Lettres</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("tools.abjad.adadByLetters")}</h3>
                 {showLetters ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
               </button>
               
@@ -294,7 +296,7 @@ export const AbjadCalculator: React.FC = () => {
             className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all border shadow-sm ${showHistory ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 hover:scale-105 active:scale-95'}`}
           >
             <History size={20} className={showHistory ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'} />
-            <span>Historique des Valeurs</span>
+            <span>{t("tools.abjad.historyTitle")}</span>
             {showHistory ? <ChevronUp size={18} className="text-gray-400 ml-2" /> : <ChevronDown size={18} className="text-gray-400 ml-2" />}
           </button>
         </div>
@@ -314,13 +316,13 @@ export const AbjadCalculator: React.FC = () => {
                   </h3>
                   {history.length > 0 && (
                     <button onClick={clearHistory} className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1">
-                      <Trash2 size={14} /> Effacer
+                      <Trash2 size={14} /> {t("common.clear")}
                     </button>
                   )}
                 </div>
                 
                 {history.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 pb-2 text-center py-4">Aucun historique pour le moment.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 pb-2 text-center py-4">{t("tools.abjad.noHistory")}</p>
                 ) : (
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                     {history.map(item => (

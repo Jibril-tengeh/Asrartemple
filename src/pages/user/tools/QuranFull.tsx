@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, ArrowLeft, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
 
@@ -46,6 +47,7 @@ interface SurahData {
 }
 
 export const QuranFull: React.FC = () => {
+  const { t } = useLanguage();
   const [surahs, setSurahs] = useState<SurahMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -275,15 +277,13 @@ export const QuranFull: React.FC = () => {
           <div className="mb-8">
             <Link to="/tools" className="inline-flex items-center text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium mb-4">
               <ArrowLeft className="mr-2" size={20} />
-              Retour aux Outils
+              {t("common.backToTools")}
             </Link>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <BookOpen className="text-emerald-500" />
               Le Saint Coran (Al-Qur'an)
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Lisez, étudiez et méditez sur les paroles d'Allah. Textes en arabe et traduction française.
-            </p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.quran.description")}</p>
           </div>
 
           <div className="relative mb-6">
@@ -344,7 +344,7 @@ export const QuranFull: React.FC = () => {
                className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm font-medium"
              >
                <ArrowLeft className="mr-2" size={18} />
-               Retour
+               {t("common.back")}
              </button>
              
              {surahArabic && (

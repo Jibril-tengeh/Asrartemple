@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowLeft, Search, BookOpen, Star, Shield, Heart, Compass, Feather } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Helper to generate a 3x3 Vifiq (Muthallath)
@@ -220,6 +221,7 @@ const divineNamesDeep = [
 ];
 
 export const Asma: React.FC = () => {
+  const { t } = useLanguage();
   const [val, setVal] = useState('');
   const [result, setResult] = useState<typeof divineNamesDeep>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -259,27 +261,27 @@ export const Asma: React.FC = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Sparkles className="text-indigo-500" />
-            Noms Divins Personnels (Asma)
+            {t("tools.asma.title")}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Analyse ésotérique profonde de votre résonance divine</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.asma.subtitle")}</p>
         </div>
       </div>
 
       <div className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-5 mb-8">
         <p className="text-sm text-indigo-800 dark:text-indigo-200 font-medium leading-relaxed">
-          Saisissez le <strong>Poids Numérique (Abjad)</strong> de votre nom complet. Ce moteur extraira les Noms Divins dont la valeur vibratoire est la plus proche de votre essence. 
-          Chaque attribut est détaillé selon la science des secrets (Sirr al-Asrar) pour définir votre Zikr unique.
+          {/* @ts-ignore */}
+          <span dangerouslySetInnerHTML={{ __html: t("tools.asma.intro") }} />
         </p>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 border border-gray-100 dark:border-gray-700 shadow-sm mb-8">
-        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Votre Valeur Numérique (PM)</label>
+        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">{t("tools.asma.inputLabel")}</label>
         <div className="flex gap-3 sm:gap-4">
           <input
             type="number"
             value={val}
             onChange={(e) => setVal(e.target.value)}
-            placeholder="Entrez un nombre (Ex: 129)"
+            placeholder={t("tools.asma.inputPlaceholder")}
             className="flex-1 min-w-0 w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-base sm:text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
@@ -287,7 +289,7 @@ export const Asma: React.FC = () => {
             disabled={!val}
             className="shrink-0 h-[56px] sm:h-16 px-5 sm:px-8 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white font-bold transition-transform hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
           >
-            <Search size={20} /> <span className="hidden sm:inline">Calculer</span>
+            <Search size={20} /> <span className="hidden sm:inline">{t("tools.asma.calculate")}</span>
           </button>
         </div>
       </div>
@@ -355,7 +357,7 @@ export const Asma: React.FC = () => {
                                      <Compass size={16} />
                                    </div>
                                    <div>
-                                      <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">Maqam (Station)</span>
+                                      <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("tools.asma.maqam")}</span>
                                       <span className="block text-sm font-bold text-gray-900 dark:text-white">{item.maqam}</span>
                                    </div>
                                 </div>
@@ -365,7 +367,7 @@ export const Asma: React.FC = () => {
                                      <Feather size={16} />
                                    </div>
                                    <div>
-                                      <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">Ruhaniyya (Serviteur Céleste)</span>
+                                      <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("tools.asma.ruhaniyya")}</span>
                                       <span className="block text-sm font-bold text-gray-900 dark:text-white">{item.angel}</span>
                                    </div>
                                 </div>
@@ -376,7 +378,7 @@ export const Asma: React.FC = () => {
                                  <Shield size={20} />
                                </div>
                                <div>
-                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">Sirr al-Asrar (Exégèse Ésotérique Profonde)</h5>
+                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">{t("tools.asma.sirr")}</h5>
                                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-serif text-justify">
                                     {item.esoteric}
                                   </p>
@@ -388,7 +390,7 @@ export const Asma: React.FC = () => {
                                  <Heart size={20} />
                                </div>
                                <div>
-                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">Khassiyya Vibratoire (Bénéfice Terrestre)</h5>
+                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">{t("tools.asma.khassiyya")}</h5>
                                   <p className="text-sm font-medium text-rose-600 dark:text-rose-400 shadow-sm border border-rose-100 dark:border-rose-900/30 bg-white dark:bg-gray-900 p-3 rounded-xl inline-block">
                                     {item.effect}
                                   </p>
@@ -400,7 +402,7 @@ export const Asma: React.FC = () => {
                                  <BookOpen size={20} />
                                </div>
                                <div className="w-full">
-                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">Tariqa / Modalités de Riyadha (Retraite)</h5>
+                                  <h5 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-2">{t("tools.asma.tariqa")}</h5>
                                   <p className="text-sm font-mono text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                                     {item.zikr}
                                   </p>
@@ -409,17 +411,17 @@ export const Asma: React.FC = () => {
 
                              {/* Talsam & Khatim Box */}
                              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 mt-4">
-                                <h5 className="text-sm font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-4 text-center">Applications Théurgiques (Talsam & Khatim)</h5>
+                                <h5 className="text-sm font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-4 text-center">{t("tools.asma.theurgic")}</h5>
                                 
                                 <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/10 p-4 rounded-xl text-center">
-                                  <span className="block text-xs uppercase font-bold text-indigo-800 dark:text-indigo-300 mb-1">Code Talsamique (Dérivation)</span>
+                                  <span className="block text-xs uppercase font-bold text-indigo-800 dark:text-indigo-300 mb-1">{t("tools.asma.talsamCode")}</span>
                                   <span className="font-arabic text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">طمشلش {item.ar.replace('يَا ', '').replace('يَا', '')} كضهيوش</span>
                                   <p className="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-2 font-mono">Formule vibratoire de connexion pour la valeur {item.val}</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                                   <div className="text-center">
-                                    <h6 className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Muthallath (Carré Magique 3x3)</h6>
+                                    <h6 className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">{t("tools.asma.muthallath")}</h6>
                                     <div className="grid grid-cols-3 mx-auto max-w-[12rem] gap-1 p-2 bg-gray-100 dark:bg-gray-900 rounded-xl">
                                       {generateVifiq3x3(item.val).map((row, i) => 
                                         row.map((cell, j) => (
@@ -432,7 +434,7 @@ export const Asma: React.FC = () => {
                                   </div>
 
                                   <div className="text-center">
-                                    <h6 className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">Murabba' (Carré Magique 4x4)</h6>
+                                    <h6 className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-2">{t("tools.asma.murabba")}</h6>
                                     <div className="grid grid-cols-4 mx-auto max-w-[16rem] gap-1 p-2 bg-gray-100 dark:bg-gray-900 rounded-xl">
                                       {generateVifiq4x4(item.val).map((row, i) => 
                                         row.map((cell, j) => (

@@ -11,6 +11,7 @@ interface DhikrGoal {
 }
 
 export const DailyDhikrTracker: React.FC = () => {
+  const { t } = useLanguage();
   const [goals, setGoals] = useState<DhikrGoal[]>([]);
   const [newDhikrName, setNewDhikrName] = useState('');
   const [newDhikrTarget, setNewDhikrTarget] = useState<number | ''>('');

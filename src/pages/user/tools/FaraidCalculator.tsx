@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Scale, ArrowLeft, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 export const FaraidCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [assetValue, setAssetValue] = useState('');
   const [gender, setGender] = useState<'male'|'female'>('male'); // deceased gender
   
@@ -113,7 +115,7 @@ export const FaraidCalculator: React.FC = () => {
             <Scale className="text-red-500" />
             Calculateur Faraid
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Science de l'héritage islamique</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.faraid.description")}</p>
         </div>
       </div>
 

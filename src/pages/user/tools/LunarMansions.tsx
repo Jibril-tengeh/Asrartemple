@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Moon, ArrowLeft, Star, Compass, Clock, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 interface Mansion {
@@ -46,6 +47,7 @@ const MANSIONS: Mansion[] = [
 ];
 
 export const LunarMansions: React.FC = () => {
+  const { t } = useLanguage();
   const [todayMansion, setTodayMansion] = useState<Mansion | null>(null);
   const [currentMansion, setCurrentMansion] = useState<Mansion | null>(null);
 
@@ -69,15 +71,13 @@ export const LunarMansions: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-4 font-medium transition-colors">
           <ArrowLeft size={20} className="mr-2" />
-          Retour au tableau de bord
+          {t("common.back")} au tableau de bord
         </Link>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Moon className="text-indigo-500" size={32} />
           Les 28 Demeures de la Lune
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Le tableau de bord astrologique lunaire (Manazil al-Qamar) pour vos opérations asrar.
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.lunar-mansions.description")}</p>
       </div>
 
       {currentMansion && (

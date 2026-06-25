@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Shuffle, ArrowLeft, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Taksir: React.FC = () => {
+  const { t } = useLanguage();
   const [inputWord, setInputWord] = useState('');
   const [matrix, setMatrix] = useState<string[][]>([]);
 
@@ -69,7 +71,7 @@ export const Taksir: React.FC = () => {
             <Shuffle className="text-rose-500" />
             Science du Taksir
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Brisures et Entrelacement des Lettres</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.taksir.description")}</p>
         </div>
       </div>
 

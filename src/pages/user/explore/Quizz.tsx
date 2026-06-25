@@ -1,39 +1,44 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { HelpCircle, ArrowRight, CheckCircle, XCircle, RotateCcw, Sparkles } from 'lucide-react';
 
-const questions = [
-  {
-    id: 1,
-    question: "Quelle sourate est souvent appelée 'Le Cœur du Coran' ?",
-    options: ["Al-Baqarah", "Yasin", "Al-Kahf", "Ar-Rahman"],
-    correctAnswer: 1, // Yasin
-    explanation: "Le Prophète Muhammad (PSL) a dit : 'Chaque chose a un cœur, et le cœur du Coran est la sourate Yasin.'"
-  },
-  {
-    id: 2,
-    question: "Dans la science des lettres (Ilm al-Huruf), quelle est la valeur numérique de la lettre 'Alif' (أ) ?",
-    options: ["10", "1", "100", "5"],
-    correctAnswer: 1,
-    explanation: "Dans le système Abjad, l'Alif est la première lettre et a pour valeur 1."
-  },
-  {
-    id: 3,
-    question: "Quel Nom Divin est particulièrement invoqué pour l'ouverture (Fath) des situations bloquées ?",
-    options: ["Al-Mani'", "Al-Fattah", "Al-Ghaffar", "Al-Qabid"],
-    correctAnswer: 1,
-    explanation: "Al-Fattah signifie 'Celui qui ouvre', 'Celui qui accorde la victoire'."
-  },
-  {
-    id: 4,
-    question: "Le verset Ayat al-Kursi (Le Verset du Trône) se trouve dans quelle sourate ?",
-    options: ["Al-Imran", "An-Nisa", "Al-Ma'idah", "Al-Baqarah"],
-    correctAnswer: 3,
-    explanation: "Le Verset du Trône est le verset 255 de la sourate Al-Baqarah."
-  }
-];
+
 
 export const Quizz: React.FC = () => {
+  const { t } = useLanguage();
+  
+  const questions = [
+    {
+      id: 1,
+      question: t('quizz.questions.q1'),
+      options: [t('quizz.questions.o1_1'), t('quizz.questions.o1_2'), t('quizz.questions.o1_3'), t('quizz.questions.o1_4')],
+      correctAnswer: 1,
+      explanation: t('quizz.questions.e1')
+    },
+    {
+      id: 2,
+      question: t('quizz.questions.q2'),
+      options: [t('quizz.questions.o2_1'), t('quizz.questions.o2_2'), t('quizz.questions.o2_3'), t('quizz.questions.o2_4')],
+      correctAnswer: 1,
+      explanation: t('quizz.questions.e2')
+    },
+    {
+      id: 3,
+      question: t('quizz.questions.q3'),
+      options: [t('quizz.questions.o3_1'), t('quizz.questions.o3_2'), t('quizz.questions.o3_3'), t('quizz.questions.o3_4')],
+      correctAnswer: 1,
+      explanation: t('quizz.questions.e3')
+    },
+    {
+      id: 4,
+      question: t('quizz.questions.q4'),
+      options: [t('quizz.questions.o4_1'), t('quizz.questions.o4_2'), t('quizz.questions.o4_3'), t('quizz.questions.o4_4')],
+      correctAnswer: 3,
+      explanation: t('quizz.questions.e4')
+    }
+  ];
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -75,8 +80,8 @@ export const Quizz: React.FC = () => {
           <HelpCircle size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quizz des Asrar</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Testez vos connaissances mystiques</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('quizz.title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('quizz.subtitle')}</p>
         </div>
       </div>
 
@@ -90,8 +95,8 @@ export const Quizz: React.FC = () => {
             className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700"
           >
             <div className="flex justify-between items-center mb-6">
-              <span className="text-sm font-bold text-gray-400">Question {currentQuestion + 1} / {questions.length}</span>
-              <span className="text-sm font-bold text-blue-500 dark:text-blue-400">Score: {score}</span>
+              <span className="text-sm font-bold text-gray-400">{t('quizz.questionLabel')} {currentQuestion + 1} / {questions.length}</span>
+              <span className="text-sm font-bold text-blue-500 dark:text-blue-400">{t('quizz.score')}: {score}</span>
             </div>
 
             <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-8">
@@ -143,7 +148,7 @@ export const Quizz: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30"
               >
-                <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-1">Explication</h4>
+                <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-1">{t('quizz.explanation')}</h4>
                 <p className="text-blue-600 dark:text-blue-400 text-sm leading-relaxed">
                   {questions[currentQuestion].explanation}
                 </p>
@@ -156,7 +161,7 @@ export const Quizz: React.FC = () => {
                   onClick={handleNext}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center shadow-sm"
                 >
-                  {currentQuestion < questions.length - 1 ? 'Question suivante' : 'Terminer'}
+                  {currentQuestion < questions.length - 1 ? t('quizz.nextQuestion') : t('quizz.finish')}
                   <ArrowRight size={18} className="ml-2" />
                 </button>
               </div>
@@ -172,9 +177,9 @@ export const Quizz: React.FC = () => {
             <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-500">
               <Sparkles size={48} />
             </div>
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">Quizz Terminé !</h2>
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{t('quizz.finishedTitle')}</h2>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Vous avez obtenu <span className="font-bold text-gray-900 dark:text-white">{score}</span> bonnes réponses sur {questions.length}.
+              {t('quizz.finishedText1')} <span className="font-bold text-gray-900 dark:text-white">{score}</span> {t('quizz.finishedText2')} {questions.length}.
             </p>
             
             <button 
@@ -182,7 +187,7 @@ export const Quizz: React.FC = () => {
               className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-3 px-8 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors inline-flex items-center"
             >
               <RotateCcw size={18} className="mr-2" />
-              Recommencer
+              {t('quizz.restart')}
             </button>
           </motion.div>
         )}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Moon, ArrowLeft, Plus, Calendar, Save, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface DreamEntry {
@@ -14,6 +15,7 @@ interface DreamEntry {
 }
 
 export const DreamJournal: React.FC = () => {
+  const { t } = useLanguage();
   const [dreams, setDreams] = useState<DreamEntry[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   
@@ -88,7 +90,7 @@ export const DreamJournal: React.FC = () => {
               <Moon className="text-indigo-500" />
               Journal des Rêves
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Interprétation (Ta'bir) et documentation</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.dreams.description")}</p>
           </div>
         </div>
         <button 
@@ -157,7 +159,7 @@ export const DreamJournal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Interprétation (Optionnel)</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t("common.interpretation")} (Optionnel)</label>
                 <textarea
                   value={interpretation}
                   onChange={(e) => setInterpretation(e.target.value)}
@@ -178,7 +180,7 @@ export const DreamJournal: React.FC = () => {
                   disabled={!title || !content}
                   className="px-5 py-2.5 rounded-xl font-bold bg-indigo-600 text-white disabled:opacity-50 flex items-center gap-2 hover:bg-indigo-700 transition-colors"
                 >
-                  <Save size={18} /> Sauvegarder
+                  <Save size={18} /> {t("common.save")}
                 </button>
               </div>
             </div>
@@ -230,7 +232,7 @@ export const DreamJournal: React.FC = () => {
             </p>
             {dream.interpretation && (
               <div className="bg-indigo-50 dark:bg-indigo-900/10 border-l-4 border-indigo-400 p-4 rounded-r-xl">
-                 <h4 className="text-xs uppercase tracking-widest font-bold text-indigo-500 mb-2">Interprétation (Ta'bir)</h4>
+                 <h4 className="text-xs uppercase tracking-widest font-bold text-indigo-500 mb-2">{t("common.interpretation")} (Ta'bir)</h4>
                  <p className="text-sm text-indigo-900 dark:text-indigo-200">{dream.interpretation}</p>
               </div>
             )}

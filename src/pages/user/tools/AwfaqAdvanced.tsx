@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Hexagon, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 export const AwfaqAdvanced: React.FC = () => {
+  const { t } = useLanguage();
   const [targetValue, setTargetValue] = useState<string>('');
   const [gridSize, setGridSize] = useState<number>(3); // 3x3, 4x4, 5x5
   const [grid, setGrid] = useState<number[][]>([]);
@@ -84,7 +86,7 @@ export const AwfaqAdvanced: React.FC = () => {
             <Hexagon className="text-fuchsia-500" />
             Générateur de Awfaq
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">Carrés magiques avancés (Muthallath, Murabba, Mukhammas)</p>
+          <p className="text-gray-500 dark:text-gray-400">{t("tools.awfaq.description")}</p>
         </div>
       </div>
 
@@ -128,7 +130,7 @@ export const AwfaqAdvanced: React.FC = () => {
           onClick={generateWafq}
           className="w-full h-[56px] rounded-2xl bg-gradient-to-br from-fuchsia-600 to-pink-700 text-white font-bold transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
         >
-          Générer le Carré Magique
+          {t("common.generate")} le Carré Magique
         </button>
 
         {error && (

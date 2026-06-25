@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, ArrowLeft, Sun, Moon, Info, Settings2, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 const planets = [
@@ -20,6 +21,7 @@ const chaldeanSequence = [4, 5, 6, 0, 1, 2, 3];
 const dayRulerMap = [0, 3, 6, 2, 5, 1, 4]; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 
 export const PlanetaryHours: React.FC = () => {
+  const { t } = useLanguage();
   const [isDay, setIsDay] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [sunrise, setSunrise] = useState('06:00');
@@ -107,7 +109,7 @@ export const PlanetaryHours: React.FC = () => {
               <Clock className="text-amber-500" />
               Heures Planétaires
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Sa'at al-Falakiyya</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.planetary.description")}</p>
           </div>
         </div>
         <button 

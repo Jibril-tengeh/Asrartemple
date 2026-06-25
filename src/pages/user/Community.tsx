@@ -37,7 +37,15 @@ export const Community: React.FC = () => {
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post)));
+      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+      if (user?.role !== 'admin') {
+          postsData.sort((a, b) => {
+              const dateA = a.createdAt?.seconds || 0;
+              const dateB = b.createdAt?.seconds || 0;
+              return dateB - dateA;
+          });
+      }
+      setPosts(postsData);
     }, (error) => {
       console.error("Community onSnapshot error:", error);
     });

@@ -482,7 +482,7 @@ export const Ruqyah: React.FC = () => {
                    Annuler
                  </button>
                  <button onClick={saveCustomPlaylist} disabled={!newPlaylistName || newPlaylistVerses.length === 0} className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-                   <Save size={18} /> Sauvegarder
+                   <Save size={18} /> {t("common.save")}
                  </button>
                </div>
             </motion.div>

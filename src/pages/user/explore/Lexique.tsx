@@ -18,7 +18,7 @@ const defaultLexiqueData = [
 ];
 
 export const Lexique: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [search, setSearch] = useState('');
   const [lexiqueData, setLexiqueData] = useState<any[]>(defaultLexiqueData);
 
@@ -46,7 +46,7 @@ export const Lexique: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [i18n.language]);
+  }, [language]);
 
   const filteredData = lexiqueData.filter(item => 
     item.term.toLowerCase().includes(search.toLowerCase()) || 
@@ -60,15 +60,15 @@ export const Lexique: React.FC = () => {
           <FileText size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lexique des Symboles</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Significations ésotériques et concepts clés</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('lexique.title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('lexique.subtitle')}</p>
         </div>
       </div>
 
       <div className="relative mb-8">
         <input 
           type="text" 
-          placeholder="Rechercher un terme, une lettre, un nombre..." 
+          placeholder={t('lexique.searchPlaceholder')} 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-sm transition-all"
@@ -99,7 +99,7 @@ export const Lexique: React.FC = () => {
           ))
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Aucun résultat trouvé pour "{search}"</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('lexique.noResult')} "{search}"</p>
           </div>
         )}
       </div>

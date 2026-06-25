@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Compass, Book, Shield, Heart, Sparkles, Moon, Sun, ArrowRight, Wallet, Activity, Share2, HelpCircle, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const categories = [
   {
@@ -62,6 +63,7 @@ const sagesses = [
 ];
 
 export const ExploreDashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [sagesse, setSagesse] = useState(sagesses[0]);
 
   useEffect(() => {
@@ -74,14 +76,14 @@ export const ExploreDashboard: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Sagesse du Jour - AsrarHub',
+          title: t('exploreDashboard.wisdomShareTitle'),
           text: `"${sagesse.arabic}"\n\n${sagesse.french}\n— ${sagesse.source}`,
         });
       } catch (err) {
         console.error('Erreur de partage', err);
       }
     } else {
-      alert("Le partage n'est pas supporté sur ce navigateur.");
+      alert(t('exploreDashboard.shareErrorText'));
     }
   };
   return (
@@ -98,20 +100,20 @@ export const ExploreDashboard: React.FC = () => {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
             <Compass className="text-emerald-400" size={32} />
-            <h1 className="text-3xl font-bold tracking-tight">Explorer</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('exploreDashboard.title')}</h1>
           </div>
           <p className="text-emerald-100/80 text-lg max-w-2xl mb-8 leading-relaxed">
-            Plongez dans les profondeurs de la science ésotérique islamique. Parcourez des collections puissantes de secrets, de recettes éprouvées et découvrez la sagesse des anciens.
+            {t('exploreDashboard.description')}
           </p>
           
           <div className="flex flex-wrap gap-4">
             <button className="bg-emerald-400 text-emerald-950 font-bold px-6 py-3 rounded-xl shadow-md hover:bg-emerald-300 transition-colors flex items-center gap-2">
               <Sparkles size={18} />
-              Noms Divins (Asmaul Husna)
+              {t('exploreDashboard.buttonAsma')}
             </button>
             <button className="bg-emerald-900/50 border border-emerald-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-emerald-800/50 transition-colors flex items-center gap-2">
               <Book size={18} />
-              Traités Anciens
+              {t('exploreDashboard.buttonTreatises')}
             </button>
           </div>
         </div>
@@ -120,8 +122,8 @@ export const ExploreDashboard: React.FC = () => {
       {/* Categories Grid */}
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Thématiques Mystiques</h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Sélectionnez un domaine spécifique</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.themesTitle')}</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{t('exploreDashboard.themesSubtitle')}</p>
         </div>
       </div>
       
@@ -143,16 +145,16 @@ export const ExploreDashboard: React.FC = () => {
                       <cat.icon size={24} />
                     </div>
                     <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                      {cat.count} secrets
+                      {cat.count} {t('exploreDashboard.secrets')}
                     </span>
                   </div>
                   
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-emerald-500 transition-colors">
-                    {cat.title}
+                    {t(`exploreCategories.${cat.id}.title`) !== `exploreCategories.${cat.id}.title` ? t(`exploreCategories.${cat.id}.title`) : cat.title}
                   </h3>
                   
                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    {cat.description}
+                    {t(`exploreCategories.${cat.id}.description`) !== `exploreCategories.${cat.id}.description` ? t(`exploreCategories.${cat.id}.description`) : cat.description}
                   </p>
                   
                   <div className="mt-4 flex justify-end text-gray-300 dark:text-gray-600 group-hover:text-emerald-500 transition-colors">
@@ -167,7 +169,7 @@ export const ExploreDashboard: React.FC = () => {
       
       {/* Featured Insight */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Sagesse du Jour</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('exploreDashboard.wisdomOfTheDay')}</h2>
         <div id="sagesse-card" className="bg-[#fdfbf7] dark:bg-[#1a1917] rounded-3xl p-8 border border-[#e8dcb5] dark:border-[#383120] relative">
           <Book className="absolute top-6 right-6 text-[#d1c29e] dark:text-[#383120] opacity-20" size={64} />
           <p className="font-arabic text-3xl sm:text-4xl text-[#5c4a30] dark:text-[#d4c39c] mb-6 leading-loose" dir="rtl">
@@ -204,13 +206,13 @@ export const ExploreDashboard: React.FC = () => {
               <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
                 <Book size={24} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Lexique des Symboles</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.lexiconTitle')}</h3>
             </div>
             <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              Découvrez la signification ésotérique des lettres arabes (Ilm al-Huruf), des nombres sacrés et des éléments symboliques coraniques.
+              {t('exploreDashboard.lexiconDesc')}
             </p>
             <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              Consulter le lexique <ArrowRight size={16} className="ml-2" />
+              {t('exploreDashboard.lexiconLink')} <ArrowRight size={16} className="ml-2" />
             </div>
           </div>
         </Link>
@@ -225,13 +227,13 @@ export const ExploreDashboard: React.FC = () => {
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
                 <Sparkles size={24} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Quizz des Asrar</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.quizTitle')}</h3>
             </div>
             <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              Testez vos connaissances sur la science des secrets. Des Noms Divins aux sourates protectrices, évaluez votre compréhension.
+              {t('exploreDashboard.quizDesc')}
             </p>
             <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              Lancer le quizz <ArrowRight size={16} className="ml-2" />
+              {t('exploreDashboard.quizLink')} <ArrowRight size={16} className="ml-2" />
             </div>
           </div>
         </Link>
@@ -246,13 +248,13 @@ export const ExploreDashboard: React.FC = () => {
               <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
                 <Moon size={24} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Convertisseur Hégirien</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.calendarTitle')}</h3>
             </div>
             <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              Convertissez le calendrier grégorien vers le calendrier lunaire islamique (Umm al-Qura) pour suivre les jours fastes pour les pratiques spirituelles.
+              {t('exploreDashboard.calendarDesc')}
             </p>
             <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              Ouvrir le convertisseur <ArrowRight size={16} className="ml-2" />
+              {t('exploreDashboard.calendarLink')} <ArrowRight size={16} className="ml-2" />
             </div>
           </div>
         </Link>
@@ -270,16 +272,16 @@ export const ExploreDashboard: React.FC = () => {
               <div className="absolute right-1 top-1 bottom-1 left-4 rounded-full bg-slate-800/90 mix-blend-multiply"></div>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">Calendrier Lunaire</h3>
-              <p className="text-slate-400 text-sm">14 Muharram 1446 AH • Lune Croissante</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t('exploreDashboard.lunarTitle')}</h3>
+              <p className="text-slate-400 text-sm">{t('exploreDashboard.lunarDate')}</p>
               <div className="flex flex-wrap gap-2 mt-3">
-                <span className="text-xs font-semibold px-2 py-1 bg-emerald-900/50 text-emerald-300 rounded border border-emerald-800">Phase favorable aux Wirds Fath</span>
-                <span className="text-xs font-semibold px-2 py-1 bg-slate-800 text-slate-300 rounded border border-slate-700">65% Illumination</span>
+                <span className="text-xs font-semibold px-2 py-1 bg-emerald-900/50 text-emerald-300 rounded border border-emerald-800">{t('exploreDashboard.lunarFavorable')}</span>
+                <span className="text-xs font-semibold px-2 py-1 bg-slate-800 text-slate-300 rounded border border-slate-700">{t('exploreDashboard.lunarIllumination')}</span>
               </div>
             </div>
           </div>
           <Link to="/explore/calendar" className="flex-shrink-0 text-slate-400 hover:text-white transition-colors cursor-pointer text-sm font-medium flex items-center gap-1">
-            Voir le calendrier complet <ArrowRight size={14} />
+            {t('exploreDashboard.lunarViewFull')} <ArrowRight size={14} />
           </Link>
         </div>
       </div>

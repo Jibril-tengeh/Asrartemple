@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Flame, Calendar, Info, ArrowLeft, Star, Wind } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Oath {
@@ -56,6 +57,7 @@ const OATHS: Oath[] = [
 ];
 
 export const GrandOaths: React.FC = () => {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<Oath | null>(null);
 
   return (
@@ -63,15 +65,13 @@ export const GrandOaths: React.FC = () => {
       <div className="mb-8">
         <Link to="/tools" className="inline-flex items-center text-amber-600 hover:text-amber-700 mb-4 font-medium transition-colors">
           <ArrowLeft size={20} className="mr-2" />
-          Retour au tableau de bord
+          {t("common.back")} au tableau de bord
         </Link>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <BookOpen className="text-amber-500" size={32} />
           Les Grands Serments (Azayim)
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          La bibliothèque des invocations majeures et des mots de pouvoir syriaques.
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.grand-oaths.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

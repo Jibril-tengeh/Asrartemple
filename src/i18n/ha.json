@@ -20,6 +20,69 @@
     "journal": "Littafi",
     "saved": "Ajiye"
   },
+  "exploreDashboard": {
+    "title": "Bincika",
+    "description": "Shiga cikin zurfin ilimin asirin Islama. Bincika tarin sirrika masu karfi, layu tabbatattu, kuma gano hikimar mutanen da.",
+    "buttonAsma": "Sunayen Ka Na Allah",
+    "buttonTreatises": "Tsoffin Rubuce-rubuce",
+    "themesTitle": "Jigogi na Sirri",
+    "themesSubtitle": "Zaɓi takamaiman fage",
+    "wisdomOfTheDay": "Hikimar Rana",
+    "shareError": "Ba a goyan bayan raba a kan wannan burauzar.",
+    "themesOfSecrets": "Jigogi na Sirri",
+    "selectSpecificField": "Zaɓi takamaiman fage",
+    "secrets": "sirrika",
+    "library": "Laburare",
+    "librarySubtitle": "Rubuce-rubuce, PDFs & Audios",
+    "support": "Taimako & Tallafi",
+    "supportSubtitle": "Tuntuɓi malamin addini",
+    "wisdomShareTitle": "Hikimar Rana - AsrarHub",
+    "shareErrorText": "Ba a goyan bayan raba a kan wannan burauzar.",
+    "lexiconTitle": "Ƙamus na Alamomi",
+    "lexiconDesc": "Gano ma'anar ɓoye ta haruffan Larabci (Ilm al-Huruf), lambobi masu tsarki da abubuwan alama na Alqur'ani.",
+    "lexiconLink": "Duba ƙamus",
+    "quizTitle": "Jarrabawar Asrar",
+    "quizDesc": "Gwada iliminku akan kimiyyar asirai. Daga Sunayen Allah zuwa surorin kariya, tantance fahimtar ku.",
+    "quizLink": "Fara jarrabawa",
+    "calendarTitle": "Mai Canja Kalandar Hijira",
+    "calendarDesc": "Canja kwanakin miladiyya zuwa kwanakin hijiriyya don gano kwanakin wata masu kyau don ayyukan ruhaniya.",
+    "calendarLink": "Canja kwanan wata",
+    "downloadTitle": "Zazzagewa & Laburare",
+    "downloadDesc": "Sami damar shiga littattafai na asali a PDF, sautin addu'o'i, da fararen filaye don wafq dinku.",
+    "downloadLink": "Shiga laburare",
+    "lunarTitle": "Kalandar Wata",
+    "lunarDate": "14 Muharram 1446 AH • Wata Mai Girma",
+    "lunarFavorable": "Lokaci mai kyau don Fath Wirds",
+    "lunarIllumination": "65% Haske",
+    "lunarViewFull": "Duba cikakken kalandar"
+  },
+  "toolsDashboard": {
+    "title": "Kayan Aiki na Sirri",
+    "description": "Kayan aiki masu ƙarfi da kwarewa da aka tanada don masana ilimin sirri.",
+    "simpleTools": "Sauƙaƙan Kayan Aiki",
+    "advancedTools": "Nagartattun Kayan Aiki",
+    "abjadTitle": "Lissafin Abjad",
+    "abjadDesc": "Lissafa ƙimar lamba ta sirri na sunayenku da wuridai.",
+    "asmaTitle": "Sunayen Allah na Keɓaɓɓu",
+    "asmaDesc": "Gano sunayen Allah masu dacewa da nauyin asirin sunanku.",
+    "names99Title": "Sunayen Allah 99"
+  },
+  "journal": {
+    "title": "Littafin Ruhu",
+    "subtitle": "Tunani, wuridai, da ci gaba",
+    "studies": "Karatu",
+    "reflections": "Tunani",
+    "newEntry": "Sabon Shiga",
+    "wirdsCompleted": "Wirdodin da aka gama",
+    "wirdsPlaceholder": "Misali: Hizb al-Bahr (1x)",
+    "progressLabel": "Ci gaban Asrar & Karatu",
+    "progressPlaceholder": "Misali: An kammala karatun Khassiyya na Fatiha.",
+    "thoughtsLabel": "Tunani & Yanayi (Ahwal)",
+    "thoughtsPlaceholder": "Tunaninku, mafarkai, ko yanayin ruhaniyarku...",
+    "emptyJournal": "Littafin ku ba komai.",
+    "emptyJournalSub": "Fara rubuta nasarorin ruhaniyarku.",
+    "wirdsLabel": "Wird"
+  },
   "namesOfAllah": {
     "title": "Sunayen Allah (Asma al-Husna)",
     "subtitle": "Cikakken Nazari & Abjad",
@@ -30,6 +93,338 @@
     "khatim": "Hatimi",
     "counts": "Lambobi",
     "abjad": "Abjad",
-    "khassiyya": "Khassiyya & Alama"
+    "khassiyya": "Khassiyya & Alama",
+    "versesAndSurahs": "Ayoyi da Surori",
+    "surah": "Sura",
+    "verse": "Aya",
+    "seeOccurrences": "Duba duk inda ya bayyana",
+    "occurrencesLimit": "Ba a iya loda bayyanar ba ko sun wuce iyakar nuni.",
+    "initiationSecret": "Sirrin farawa: Fitar da duk waɗannan ayoyin (Ayat) don karanta su tare yana zama \"Khatm Al-Akbar\" (Babban Hatimi) na wannan Sunan na Ubangiji, yana sakin gabaɗayan ƙarfin bayyanarsa."
+  },
+  "tools": {
+    "abjad": {
+      "title": "Lissafin Abjad",
+      "description": "Lissafa ƙimar lamba ta sirri na sunayenku da wuridai.",
+      "subtitle": "Lissafin ƙimar lamba",
+      "inputLabel": "Shigar da rubutu a Larabci",
+      "inputPlaceholder": "Misali: بسم الله الرحمن الرحيم",
+      "words": "Kalmomi",
+      "letters": "Haruffa",
+      "save": "Ajiye",
+      "clear": "Goge",
+      "mashriq": "Gabas",
+      "maghribi": "Yamma",
+      "copy": "Kwafa",
+      "copied": "An Kwafa",
+      "adadByWords": "Adad ta Kalmomi",
+      "adadByLetters": "Adad ta Haruffa",
+      "oriental": "Gabas.",
+      "occidental": "Yamma.",
+      "historyTitle": "Tarihin Ƙima",
+      "history": "Tarihi",
+      "clearHistory": "Goge",
+      "noHistory": "Babu tarihi tukuna."
+    },
+    "asma": {
+      "title": "Sunayen Allah na Keɓaɓɓu (Asma)",
+      "description": "Gano sunayen Allah masu dacewa da nauyin asirin sunanku.",
+      "subtitle": "Zurfin binciken sirri na kiran sunayenka na Ubangiji",
+      "intro": "Shigar da <strong>Nauyin Lamba (Abjad)</strong> na cikakken sunanka. Wannan injin zai fitar da Sunayen Allah waɗanda ƙimar rawar jikinsu ta fi kusa da ainihin ku. Kowane siffa ana ba da cikakken bayani bisa ga ilimin asirai (Sirr al-Asrar) don bayyana keɓaɓɓen Zikiri naku.",
+      "inputLabel": "Ƙimar Lambarka (PM)",
+      "inputPlaceholder": "Shigar da lamba (Misali: 129)",
+      "calculate": "Lissafa",
+      "resultsTitle": "Sunayen Ku Masu Amsawa (Zikirin Kai)",
+      "resultsDesc": "Sunan farko da aka nuna shine wanda ya fi dacewa da tasirin ruhin ku. Danna kan kati don bayyana asirin.",
+      "mainAffinity": "Babban Haɗin Kai",
+      "maqam": "Maqam (Matsayi)",
+      "ruhaniyya": "Ruhaniyya (Bawan Sama)",
+      "sirr": "Sirr al-Asrar (Zurfin Fassarar Sirri)",
+      "khassiyya": "Khassiyya ta Rawar Jiki (Amfanin Duniya)",
+      "tariqa": "Tariqa / Hanyoyin Riyadha (Kewaye)",
+      "theurgic": "Ayyukan Theurgic (Talsam & Khatim)",
+      "talsamCode": "Lambar Talsam (Fitarwa)",
+      "talsamDesc": "Hanyar haɗin gwiwa na rawar jiki don ƙimar",
+      "muthallath": "Muthallath (Sihirin Filin 3x3)",
+      "murabba": "Murabba' (Sihirin Filin 4x4)"
+    },
+    "99names": {
+      "title": "Sunayen Allah 99",
+      "description": "Bincika, yi karatu, kuma ku fahimci Sunaye Masu Girma (Asma al-Husna)."
+    },
+    "quran": {
+      "title": "Alqur'ani Mai Girma",
+      "description": "Karatun Alqur'ani da tunani akai, asalin duk wani Asiri."
+    },
+    "tasbih": {
+      "title": "Tasbih Mai Wayo",
+      "description": "Mai ƙidayar zikiri mai fasaha don bin diddigin karatunku na yau da kullun.",
+      "subtitle": "Kiramga ta dijital tare da jin jiki",
+      "tapToCount": "Taɓa don ƙirgawa",
+      "reset": "Sake saitawa",
+      "target": "Manufa",
+      "vibration": "Jijjiga",
+      "sound": "Sauti",
+      "lap": "Kewaye",
+      "history": "Tarihi",
+      "clearHistory": "Goge Tarihi",
+      "noHistory": "Babu tarihi tukuna.",
+      "save": "Ajiye Zama"
+    },
+    "daily-dhikr": {
+      "title": "Mai Bin Diddigin Zikiri",
+      "description": "Sanya maƙasudi kuma ku bi diddigin zikirinku na yau da kullun."
+    },
+    "planetary": {
+      "title": "Awannin Taurari",
+      "description": "Ƙayyade lokutan ruhaniya masu kyau don addu'o'in ku."
+    },
+    "zakat": {
+      "title": "Lissafin Zakkah",
+      "description": "Lissafa Zakkatul Maali daidai akan dukiya daban-daban.",
+      "subtitle": "Lissafa Zakkah dinka bisa ga Nissab",
+      "config": "Tsarin farashin kasuwa",
+      "goldPrice": "Farashin Zinare (g)",
+      "silverPrice": "Farashin Azurfa (g)",
+      "assets": "Dukiyoyin ku (watan 12 da suka gabata)",
+      "goldAssets": "Zinaren da kuke dashi (g)",
+      "silverAssets": "Azurfar da kuke dashi (g)",
+      "cashAssets": "Kudi / Asusu",
+      "stockAssets": "Ƙimar hannun jari",
+      "merchAssets": "Ƙimar hajojin kasuwanci",
+      "deductions": "Rage-rage",
+      "debtsDesc": "Bashi da za a biya nan take",
+      "reset": "Goge",
+      "resultsTitle": "Sakamakon Lissafi",
+      "totalAssets": "Jimillar Dukiya",
+      "debtsVal": "Bashi",
+      "netAmount": "Adadin da ya rage",
+      "nissabRef": "Nissab Reference",
+      "zakatDue": "Zakkah da zaka biya (2.5%)",
+      "notEligible": "Ba a wajabta maka Zakkah a wannan shekara ba.",
+      "nissabInfo": "Nissab da ake amfani da shi shi ne mafi ƙaranci tsakanin Zinare da Azurfa don amfanin matalauta (Galibi Azurfa)."
+    },
+    "faraid": {
+      "title": "Lissafin Faraid",
+      "description": "Lissafa rabon gado bisa tsarin shari'ar Musulunci."
+    },
+    "dreams": {
+      "title": "Littafin Mafarki",
+      "description": "Bincika da rubuta mafarkin ku tare da fassarori."
+    },
+    "personal-wird": {
+      "title": "Mai Samar da Wird",
+      "description": "Istikhraj al-Asma: Lissafa Zikirin ku na asali dangane da nauyin ku na asiri."
+    },
+    "lunar-mansions": {
+      "title": "Gidajen Wata",
+      "description": "Manazil al-Qamar: Bi gidajen taurari 28 don ayyukan ku."
+    },
+    "spiritual-compatibility": {
+      "title": "Dacewar Ruhaniya",
+      "description": "Hisab al-Tawafuq: Dokar Al-Buni don aure da haɗin gwiwa."
+    },
+    "ilm-jafar": {
+      "title": "Duban Jafar",
+      "description": "Ilm al-Jafar: Babban duban asiri ta hanyar rarraba haruffa (Taksir)."
+    },
+    "grand-oaths": {
+      "title": "Manyan Rantsuwowi",
+      "description": "Da'awat & Azayim: Kundin manyan addu'o'i."
+    },
+    "elemental": {
+      "title": "Mai Binciken Halitta",
+      "description": "Tabai' al-Huruf: Gano ainihin yanayin sunan ku (Wuta, Ƙasa, Iska, Ruwa)."
+    },
+    "geomancy": {
+      "title": "Duba na Larabawa",
+      "description": "Khatt ar-Raml: Samar da fassara siffofin duban ƙasa don neman shawara."
+    },
+    "letters": {
+      "title": "Ilimin Haruffa",
+      "description": "Sirr al-Huruf: Gano asiran da ke tattare da kowane harafin Larabci."
+    },
+    "rouhaniyya": {
+      "title": "Mai Fitar da Rouhaniyya",
+      "description": "Fitar da ruhohin sama ko ƙasa bisa Sunaye da Nauyi."
+    },
+    "taksir": {
+      "title": "Taksir (Rarrabawa)",
+      "description": "Samar da siffofin Taksir da rarraba haruffa."
+    },
+    "sirr": {
+      "title": "Sirr Al-Asrar",
+      "description": "Cikakken binciken asiri: halittu, aura, da khuddam."
+    },
+    "zairja": {
+      "title": "Duban Zairja",
+      "description": "Na'urar Sufaye ta asali don faɗan da fayyace tambayoyin asiri."
+    },
+    "khatim": {
+      "title": "Mai Samar da Khatim",
+      "description": "Ƙirƙiri sihirin fili na 3x3 (Wafq) bisa ƙimar lamba."
+    },
+    "ruqyah": {
+      "title": "Ruqyah ta Shari'ah",
+      "description": "Zaman magani na ruhaniya mai zurfi tare da maimaita ayyana (7 zuwa 1000)."
+    },
+    "talsam": {
+      "title": "Mai Samar da Talsam",
+      "description": "Ƙirƙiri kalmomin ƙarfi da talsam ɓoyayyu don adana addu'o'in ku."
+    },
+    "istikhara": {
+      "title": "Istikhara ta Dijital",
+      "description": "Tsarin ruhi wanda ya ginu a kan Alqur'ani Mai Girma da ilimin Abjad."
+    },
+    "khouddam": {
+      "title": "Mai Fitar da Khouddam",
+      "description": "Lissafa da kiran ruhohin mala'iku da na ƙasa (A'il da Yush) masu alaƙa da suna."
+    },
+    "awfaq": {
+      "title": "Mai Samar da Awfaq",
+      "description": "Ƙirƙiri rikitattun sihirin fili (Muthallath, Murabba) tare da daidaita taurari da niyya."
+    },
+    "quranic-faal": {
+      "title": "Istikhara ta Alqur'ani (Faal)",
+      "description": "Hanyar asiri ta tuntuɓar Alqur'ani don duban asiri da jagoranci (Zaɓin Ƙuri'a)."
+    },
+    "names99": {
+      "title": "Asma al-Husna (Sunaye 99)",
+      "subtitle": "Sunayen Allah 99 masu kyau da asirinsu",
+      "searchPlaceholder": "Bincika da suna, ma'ana ko Abjad (misali: 66)",
+      "abjadWeight": "Nauyin Abjad",
+      "viewQuran": "Duba a cikin Alqur'ani",
+      "viewZikr": "Asirin Zikiri",
+      "viewKhatim": "Duba Khatim",
+      "quranicContext": "Yanayin Alqur'ani",
+      "mentions": "ambato",
+      "surah": "Surah",
+      "verse": "Aya",
+      "esotericMeaning": "Ma'anar Sirri",
+      "zikrGuide": "Jagora & Hanyoyin Zikiri",
+      "traditionalCounts": "Lambobin Al'ada (Fa'idoji)",
+      "traditionalCountsDesc": "Kowace lamba tana ɗauke da niyya da tsarin ruhi na musamman.",
+      "theurgicSquare": "Sihirin Filin (Khatim)",
+      "talsamDesc": "Hanyar haɗin gwiwa na rawar jiki don ƙimar",
+      "muthallath": "Muthallath (Sihirin Filin 3x3)",
+      "murabba": "Murabba' (Sihirin Filin 4x4)",
+      "interactiveTasbih": "Tasbih mai aiki",
+      "reset": "Sake saitawa",
+      "backToList": "Komawa zuwa jeri"
+    },
+    "dailyDhikr": {
+      "title": "Binciken Zikirin Kullum",
+      "subtitle": "Bibiyar zikirinku na yau da kullun da maƙasudin ruhin ku",
+      "addDhikr": "Ƙara Zikiri",
+      "dhikrName": "Sunan Zikiri",
+      "target": "Manufa",
+      "progress": "Ci gaba",
+      "completed": "An Kammala",
+      "edit": "Gyara",
+      "delete": "Share",
+      "reset": "Sake saitawa",
+      "noDhikr": "Babu Zikiri da aka samu. Ƙara ɗaya don farawa.",
+      "save": "Ajiye",
+      "cancel": "Soke",
+      "namePlaceholder": "Misali: Astaghfirullah",
+      "targetPlaceholder": "Misali: 100"
+    }
+  },
+  "common": {
+    "calculate": "Lissafa",
+    "clear": "Goge",
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "back": "Koma Baya",
+    "generate": "Samar",
+    "reset": "Sake saitawa",
+    "results": "Sakamako",
+    "copy": "Kwafa",
+    "copied": "An Kwafa",
+    "backToTools": "Koma kan Kayan aiki",
+    "result": "Sakamako",
+    "details": "Cikakken Bayani",
+    "interpretation": "Fassara",
+    "close": "Rufe"
+  },
+  "exploreCategories": {
+    "protection": {
+      "title": "Kariya (Tahsin)",
+      "description": "Garkuwar ruhi, kariya daga mugun ido da maita."
+    },
+    "fath": {
+      "title": "Buɗewa (Fath)",
+      "description": "Don warware yanayi masu wahala da nasarar aiki."
+    },
+    "rizq": {
+      "title": "Arziƙi (Rizq)",
+      "description": "Sirrin jan hankalin dukiya, sa'a da yalwa."
+    },
+    "shifa": {
+      "title": "Waraka (Shifa)",
+      "description": "Magunguna da addu'o'i don lafiyar jiki da ruhi."
+    },
+    "mahabba": {
+      "title": "Ƙauna (Mahabba)",
+      "description": "Don fahimtar juna a iyali, aure da kuma samun farin jini ga halittu."
+    },
+    "ilm_huruf": {
+      "title": "Ilimin Haruffa",
+      "description": "Binciken Ilm al-Huruf da asirin haruffan Larabci."
+    }
+  },
+  "quizz": {
+    "title": "Jarrabawar Asrar",
+    "subtitle": "Gwada ilimin ku na asiri",
+    "questionLabel": "Tambaya",
+    "score": "Maki",
+    "explanation": "Bayani",
+    "nextQuestion": "Tambaya ta gaba",
+    "finish": "Gama",
+    "finishedTitle": "An Gama Jarrabawa!",
+    "finishedText1": "Kun sami amsoshi",
+    "finishedText2": "masu kyau daga cikin",
+    "restart": "Sake farawa",
+    "questions": {
+      "q1": "Wace Sura ce ake yawan kira 'Zuciyar Alqur'ani'?",
+      "o1_1": "Al-Baqarah",
+      "o1_2": "Yasin",
+      "o1_3": "Al-Kahf",
+      "o1_4": "Ar-Rahman",
+      "e1": "Annabi Muhammad (SAW) ya ce: 'Kowane abu yana da zuciya, kuma zuciyar Alqur'ani ita ce Suratul Yasin.'",
+      "q2": "A kimiyyar haruffa (Ilm al-Huruf), menene darajar lamba ta harafin 'Alif' (أ)?",
+      "o2_1": "10",
+      "o2_2": "1",
+      "o2_3": "100",
+      "o2_4": "5",
+      "e2": "A tsarin Abjad, Alif shine harafin farko kuma yana da darajar 1.",
+      "q3": "Wane Sunan Allah ake yawan ambatonsa don buɗewa (Fath) na yanayi masu wahala?",
+      "o3_1": "Al-Mani'",
+      "o3_2": "Al-Fattah",
+      "o3_3": "Al-Ghaffar",
+      "o3_4": "Al-Qabid",
+      "e3": "Al-Fattah yana nufin 'Mai Buɗewa', 'Mai Bayar Da Nasara'.",
+      "q4": "Ayat al-Kursi (Ayar Karaga) tana cikin wace Sura?",
+      "o4_1": "Al-Imran",
+      "o4_2": "An-Nisa",
+      "o4_3": "Al-Ma'idah",
+      "o4_4": "Al-Baqarah",
+      "e4": "Ayar Karaga ita ce aya ta 255 a Suratul Baqarah."
+    }
+  },
+  "lexique": {
+    "title": "Ƙamus Na Alamomi",
+    "subtitle": "Ma'anar ɓoye da mahimman ra'ayoyi",
+    "searchPlaceholder": "Nemo kalma, harafi, lamba...",
+    "noResult": "Ba a sami sakamako ba don"
+  },
+  "calendar": {
+    "title": "Kalandar Hijira",
+    "subtitle": "Mai Canja Miladiyya Zuwa Hijira",
+    "description": "Wannan mai canja wata yana amfani da kalandar Musulunci ta Umm al-Qura. Yana ba ka damar gano kwanakin masu kyau (kamar tsakiyar watan wata) don ayyukan ka na ruhaniya.",
+    "gregorianDate": "Kwanan Watan Miladiyya",
+    "convert": "Canja",
+    "hijriMatch": "Daidaiton Hijira",
+    "monthOf": "Watan",
+    "conversionError": "Kuskuren Canzawa"
   }
 }

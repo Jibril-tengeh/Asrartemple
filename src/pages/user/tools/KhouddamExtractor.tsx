@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Sparkles, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion } from 'motion/react';
 
 // Abjad calculation helper
@@ -34,6 +35,7 @@ const numberToLetters = (num: number): string => {
 };
 
 export const KhouddamExtractor: React.FC = () => {
+  const { t } = useLanguage();
   const [inputVal, setInputVal] = useState('');
   const [calculation, setCalculation] = useState<{
     original: number;
@@ -84,7 +86,7 @@ export const KhouddamExtractor: React.FC = () => {
             <Sparkles className="text-amber-500" />
             Extracteur de Khouddam
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">Extraction des Serviteurs Angéliques (A'il) et Terrestres (Yush)</p>
+          <p className="text-gray-500 dark:text-gray-400">{t("tools.khouddam.description")}</p>
         </div>
       </div>
 

@@ -20,6 +20,69 @@
     "journal": "Journal",
     "saved": "Saved"
   },
+  "exploreDashboard": {
+    "title": "Explore",
+    "description": "Dive into the depths of Islamic esoteric science. Browse powerful collections of secrets, proven recipes, and discover the wisdom of the ancients.",
+    "buttonAsma": "Your Divine Names",
+    "buttonTreatises": "Ancient Treatises",
+    "themesTitle": "Themes of Secrets",
+    "themesSubtitle": "Choose a specific field",
+    "wisdomOfTheDay": "Wisdom of the day",
+    "shareError": "Sharing is not supported on this browser.",
+    "themesOfSecrets": "Themes of Secrets",
+    "selectSpecificField": "Choose a specific field",
+    "secrets": "secrets",
+    "library": "Library",
+    "librarySubtitle": "Manuscripts, PDFs & Audios",
+    "support": "Support & Help",
+    "supportSubtitle": "Contact a spiritual master",
+    "wisdomShareTitle": "Wisdom of the Day - AsrarHub",
+    "shareErrorText": "Sharing is not supported on this browser.",
+    "lexiconTitle": "Lexicon of Symbols",
+    "lexiconDesc": "Discover the esoteric meaning of Arabic letters (Ilm al-Huruf), sacred numbers and Quranic symbolic elements.",
+    "lexiconLink": "Consult the lexicon",
+    "quizTitle": "Asrar Quiz",
+    "quizDesc": "Test your knowledge on the science of secrets. From Divine Names to protective Surahs, evaluate your understanding.",
+    "quizLink": "Start the quiz",
+    "calendarTitle": "Hijri Calendar Converter",
+    "calendarDesc": "Convert Gregorian dates to Hijri dates to identify auspicious lunar days for your spiritual operations.",
+    "calendarLink": "Convert a date",
+    "downloadTitle": "Downloads & Library",
+    "downloadDesc": "Access classical treatises in PDF, prayer audios, and blank grids for your wafq.",
+    "downloadLink": "Access the library",
+    "lunarTitle": "Lunar Calendar",
+    "lunarDate": "14 Muharram 1446 AH • Waxing Crescent",
+    "lunarFavorable": "Favorable phase for Fath Wirds",
+    "lunarIllumination": "65% Illumination",
+    "lunarViewFull": "View full calendar"
+  },
+  "toolsDashboard": {
+    "title": "Mystical Tools",
+    "description": "Powerful and professional tools reserved for initiates of the science of secrets.",
+    "simpleTools": "Simple Tools",
+    "advancedTools": "Advanced Tools",
+    "abjadTitle": "Abjad Calculator",
+    "abjadDesc": "Calculate the mystical numerical value of your names and wirds.",
+    "asmaTitle": "Personal Divine Names",
+    "asmaDesc": "Discover your corresponding divine names based on the mystical weight of your name.",
+    "names99Title": "The 99 Names of Allah"
+  },
+  "journal": {
+    "title": "Spiritual Journal",
+    "subtitle": "Reflections, wirds, and progression",
+    "studies": "Studies",
+    "reflections": "Reflections",
+    "newEntry": "New Entry",
+    "wirdsCompleted": "Completed Wirds",
+    "wirdsPlaceholder": "E.g.: Hizb al-Bahr (1x)",
+    "progressLabel": "Asrar Progress & Studies",
+    "progressPlaceholder": "E.g.: Study of the Fatiha Khassiyya completed.",
+    "thoughtsLabel": "Reflections & States (Ahwal)",
+    "thoughtsPlaceholder": "Your thoughts, dreams, or spiritual states...",
+    "emptyJournal": "Your journal is empty.",
+    "emptyJournalSub": "Start noting your spiritual accomplishments.",
+    "wirdsLabel": "Wirds"
+  },
   "namesOfAllah": {
     "title": "Divine Names (Asma al-Husna)",
     "subtitle": "Detailed Study & Abjad Weight",
@@ -30,6 +93,338 @@
     "khatim": "Khatim",
     "counts": "Numbers",
     "abjad": "Abjad",
-    "khassiyya": "Khassiyya & Symbol"
+    "khassiyya": "Khassiyya & Symbol",
+    "versesAndSurahs": "Verses and Surahs",
+    "surah": "Surah",
+    "verse": "Verse",
+    "seeOccurrences": "View all occurrences",
+    "occurrencesLimit": "Occurrences could not be loaded or have exceeded the display limit.",
+    "initiationSecret": "Initiatory secret: Extracting all these occurrences (Ayat) to recite them together constitutes the \"Khatm Al-Akbar\" (Great Seal) of this divine Name, releasing the totality of its manifestation energy."
+  },
+  "tools": {
+    "abjad": {
+      "title": "Abjad Calculator",
+      "description": "Calculate the mystical numerical value of your names and wirds.",
+      "subtitle": "Numerical value calculator",
+      "inputLabel": "Enter text in Arabic",
+      "inputPlaceholder": "Ex: بسم الله الرحمن الرحيم",
+      "words": "Words",
+      "letters": "Letters",
+      "save": "Save",
+      "clear": "Clear",
+      "mashriq": "Mashriq",
+      "maghribi": "Maghribi",
+      "copy": "Copy",
+      "copied": "Copied",
+      "adadByWords": "Adad by Words",
+      "adadByLetters": "Adad by Letters",
+      "oriental": "Orient.",
+      "occidental": "Occid.",
+      "historyTitle": "Value History",
+      "history": "History",
+      "clearHistory": "Clear",
+      "noHistory": "No history yet."
+    },
+    "asma": {
+      "title": "Personal Divine Names (Asma)",
+      "description": "Discover your divine names corresponding to the mystical weight of your name.",
+      "subtitle": "Deep esoteric analysis of your divine resonance",
+      "intro": "Enter the <strong>Numerical Weight (Abjad)</strong> of your full name. This engine will extract the Divine Names whose vibratory value is closest to your essence. Each attribute is detailed according to the science of secrets (Sirr al-Asrar) to define your unique Zikr.",
+      "inputLabel": "Your Numerical Value (PM)",
+      "inputPlaceholder": "Enter a number (Ex: 129)",
+      "calculate": "Calculate",
+      "resultsTitle": "Your Resonating Names (Personal Zikr)",
+      "resultsDesc": "The first Name displayed is the one that merges most perfectly with your soul imprint. Click on a card to reveal the secrets.",
+      "mainAffinity": "Main Affinity",
+      "maqam": "Maqam (Station)",
+      "ruhaniyya": "Ruhaniyya (Celestial Servant)",
+      "sirr": "Sirr al-Asrar (Deep Esoteric Exegesis)",
+      "khassiyya": "Vibratory Khassiyya (Earthly Benefit)",
+      "tariqa": "Tariqa / Riyadha Modalities (Retreat)",
+      "theurgic": "Theurgic Applications (Talsam & Khatim)",
+      "talsamCode": "Talsamic Code (Derivation)",
+      "talsamDesc": "Vibratory connection formula for the value",
+      "muthallath": "Muthallath (3x3 Magic Square)",
+      "murabba": "Murabba' (4x4 Magic Square)"
+    },
+    "99names": {
+      "title": "The 99 Names of Allah",
+      "description": "Search, study, and understand the Sublime Names (Asma al-Husna)."
+    },
+    "quran": {
+      "title": "Holy Quran",
+      "description": "Reading and meditation on the Quran, the fundamental tool of any Asrar."
+    },
+    "tasbih": {
+      "title": "Smart Tasbih",
+      "description": "A smart zikr counter to track your daily recitations.",
+      "subtitle": "Digital counter with haptic feedback",
+      "tapToCount": "Tap to count",
+      "reset": "Reset",
+      "target": "Target",
+      "vibration": "Vibration",
+      "sound": "Sound",
+      "lap": "Lap",
+      "history": "History",
+      "clearHistory": "Clear History",
+      "noHistory": "No history yet.",
+      "save": "Save Session"
+    },
+    "daily-dhikr": {
+      "title": "Daily Dhikr Tracker",
+      "description": "Set goals and track your daily Dhikr with persistence."
+    },
+    "planetary": {
+      "title": "Planetary Hours",
+      "description": "Determine the auspicious spiritual hours for your invocations."
+    },
+    "zakat": {
+      "title": "Zakat Calculator",
+      "description": "Accurately calculate your Zakat al-Maal on various wealth.",
+      "subtitle": "Calculate your Zakat al-Maal based on Nissab",
+      "config": "Market configuration",
+      "goldPrice": "Gold price (g)",
+      "silverPrice": "Silver price (g)",
+      "assets": "Your Assets (last 12 months)",
+      "goldAssets": "Gold in your possession (g)",
+      "silverAssets": "Silver in your possession (g)",
+      "cashAssets": "Liquidity / Savings",
+      "stockAssets": "Value of Stocks / Shares",
+      "merchAssets": "Merchandise value",
+      "deductions": "Deductions",
+      "debtsDesc": "Debts to pay immediately",
+      "reset": "Reset",
+      "resultsTitle": "Calculation Result",
+      "totalAssets": "Total Assets",
+      "debtsVal": "Debts",
+      "netAmount": "Net Amount",
+      "nissabRef": "Nissab Reference",
+      "zakatDue": "Zakat Due (2.5%)",
+      "notEligible": "You are not eligible to pay Zakat this year.",
+      "nissabInfo": "The Nissab used is the lowest between Gold and Silver for the benefit of the poor (Usually Silver)."
+    },
+    "faraid": {
+      "title": "Faraid Calculator",
+      "description": "Calculate inheritance shares according to Islamic jurisprudence."
+    },
+    "dreams": {
+      "title": "Dream Journal",
+      "description": "Analyze and document your dreams with interpretations."
+    },
+    "personal-wird": {
+      "title": "Wird Generator",
+      "description": "Istikhraj al-Asma: Calculate your personal Zikr based on your mystical weight."
+    },
+    "lunar-mansions": {
+      "title": "Lunar Mansions",
+      "description": "Manazil al-Qamar: Follow the 28 astrological mansions for your operations."
+    },
+    "spiritual-compatibility": {
+      "title": "Spiritual Compatibility",
+      "description": "Hisab al-Tawafuq: Al-Buni's rule for marriage and partnerships."
+    },
+    "ilm-jafar": {
+      "title": "Jafar Oracle",
+      "description": "Ilm al-Jafar: Supreme divination through the fracturing of letters (Taksir)."
+    },
+    "grand-oaths": {
+      "title": "Grand Oaths",
+      "description": "Da'awat & Azayim: Library of major invocations."
+    },
+    "elemental": {
+      "title": "Elemental Analyzer",
+      "description": "Tabai' al-Huruf: Discover the dominant nature of your name (Fire, Earth, Air, Water)."
+    },
+    "geomancy": {
+      "title": "Arabic Geomancy",
+      "description": "Khatt ar-Raml: Generate and interpret geomantic figures for consultation."
+    },
+    "letters": {
+      "title": "Science of Letters",
+      "description": "Sirr al-Huruf: Discover the mysteries associated with each Arabic letter."
+    },
+    "rouhaniyya": {
+      "title": "Rouhaniyya Extractor",
+      "description": "Extraction of celestial or terrestrial spirits based on Names and Weight."
+    },
+    "taksir": {
+      "title": "Taksir (Fracturing)",
+      "description": "Generate Taksir matrices and letter breakages."
+    },
+    "sirr": {
+      "title": "Sirr Al-Asrar",
+      "description": "Absolute esoteric analysis: elements, auras, and khuddam."
+    },
+    "zairja": {
+      "title": "Zairja Oracle",
+      "description": "The ancestral Sufi machine to predict and clarify mystical questions."
+    },
+    "khatim": {
+      "title": "Khatim Generator",
+      "description": "Create 3x3 magic squares (Wafq) based on numerical values."
+    },
+    "ruqyah": {
+      "title": "Ruqyah Shari'ah",
+      "description": "Intensive spiritual treatment sessions with targeted repetitions (7 to 1000)."
+    },
+    "talsam": {
+      "title": "Talsam Generator",
+      "description": "Create words of power and encrypted talsams to encapsulate your invocations."
+    },
+    "istikhara": {
+      "title": "Digital Istikhara",
+      "description": "Spiritual drawing of lots based on the Holy Quran and the science of Abjad."
+    },
+    "khouddam": {
+      "title": "Khouddam Extractor",
+      "description": "Calculate and invoke angelic and terrestrial spiritual entities (A'il and Yush) linked to a name."
+    },
+    "awfaq": {
+      "title": "Awfaq Generator",
+      "description": "Create complex magic squares (Muthallath, Murabba) with planetary alignment and intentions."
+    },
+    "quranic-faal": {
+      "title": "Quranic Istikhara (Faal)",
+      "description": "Mystical method of consulting the Quran for divination and guidance (Drawing of lots)."
+    },
+    "names99": {
+      "title": "Asma al-Husna (99 Names)",
+      "subtitle": "The 99 beautiful Names of Allah and their secrets",
+      "searchPlaceholder": "Search by name, meaning or Abjad (e.g. 66)",
+      "abjadWeight": "Abjad Weight",
+      "viewQuran": "View in Quran",
+      "viewZikr": "Zikr Secrets",
+      "viewKhatim": "View Khatim",
+      "quranicContext": "Quranic Context",
+      "mentions": "mentions",
+      "surah": "Surah",
+      "verse": "Verse",
+      "esotericMeaning": "Esoteric Meaning",
+      "zikrGuide": "Zikr Guide & Modalities",
+      "traditionalCounts": "Traditional Numbers (Benefits)",
+      "traditionalCountsDesc": "Every number carries a specific intention and spiritual polarity.",
+      "theurgicSquare": "Theurgic Square (Khatim)",
+      "talsamDesc": "Vibratory formula of connection for the value",
+      "muthallath": "Muthallath (3x3 Magic Square)",
+      "murabba": "Murabba' (4x4 Magic Square)",
+      "interactiveTasbih": "Interactive Tasbih",
+      "reset": "Reset",
+      "backToList": "Back to List"
+    },
+    "dailyDhikr": {
+      "title": "Daily Dhikr Tracker",
+      "subtitle": "Track your daily litanies and spiritual goals",
+      "addDhikr": "Add Dhikr",
+      "dhikrName": "Dhikr Name",
+      "target": "Target",
+      "progress": "Progress",
+      "completed": "Completed",
+      "edit": "Edit",
+      "delete": "Delete",
+      "reset": "Reset",
+      "noDhikr": "No Dhikr found. Add one to get started.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "namePlaceholder": "E.g. Astaghfirullah",
+      "targetPlaceholder": "E.g. 100"
+    }
+  },
+  "common": {
+    "calculate": "Calculate",
+    "clear": "Clear",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "generate": "Generate",
+    "reset": "Reset",
+    "results": "Results",
+    "copy": "Copy",
+    "copied": "Copied",
+    "backToTools": "Back to Tools",
+    "result": "Result",
+    "details": "Details",
+    "interpretation": "Interpretation",
+    "close": "Close"
+  },
+  "exploreCategories": {
+    "protection": {
+      "title": "Protection (Tahsin)",
+      "description": "Spiritual shields, protection against the evil eye and sorcery."
+    },
+    "fath": {
+      "title": "Opening (Fath)",
+      "description": "For unblocking difficult situations and professional success."
+    },
+    "rizq": {
+      "title": "Sustenance (Rizq)",
+      "description": "Secrets for attracting wealth, luck and abundance."
+    },
+    "shifa": {
+      "title": "Healing (Shifa)",
+      "description": "Remedies and invocations for physical and spiritual health."
+    },
+    "mahabba": {
+      "title": "Love (Mahabba)",
+      "description": "For family harmony, marriage and being loved by creatures."
+    },
+    "ilm_huruf": {
+      "title": "Science of Letters",
+      "description": "Exploration of Ilm al-Huruf and the secrets of the Arabic alphabet letters."
+    }
+  },
+  "quizz": {
+    "title": "Asrar Quiz",
+    "subtitle": "Test your mystical knowledge",
+    "questionLabel": "Question",
+    "score": "Score",
+    "explanation": "Explanation",
+    "nextQuestion": "Next question",
+    "finish": "Finish",
+    "finishedTitle": "Quiz Finished!",
+    "finishedText1": "You got",
+    "finishedText2": "correct answers out of",
+    "restart": "Restart",
+    "questions": {
+      "q1": "Which Surah is often called 'The Heart of the Quran'?",
+      "o1_1": "Al-Baqarah",
+      "o1_2": "Yasin",
+      "o1_3": "Al-Kahf",
+      "o1_4": "Ar-Rahman",
+      "e1": "Prophet Muhammad (PBUH) said: 'Everything has a heart, and the heart of the Quran is Surah Yasin.'",
+      "q2": "In the science of letters (Ilm al-Huruf), what is the numerical value of the letter 'Alif' (أ)?",
+      "o2_1": "10",
+      "o2_2": "1",
+      "o2_3": "100",
+      "o2_4": "5",
+      "e2": "In the Abjad system, Alif is the first letter and has a value of 1.",
+      "q3": "Which Divine Name is particularly invoked for the opening (Fath) of blocked situations?",
+      "o3_1": "Al-Mani'",
+      "o3_2": "Al-Fattah",
+      "o3_3": "Al-Ghaffar",
+      "o3_4": "Al-Qabid",
+      "e3": "Al-Fattah means 'The Opener', 'The Grantor of Success'.",
+      "q4": "The verse Ayat al-Kursi (The Throne Verse) is found in which Surah?",
+      "o4_1": "Al-Imran",
+      "o4_2": "An-Nisa",
+      "o4_3": "Al-Ma'idah",
+      "o4_4": "Al-Baqarah",
+      "e4": "The Throne Verse is verse 255 of Surah Al-Baqarah."
+    }
+  },
+  "lexique": {
+    "title": "Lexicon of Symbols",
+    "subtitle": "Esoteric meanings and key concepts",
+    "searchPlaceholder": "Search for a term, a letter, a number...",
+    "noResult": "No result found for"
+  },
+  "calendar": {
+    "title": "Hijri Calendar",
+    "subtitle": "Gregorian to Hijri Converter",
+    "description": "This converter uses the Umm al-Qura Islamic calendar. It allows you to identify auspicious dates (like the middle of the lunar month) for your spiritual practices.",
+    "gregorianDate": "Gregorian Date",
+    "convert": "Convert",
+    "hijriMatch": "Hijri Match",
+    "monthOf": "Month of",
+    "conversionError": "Conversion Error"
   }
 }

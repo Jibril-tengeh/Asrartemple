@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Eye, ArrowLeft, RefreshCw, Key, Flame, Wind, Droplets, Mountain, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const SirrAlAsrar: React.FC = () => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [motherName, setMotherName] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -86,7 +88,7 @@ export const SirrAlAsrar: React.FC = () => {
             <Eye className="text-violet-600" />
             Sirr Al-Asrar (Le Secret des Secrets)
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Analyse ésotérique absolue & extraction des entités</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.sirr.description")}</p>
         </div>
       </div>
 
