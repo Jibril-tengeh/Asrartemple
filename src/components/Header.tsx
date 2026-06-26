@@ -71,10 +71,10 @@ export const Header: React.FC = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? 'py-3' 
-          : 'py-4'
+          ? 'py-3 bg-emerald-600 dark:bg-emerald-800 shadow-lg' 
+          : 'py-4 bg-emerald-600 dark:bg-emerald-800'
       } px-6`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -82,11 +82,11 @@ export const Header: React.FC = () => {
           <motion.div 
             whileHover={{ rotate: 180 }}
             transition={{ duration: 0.5 }}
-            className="mr-2 text-emerald-600 dark:text-emerald-400"
+            className="mr-2 text-white"
           >
             <Sparkles size={20} />
           </motion.div>
-          <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 to-emerald-500 dark:from-emerald-400 dark:to-emerald-200 tracking-tight transition-all">
+          <span className="text-xl font-extrabold text-white tracking-tight transition-all">
             AsrarHub
           </span>
         </Link>
@@ -98,7 +98,7 @@ export const Header: React.FC = () => {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 transition-colors"
+                className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
                 aria-label="Admin Dashboard"
               >
                 <Shield size={18} />
@@ -110,7 +110,7 @@ export const Header: React.FC = () => {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors hidden sm:flex"
+              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors hidden sm:flex"
               aria-label="Community"
             >
               <Users size={18} />
@@ -123,12 +123,12 @@ export const Header: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                className="relative p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
                 aria-label="Notifications"
               >
                 <Bell size={18} />
                 {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-emerald-600 dark:border-emerald-800"></span>
                 )}
               </motion.button>
               <AnimatePresence>
@@ -171,7 +171,7 @@ export const Header: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setLangMenuOpen(!langMenuOpen)}
-              className="flex items-center space-x-1.5 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              className="flex items-center space-x-1.5 p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
               aria-label="Toggle language menu"
             >
               <Languages size={18} />
@@ -214,7 +214,7 @@ export const Header: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
             aria-label="Toggle dark mode"
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
@@ -224,7 +224,7 @@ export const Header: React.FC = () => {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
               aria-label="Community"
             >
               <Users size={18} />
@@ -235,12 +235,12 @@ export const Header: React.FC = () => {
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 dark:from-emerald-900 dark:to-emerald-800 flex items-center justify-center overflow-hidden ring-2 ring-emerald-500/20 cursor-pointer ml-1"
+              className="w-8 h-8 rounded-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20 cursor-pointer ml-1"
             >
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User className="text-emerald-600 dark:text-emerald-300" size={16} />
+                <User className="text-white" size={16} />
               )}
             </motion.div>
           </Link>
@@ -250,7 +250,7 @@ export const Header: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={signOut}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
               aria-label="Sign Out"
             >
               <LogOut size={18} />
@@ -260,7 +260,7 @@ export const Header: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setAuthModalOpen(true)}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 transition-colors"
+              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
               aria-label="Sign In"
             >
               <LogIn size={18} />

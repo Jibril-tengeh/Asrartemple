@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
@@ -21,9 +21,11 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isTopContributorsOpen, setIsTopContributorsOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [lastReadPosition, setLastReadPosition] = useState<{ surahNumber: number, ayahNumberInSurah: number, surahName: string } | null>(null);
 
   useEffect(() => {
     setFilter(initialFilter);
@@ -37,6 +39,13 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
     } catch (e) {
       setBookmarks([]);
     }
+    
+    try {
+      const savedRead = localStorage.getItem('asrarhub_last_read_position');
+      if (savedRead) {
+        setLastReadPosition(JSON.parse(savedRead));
+      }
+    } catch(e) {}
   }, []);
 
   // Refresh bookmarks when window gets focus (in case they changed it on another page)
@@ -93,11 +102,11 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
       {/* Banner Section */}
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Annonce Board */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-900 dark:to-teal-900 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden text-white">
+        <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-900 dark:to-teal-900 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden text-white flex flex-col justify-between">
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <Megaphone size={100} />
           </div>
-          <div className="relative z-10 flex flex-col h-full justify-center">
+          <div className="relative z-10 flex flex-col justify-center mb-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider backdrop-blur-sm">{t('dashboardContent.announcement', 'Annonce')}</span>
             </div>
@@ -106,45 +115,69 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
               {t('dashboardContent.announcementText', 'Découvrez la nouvelle version des outils d\'AsrarHub. Le Saint Coran est désormais disponible avec une option de téléchargement pour une lecture hors ligne fluide et rapide.')}
             </p>
           </div>
+          
+          {lastReadPosition && (
+            <div className="relative z-10 mt-auto">
+              <Link to="/tools/quran?resume=true" className="inline-flex items-center gap-2 bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-4 py-2 rounded-xl transition-colors shadow-sm">
+                <BookOpen size={18} />
+                Reprendre: {lastReadPosition.surahName} (Verset {lastReadPosition.ayahNumberInSurah})
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Top Contributors */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer group"
+            onClick={() => setIsTopContributorsOpen(!isTopContributorsOpen)}
+          >
             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Trophy className="text-amber-500" size={18} /> {t('dashboardContent.topContributors', 'Top Contributeurs')}
             </h3>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
-                AH
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Ahmad Hassan</h4>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  <MapPin size={10} /> <span>{t('dashboardContent.countryMorocco', 'Maroc')}</span>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md"><ShieldCheck size={10}/> {t('dashboardContent.badgeSage', 'Sage')}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
-                MK
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Moussa Koné</h4>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  <MapPin size={10} /> <span>{t('dashboardContent.countryMali', 'Mali')}</span>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-md"><Award size={10}/> {t('dashboardContent.badgeScholar', 'Érudit')}</span>
-              </div>
+            <div className={`p-1.5 rounded-full bg-gray-50 dark:bg-gray-700/50 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all duration-300 ${isTopContributorsOpen ? 'rotate-180' : ''}`}>
+              <ChevronDown size={16} />
             </div>
           </div>
+          <AnimatePresence>
+            {isTopContributorsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                className="overflow-hidden space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
+                    AH
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Ahmad Hassan</h4>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <MapPin size={10} /> <span>{t('dashboardContent.countryMorocco', 'Maroc')}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md"><ShieldCheck size={10}/> {t('dashboardContent.badgeSage', 'Sage')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex flex-shrink-0 items-center justify-center text-white font-bold shadow-sm">
+                    MK
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Moussa Koné</h4>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <MapPin size={10} /> <span>{t('dashboardContent.countryMali', 'Mali')}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-md"><Award size={10}/> {t('dashboardContent.badgeScholar', 'Érudit')}</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -275,6 +308,26 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           </button>
         </div>
       </div>
+      
+      {searchQuery && (
+        <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex flex-shrink-0 items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Search size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Rechercher "{searchQuery}" dans le Saint Coran</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Explorez les versets et traductions correspondants.</p>
+            </div>
+          </div>
+          <Link
+            to={`/tools/quran?search=${encodeURIComponent(searchQuery)}`}
+            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors text-center shrink-0 flex items-center justify-center gap-2"
+          >
+            <BookOpen size={16} /> Rechercher
+          </Link>
+        </div>
+      )}
 
       <div className={`grid gap-3 sm:gap-6 lg:gap-8 ${
         layoutMode === 'grid2' ? 'grid-cols-2 lg:grid-cols-3' : 
