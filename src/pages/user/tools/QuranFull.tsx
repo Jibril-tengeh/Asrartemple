@@ -168,13 +168,25 @@ export const QuranFull: React.FC = () => {
   const [surahSearchQuery, setSurahSearchQuery] = useState('');
   const [showAyahSearch, setShowAyahSearch] = useState(false);
   const [readSurahs, setReadSurahs] = useState<number[]>(() => {
-    const saved = localStorage.getItem('asrarhub_read_surahs');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('asrarhub_read_surahs');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
   
   const [bookmarks, setBookmarks] = useState<AyahBookmark[]>(() => {
-    const saved = localStorage.getItem('asrarhub_quran_bookmarks');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('asrarhub_quran_bookmarks');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
 
   interface RoqyaPlaylist {
@@ -184,8 +196,14 @@ export const QuranFull: React.FC = () => {
   }
 
   const [roqyaPlaylists, setRoqyaPlaylists] = useState<RoqyaPlaylist[]>(() => {
-    const saved = localStorage.getItem('asrarhub_roqya_playlists');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('asrarhub_roqya_playlists');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {
@@ -200,8 +218,14 @@ export const QuranFull: React.FC = () => {
     timestamp: number;
   }
   const [lastReadPosition, setLastReadPosition] = useState<LastReadPosition | null>(() => {
-    const saved = localStorage.getItem('asrarhub_last_read_position');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('asrarhub_last_read_position');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : null;
+    } catch {
+      return null;
+    }
   });
 
   const [isAutoNightModeEnabled, setIsAutoNightModeEnabled] = useState(() => {
@@ -234,8 +258,14 @@ export const QuranFull: React.FC = () => {
     ayahsReadCount: number;
   }
   const [readingStats, setReadingStats] = useState<ReadingStats>(() => {
-    const saved = localStorage.getItem('asrarhub_reading_stats');
-    return saved ? JSON.parse(saved) : { pagesRead: 0, timeSpentSeconds: 0, ayahsReadCount: 0 };
+    try {
+      const saved = localStorage.getItem('asrarhub_reading_stats');
+      if (!saved) return { pagesRead: 0, timeSpentSeconds: 0, ayahsReadCount: 0 };
+      const parsed = JSON.parse(saved);
+      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : { pagesRead: 0, timeSpentSeconds: 0, ayahsReadCount: 0 };
+    } catch {
+      return { pagesRead: 0, timeSpentSeconds: 0, ayahsReadCount: 0 };
+    }
   });
 
   useEffect(() => {
@@ -482,7 +512,10 @@ export const QuranFull: React.FC = () => {
 
   const [downloadedItems, setDownloadedItems] = useState<{ [key: string]: number[] }>(() => {
     try {
-      return JSON.parse(localStorage.getItem('quran_downloaded_items') || '{}');
+      const saved = localStorage.getItem('quran_downloaded_items');
+      if (!saved) return {};
+      const parsed = JSON.parse(saved);
+      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
     } catch {
       return {};
     }
@@ -494,7 +527,10 @@ export const QuranFull: React.FC = () => {
 
   const [pausedDownloads, setPausedDownloads] = useState<{ id: string, type: 'surah' | 'page' | 'hizbQuarter' | 'juz' | 'ruku', remainingIds: number[], progress: number, total: number, label: string }[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem('quran_paused_downloads') || '[]');
+      const saved = localStorage.getItem('quran_paused_downloads');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
