@@ -160,10 +160,10 @@ export const Store: React.FC = () => {
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <ShoppingBag className="text-amber-500" />
-            Boutique Spirituelle
+            {t('store.title', 'Boutique Spirituelle')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm sm:text-base">
-            Découvrez notre sélection de produits, livres et talismans pour accompagner votre pratique.
+            {t('store.subtitle', 'Découvrez notre sélection de produits, livres et talismans pour accompagner votre pratique.')}
           </p>
         </div>
         
@@ -172,7 +172,7 @@ export const Store: React.FC = () => {
           <div className="relative w-full sm:w-64">
             <input 
               type="text" 
-              placeholder="Rechercher..."
+              placeholder={t('search', 'Rechercher...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
@@ -219,7 +219,7 @@ export const Store: React.FC = () => {
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
-              {category}
+              {t(`store.categories.${category.toLowerCase()}`, category)}
             </button>
           ))}
         </div>
@@ -365,7 +365,7 @@ export const Store: React.FC = () => {
               <div ref={scrollContainerRef} className="p-6 sm:p-8 overflow-y-auto">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300">
-                    {selectedProduct.category}
+                    {t(`store.categories.${selectedProduct.category.toLowerCase()}`, selectedProduct.category)}
                   </span>
                   <span className="text-sm text-gray-400">
                     Ajouté en {new Date(selectedProduct.date).getFullYear()}

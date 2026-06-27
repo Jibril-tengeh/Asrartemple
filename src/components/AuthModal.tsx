@@ -31,14 +31,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         const result = await signInWithEmail(email, password);
         if (result?.user && !result.user.emailVerified) {
           await auth.signOut();
-          setError('Veuillez vérifier votre email avant de vous connecter.');
+          setError(t('auth.verifyEmailFirst', 'Veuillez vérifier votre email avant de vous connecter.'));
         } else {
           onClose();
         }
       } else {
         const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$/;
         if (!strongPasswordRegex.test(password)) {
-          setError('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.');
+          setError(t('auth.strongPassword', 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.'));
           setLoading(false);
           return;
         }
@@ -53,13 +53,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
-        setError('Cet email est déjà utilisé.');
+        setError(t('auth.emailInUse', 'Cet email est déjà utilisé.'));
       } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        setError('Email ou mot de passe incorrect.');
+        setError(t('auth.invalidCredentials', 'Email ou mot de passe incorrect.'));
       } else if (err.code === 'auth/weak-password') {
-        setError('Le mot de passe doit contenir au moins 6 caractères.');
+        setError(t('auth.weakPassword', 'Le mot de passe doit contenir au moins 6 caractères.'));
       } else {
-        setError('Une erreur est survenue. Veuillez réessayer.');
+        setError(t('auth.generalError', 'Une erreur est survenue. Veuillez réessayer.'));
       }
     } finally {
       setLoading(false);
@@ -99,12 +99,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="p-6 sm:p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isLogin ? 'Bon retour !' : 'Créer un compte'}
+                  {isLogin ? t('auth.welcomeBack', 'Bon retour !') : t('auth.createAccount', 'Créer un compte')}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {isLogin 
-                    ? 'Connectez-vous pour accéder à vos outils et favoris'
-                    : 'Rejoignez-nous pour sauvegarder vos découvertes'}
+                    ? t('auth.loginSubtitle', 'Connectez-vous pour accéder à vos outils et favoris')
+                    : t('auth.registerSubtitle', 'Rejoignez-nous pour sauvegarder vos découvertes')}
                 </p>
               </div>
 
@@ -113,9 +113,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Mail size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Vérifiez votre email</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t('auth.verifyEmailTitle', 'Vérifiez votre email')}</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-                    Nous avons envoyé un lien de vérification à <span className="font-semibold">{email}</span>. Veuillez cliquer sur ce lien pour activer votre compte.
+                    {t('auth.verifyEmailDesc', 'Nous avons envoyé un lien de vérification à')} <span className="font-semibold">{email}</span>. {t('auth.verifyEmailAction', 'Veuillez cliquer sur ce lien pour activer votre compte.')}
                   </p>
                   <button
                     onClick={() => {
@@ -124,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     }}
                     className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
                   >
-                    Retour à la connexion
+                    {t('auth.backToLogin', 'Retour à la connexion')}
                   </button>
                 </div>
               ) : (
@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     {!isLogin && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Nom complet
+                          {t('auth.fullName', 'Nom complet')}
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -152,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             onChange={(e) => setName(e.target.value)}
                             required
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-                            placeholder="Votre nom"
+                            placeholder={t('auth.namePlaceholder', 'Votre nom')}
                           />
                         </div>
                       </div>
@@ -160,7 +160,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Email
+                        {t('auth.email', 'Email')}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -179,7 +179,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Mot de passe
+                        {t('auth.password', 'Mot de passe')}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -202,17 +202,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       disabled={loading}
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl font-medium transition-colors mt-2"
                     >
-                      {loading ? 'Chargement...' : (isLogin ? 'Se connecter' : 'S\'inscrire')}
+                      {loading ? t('auth.loading', 'Chargement...') : (isLogin ? t('auth.login', 'Se connecter') : t('auth.register', "S'inscrire"))}
                     </button>
                   </form>
 
                   <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-                    {isLogin ? "Vous n'avez pas de compte ? " : "Vous avez déjà un compte ? "}
+                    {isLogin ? t('auth.noAccount', "Vous n'avez pas de compte ? ") : t('auth.hasAccount', "Vous avez déjà un compte ? ")}
                     <button
                       onClick={() => setIsLogin(!isLogin)}
                       className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
-                      {isLogin ? "S'inscrire" : "Se connecter"}
+                      {isLogin ? t('auth.register', "S'inscrire") : t('auth.login', "Se connecter")}
                     </button>
                   </div>
                 </>

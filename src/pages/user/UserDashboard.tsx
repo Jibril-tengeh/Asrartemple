@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
@@ -25,6 +25,7 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   const filterRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [quranBookmarks, setQuranBookmarks] = useState<any[]>([]);
   const [lastReadPosition, setLastReadPosition] = useState<{ surahNumber: number, ayahNumberInSurah: number, surahName: string } | null>(null);
 
   useEffect(() => {
@@ -38,6 +39,13 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
       setBookmarks(Array.isArray(parsed) ? parsed : []);
     } catch (e) {
       setBookmarks([]);
+    }
+    
+    try {
+      const parsedQuran = JSON.parse(localStorage.getItem('asrarhub_quran_bookmarks') || '[]');
+      setQuranBookmarks(Array.isArray(parsedQuran) ? parsedQuran : []);
+    } catch (e) {
+      setQuranBookmarks([]);
     }
     
     try {
@@ -126,6 +134,36 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           )}
         </div>
 
+        {/* My Quran Bookmarks */}
+        {quranBookmarks.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <Bookmark className="text-emerald-500" size={18} /> Signets du Coran
+            </h3>
+            <div className="space-y-3">
+              {quranBookmarks.map((bookmark, idx) => (
+                <Link
+                  key={idx}
+                  to={`/tools/quran?surah=${bookmark.surahNumber}&ayah=${bookmark.ayahNumberInSurah}`}
+                  className="block bg-gray-50 dark:bg-gray-750 rounded-xl p-4 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-emerald-800"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      Sourate {bookmark.surahName}
+                    </h4>
+                    <span className="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-400 px-2 py-1 rounded-full">
+                      Verset {bookmark.ayahNumberInSurah}
+                    </span>
+                  </div>
+                  {bookmark.note && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">"{bookmark.note}"</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Top Contributors */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div 
@@ -194,7 +232,7 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Mots-clés, sourates, versets..."
+                placeholder={t('dashboardContent.searchPlaceholder', "Mots-clés, sourates, versets...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-full pl-10 pr-10 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm shadow-sm"
@@ -275,7 +313,7 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
                         : 'text-gray-700 dark:text-gray-200'
                       }`}
                   >
-                    <span>{cat === 'all' ? t('all') : cat === 'favoris' ? 'Favoris' : cat === 'wird' ? 'Versets' : cat === 'secret' ? 'Secrets' : 'Recettes'}</span>
+                    <span>{cat === 'all' ? t('all') : cat === 'favoris' ? t('favorites', 'Favoris') : cat === 'wird' ? t('wirds', 'Versets') : cat === 'secret' ? t('secrets', 'Secrets') : t('recettes', 'Recettes')}</span>
                     {filter === cat && <span className="text-emerald-500 text-[10px]">●</span>}
                   </button>
                 ))}
@@ -316,15 +354,15 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
               <Search size={20} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Rechercher "{searchQuery}" dans le Saint Coran</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Explorez les versets et traductions correspondants.</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{t('searchInQuran', `Rechercher "{searchQuery}" dans le Saint Coran`).replace('{searchQuery}', searchQuery)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('searchInQuranDesc', 'Explorez les versets et traductions correspondants.')}</p>
             </div>
           </div>
           <Link
             to={`/tools/quran?search=${encodeURIComponent(searchQuery)}`}
             className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors text-center shrink-0 flex items-center justify-center gap-2"
           >
-            <BookOpen size={16} /> Rechercher
+            <BookOpen size={16} /> {t('searchButton', 'Rechercher')}
           </Link>
         </div>
       )}
@@ -343,7 +381,7 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
               <Search className="text-gray-400" size={24} />
             </div>
-            <p className="text-gray-500 dark:text-gray-400">Aucun résultat trouvé.</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('dashboardContent.noResults', "Aucun résultat trouvé.")}</p>
           </div>
         )}
       </div>

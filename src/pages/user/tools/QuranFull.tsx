@@ -16,15 +16,17 @@ const QURAN_RECITERS = [
 ];
 
 const MUSHAF_OPTIONS = [
-  { id: 'Amiri Quran', name: 'Mushaf Unicode Text', desc: 'The basic Unicode mushaf with font adjustment options', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾ فَذَٰلِكَ ٱلَّذِى يَدُعُّ ٱلْيَتِيمَ ﴿٢﴾', style: {fontFamily: '"Amiri Quran", serif'} },
-  { id: 'Tajweed', name: 'Mushaf Tajweed', desc: 'Color coded tajweed rules', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', style: {fontFamily: '"Amiri Quran", serif'}, isTajweed: true },
-  { id: 'Amiri', name: 'Classic Madani Mushaf', desc: 'Hijri 1405 classic Madani script', preview: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\nأَرَأَيْتَ الَّذِي يُكَذِّبُ بِالدِّينِ ﴿١﴾ فَذَٰلِكَ الَّذِي يَدُعُّ الْيَتِيمَ ﴿٢﴾', style: {fontFamily: '"Amiri", serif'} },
-  { id: 'Lateef', name: 'Naskh (Indopak)', desc: 'Mushaf Naskh (Indopak) script', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾ فَذَٰلِكَ ٱلَّذِى يَدُعُّ ٱلْيَتِيمَ ﴿٢﴾', style: {fontFamily: '"Lateef", serif', fontSize: '1.2em'} },
-  { id: 'Scheherazade New', name: 'Madani Mushaf with Tajweed', desc: 'Mushaf, Madani script, with Tajweed', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾ فَذَٰلِكَ ٱلَّذِى يَدُعُّ ٱلْيَتِيمَ ﴿٢﴾', style: {fontFamily: '"Scheherazade New", serif'} },
-  { id: 'Noto Naskh Arabic', name: 'Warsh / Qaloon', desc: 'Alternative modern script', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾ فَذَٰلِكَ ٱلَّذِى يَدُعُّ ٱلْيَتِيمَ ﴿٢﴾', style: {fontFamily: '"Noto Naskh Arabic", serif'} }
+  { id: 'Amiri Quran', name: 'Uthmani (Amiri)', desc: 'Standard Uthmani script', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"Amiri Quran", "Amiri", serif'} },
+  { id: 'Tajweed', name: 'Mushaf Tajweed', desc: 'Color coded tajweed rules', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"Amiri Quran", "Amiri", serif'}, isTajweed: true },
+  { id: 'Amiri', name: 'Amiri', desc: 'Classic Madani script', preview: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\nأَرَأَيْتَ الَّذِي يُكَذِّبُ بِالدِّينِ ﴿١﴾', style: {fontFamily: '"Amiri", serif'} },
+  { id: 'Lateef', name: 'Lateef', desc: 'Clear and readable', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"Lateef", serif', fontSize: '1.2em'} },
+  { id: 'Scheherazade New', name: 'IndoPak', desc: 'Popular in South Asia', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"Scheherazade New", serif'} },
+  { id: 'Noto Naskh Arabic', name: 'Naskh', desc: 'Alternative modern script', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"Noto Naskh Arabic", serif'} },
+  { id: 'KFGQPC Uthman Taha Naskh', name: 'Adwa (Uthman Taha)', desc: 'Standard printed script', preview: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\n\nأَرَءَيْتَ ٱلَّذِى يُكَذِّبُ بِٱلدِّينِ ﴿١﴾', style: {fontFamily: '"KFGQPC Uthman Taha Naskh", "Amiri", serif'} }
 ];
 
-const toArabicNumeral = (num: number) => {
+const toArabicNumeral = (num: number | undefined | null) => {
+  if (num === null || num === undefined) return '';
   const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   return num.toString().split('').map(digit => arabicNumbers[parseInt(digit)]).join('');
 };
@@ -295,6 +297,21 @@ export const QuranFull: React.FC = () => {
     localStorage.setItem('asrarhub_auto_night_mode', isAutoNightModeEnabled.toString());
   }, [isAutoNightModeEnabled]);
 
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('asrarhub_quran_search_history');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('asrarhub_quran_search_history', JSON.stringify(searchHistory));
+  }, [searchHistory]);
+
   const [activeModal, setActiveModal] = useState<'bookmarks' | 'search' | 'dashboard' | 'settings' | null>(null);
   const [advancedSearchQuery, setAdvancedSearchQuery] = useState('');
   const [advancedSearchResults, setAdvancedSearchResults] = useState<any[]>([]);
@@ -332,6 +349,10 @@ export const QuranFull: React.FC = () => {
     const queryToUse = directQuery || advancedSearchQuery;
     if (!queryToUse.trim()) return;
     
+    setSearchHistory(prev => {
+      const filtered = prev.filter(q => q.toLowerCase() !== queryToUse.toLowerCase().trim());
+      return [queryToUse.trim(), ...filtered].slice(0, 10); // Keep last 10
+    });
     setAdvancedSearchQuery(queryToUse);
     setIsSearching(true);
     setAdvancedSearchResults([]);
@@ -612,30 +633,72 @@ export const QuranFull: React.FC = () => {
         isLocalIntercept = true;
       }
 
-      const res = await fetch(targetUrl);
-      const data = await res.json();
+      // console.log(`[QuranFull] Fetching targetUrl: ${targetUrl} (isLocalIntercept: ${isLocalIntercept})`);
+      let data;
+      try {
+        const res = await fetch(targetUrl);
+        // console.log(`[QuranFull] Fetch res status for ${targetUrl}: ${res.status}`);
+        
+        if (!res.ok) {
+           throw new Error(`Local fetch returned status: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+           throw new Error("Received HTML instead of JSON (likely 404 fallback)");
+        }
 
-      if (isLocalIntercept && data.code === 200 && data.data && data.data.ayahs && url.includes(reciterApiId)) {
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+          if (!data || data.code !== 200) {
+             // console.warn(`[QuranFull] Invalid local data for ${targetUrl}:`, data);
+             throw new Error("Invalid local data");
+          }
+        } catch(e) {
+          // console.error(`[QuranFull] JSON Parse failed for ${targetUrl}. Text length: ${text.length}`);
+          throw new Error("JSON Parse failed");
+        }
+      } catch (localErr) {
+        if (isLocalIntercept) {
+          // Si l'interception locale échoue (fichier introuvable ou erreur de parse), on fetch directement depuis l'API distante
+          // console.warn(`[QuranFull] Local fetch failed for ${targetUrl}, falling back to network api ${url}:`, localErr);
+          const realRes = await fetch(url);
+          // console.log(`[QuranFull] Network fetch status for ${url}: ${realRes.status}`);
+          data = await realRes.json();
+        } else {
+          // console.error(`[QuranFull] Fetch failed for ${targetUrl}:`, localErr);
+          throw localErr;
+        }
+      }
+
+      if (isLocalIntercept && data && data.code === 200 && data.data && data.data.ayahs && url.includes(reciterApiId)) {
           data.data.ayahs = data.data.ayahs.map((a: any) => ({
               ...a,
               audio: `https://cdn.islamic.network/quran/audio/128/${reciterApiId}/${a.number}.mp3`
           }));
       }
       
-      if (data.code === 200) {
-        await set(url, data);
+      if (data && data.code === 200) {
+        try {
+          await set(url, data);
+          console.log(`[QuranFull] Successfully cached data for ${url}`);
+        } catch (idbSetErr) {
+          console.warn(`[QuranFull] IDB set failed for ${url}:`, idbSetErr);
+        }
       }
       return data;
     } catch (err) {
-      console.warn('Fetch error for', url, 'falling back to proxy...', err);
+      console.warn(`[QuranFull] fetchWithCache final error for ${url}, falling back to proxy:`, err);
       if (url !== 'https://api.alquran.cloud/v1/surah' && !url.includes('/data/quran/')) {
          try {
            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+           console.log(`[QuranFull] Fetching via proxy: ${proxyUrl}`);
            const res = await fetch(proxyUrl);
            const proxyData = await res.json();
            const data = JSON.parse(proxyData.contents);
-           if (data.code === 200) {
-             await set(url, data);
+           if (data && data.code === 200) {
+             try { await set(url, data); } catch (e) {}
            }
            return data;
          } catch(e) {
@@ -1119,10 +1182,10 @@ export const QuranFull: React.FC = () => {
 
       const [arData, tajweedData, frData, enData, haData] = await Promise.all([
         fetchWithCache(endpointAr),
-        fetchWithCache(endpointTajweed),
-        fetchWithCache(endpointFr),
-        fetchWithCache(endpointEn),
-        fetchWithCache(endpointHa)
+        fetchWithCache(endpointTajweed).catch(() => null),
+        fetchWithCache(endpointFr).catch(() => null),
+        fetchWithCache(endpointEn).catch(() => null),
+        fetchWithCache(endpointHa).catch(() => null)
       ]);
       
       const processData = (data: any, isHizb: boolean, hizbNum: number) => {
@@ -1252,7 +1315,7 @@ export const QuranFull: React.FC = () => {
             </Link>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <BookOpen className="text-emerald-500" />
-              Le Saint Coran (Al-Qur'an)
+              {t('tools.quran.title', "Le Saint Coran (Al-Qur'an)")}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.quran.description")}</p>
           </div>
@@ -1298,7 +1361,7 @@ export const QuranFull: React.FC = () => {
               </div>
               <input
                 type="text"
-                placeholder="Rechercher une sourate (ex: Ya-Sin, 36, L'Aube)..."
+                placeholder={t('searchSurah', "Rechercher une sourate (ex: Ya-Sin, 36, L'Aube)...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-3 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm shadow-sm transition-all"
@@ -2563,6 +2626,26 @@ export const QuranFull: React.FC = () => {
                     </form>
 
                     <div className="overflow-y-auto flex-1 pr-2 space-y-4">
+                      {!advancedSearchQuery && searchHistory.length > 0 && (
+                        <div className="mb-6">
+                          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 flex items-center justify-between">
+                            Recherches récentes
+                            <button onClick={() => setSearchHistory([])} className="text-xs text-red-500 hover:text-red-600 font-medium">Effacer</button>
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {searchHistory.map((hist, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleAdvancedSearch(undefined, hist)}
+                                className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/30 transition-colors"
+                              >
+                                {hist}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       {isSearching ? (
                         <div className="flex flex-col items-center justify-center py-10 text-gray-500">
                           <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -2621,11 +2704,38 @@ export const QuranFull: React.FC = () => {
             </AnimatePresence>
 
            {loadingSurah ? (
-             <div className="flex flex-col items-center justify-center py-20">
-               <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-               <p className="text-gray-500">Chargement de la sourate...</p>
+             <div className="space-y-6 pb-32 sm:pb-40 px-2 sm:px-4 animate-pulse">
+               {/* Skeleton for Surah Banner */}
+               <div className="w-full h-32 bg-gray-200 dark:bg-gray-800 rounded-2xl mb-8"></div>
+               {/* Skeleton for Ayahs */}
+               {Array.from({ length: 5 }).map((_, i) => (
+                 <div key={i} className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col items-end">
+                   <div className="flex items-center gap-4 w-full mb-6">
+                     <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                     <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/4"></div>
+                     <div className="flex-grow"></div>
+                     <div className="h-6 w-6 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
+                     <div className="h-6 w-6 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
+                   </div>
+                   <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-4"></div>
+                   <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-full mb-6"></div>
+                   <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full mb-2 self-start"></div>
+                   <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6 mb-2 self-start"></div>
+                   <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-2/3 self-start"></div>
+                 </div>
+               ))}
              </div>
-           ) : surahArabic && (
+           ) : !surahArabic ? (
+             <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-2xl border border-red-100 dark:border-red-900/50 max-w-md w-full shadow-sm">
+                 <p className="font-bold text-lg mb-2">Erreur de chargement</p>
+                 <p className="text-sm opacity-90">Impossible de charger le contenu. Veuillez vérifier votre connexion internet et réessayer.</p>
+                 <button onClick={() => activeSurah && loadContent(activeViewMode, activeSurah as number)} className="mt-6 px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm">
+                   Réessayer
+                 </button>
+               </div>
+             </div>
+           ) : (
              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6 pb-32 sm:pb-40">
                 {(() => {
                   const query = surahSearchQuery.trim().toLowerCase();

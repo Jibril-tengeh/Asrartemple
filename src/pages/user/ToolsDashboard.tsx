@@ -291,50 +291,50 @@ export const ToolsDashboard: React.FC = () => {
 
   const guideSteps = [
     {
-      title: "Bienvenue dans les Outils Mystiques",
-      description: "Ce tableau de bord regroupe des outils professionnels pour l'étude et la pratique spirituelle. Suivez ce guide pour découvrir comment les utiliser efficacement.",
+      title: t('toolsDashboard.guide.welcomeTitle', "Bienvenue dans les Outils Mystiques"),
+      description: t('toolsDashboard.guide.welcomeDesc', "Ce tableau de bord regroupe des outils professionnels pour l'étude et la pratique spirituelle. Suivez ce guide pour découvrir comment les utiliser efficacement."),
       icon: Compass,
       color: "text-emerald-500",
       bg: "bg-emerald-100 dark:bg-emerald-900/30"
     },
     {
-      title: "Calculateur Abjad",
-      description: "Le calcul du poids mystique (Adad) est la base de toute opération. Utilisez cet outil pour convertir vos noms ou invocations en nombres selon différentes méthodes (Maghrébi, Machriqi).",
+      title: t('toolsDashboard.guide.abjadTitle', "Calculateur Abjad"),
+      description: t('toolsDashboard.guide.abjadDesc', "Le calcul du poids mystique (Adad) est la base de toute opération. Utilisez cet outil pour convertir vos noms ou invocations en nombres selon différentes méthodes (Maghrébi, Machriqi)."),
       icon: Calculator,
       color: "text-blue-500",
       bg: "bg-blue-100 dark:bg-blue-900/30"
     },
     {
-      title: "Générateur de Khatim",
-      description: "Une fois le poids mystique connu, entrez-le dans le générateur de Khatim pour créer un carré magique (Wafq) 3x3 équilibré, prêt pour vos travaux spirituels.",
+      title: t('toolsDashboard.guide.khatimTitle', "Générateur de Khatim"),
+      description: t('toolsDashboard.guide.khatimDesc', "Une fois le poids mystique connu, entrez-le dans le générateur de Khatim pour créer un carré magique (Wafq) 3x3 équilibré, prêt pour vos travaux spirituels."),
       icon: Hexagon,
       color: "text-purple-500",
       bg: "bg-purple-100 dark:bg-purple-900/30"
     },
     {
-      title: "Extraction des Noms (Istikhraj)",
-      description: "Utilisez les outils 'Générateur de Wird' ou 'Noms Divins Personnels' pour découvrir les Noms d'Allah qui correspondent exactement à votre poids mystique.",
+      title: t('toolsDashboard.guide.namesTitle', "Extraction des Noms (Istikhraj)"),
+      description: t('toolsDashboard.guide.namesDesc', "Utilisez les outils 'Générateur de Wird' ou 'Noms Divins Personnels' pour découvrir les Noms d'Allah qui correspondent exactement à votre poids mystique."),
       icon: Sparkles,
       color: "text-amber-500",
       bg: "bg-amber-100 dark:bg-amber-900/30"
     },
     {
-      title: "Noms Divins et Coran",
-      description: "Explorez les 99 Noms d'Allah et leurs secrets. Utilisez le Coran pour vos récitations (Tilawa) et trouvez les versets appropriés à vos intentions.",
+      title: t('toolsDashboard.guide.divineTitle', "Noms Divins et Coran"),
+      description: t('toolsDashboard.guide.divineDesc', "Explorez les 99 Noms d'Allah et leurs secrets. Utilisez le Coran pour vos récitations (Tilawa) et trouvez les versets appropriés à vos intentions."),
       icon: Star,
       color: "text-indigo-500",
       bg: "bg-indigo-100 dark:bg-indigo-900/30"
     },
     {
-      title: "Ruqyah et Soins",
-      description: "Découvrez des versets et invocations pour la protection, la guérison et le traitement contre les maux mystiques avec des récitations ciblées.",
+      title: t('toolsDashboard.guide.ruqyahTitle', "Ruqyah et Soins"),
+      description: t('toolsDashboard.guide.ruqyahDesc', "Découvrez des versets et invocations pour la protection, la guérison et le traitement contre les maux mystiques avec des récitations ciblées."),
       icon: Shield,
       color: "text-rose-500",
       bg: "bg-rose-100 dark:bg-rose-900/30"
     },
     {
-      title: "Compteur de Zikr",
-      description: "Une fois votre recette ou secret établi, utilisez notre Tasbih intelligent pour compter vos invocations avec précision tout en vous concentrant.",
+      title: t('toolsDashboard.guide.zikrTitle', "Compteur de Zikr"),
+      description: t('toolsDashboard.guide.zikrDesc', "Une fois votre recette ou secret établi, utilisez notre Tasbih intelligent pour compter vos invocations avec précision tout en vous concentrant."),
       icon: Target,
       color: "text-cyan-500",
       bg: "bg-cyan-100 dark:bg-cyan-900/30"

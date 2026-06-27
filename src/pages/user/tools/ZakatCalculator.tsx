@@ -3,6 +3,7 @@ import { Coins, ArrowLeft, RefreshCw, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export const ZakatCalculator: React.FC = () => {
   const { t } = useLanguage();
@@ -12,6 +13,20 @@ export const ZakatCalculator: React.FC = () => {
   const [stocks, setStocks] = useState('');
   const [merchandise, setMerchandise] = useState('');
   const [debts, setDebts] = useState('');
+
+  const handleReset = async () => {
+    setGold('');
+    setSilver('');
+    setCash('');
+    setStocks('');
+    setMerchandise('');
+    setDebts('');
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+      if (navigator.vibrate) navigator.vibrate(40);
+    }
+  };
 
   const [goldPrice, setGoldPrice] = useState(65); // EUR per gram (approx)
   const [silverPrice, setSilverPrice] = useState(0.70); // EUR per gram (approx)
@@ -43,27 +58,36 @@ export const ZakatCalculator: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 min-h-screen">
-      <div className="flex items-center gap-4 mb-6">
-        <Link 
-          to="/tools" 
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </Link>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Coins className="text-amber-500" />
-            Calculateur de Zakat
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Calculez précisément votre Zakat al-Maal (2.5%)</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/tools" 
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+          >
+            <ArrowLeft size={24} />
+          </Link>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Coins className="text-amber-500" />
+              {t('tools.zakat.title', 'Calculateur de Zakat')}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('tools.zakat.description', 'Calculez précisément votre Zakat al-Maal (2.5%)')}</p>
+          </div>
         </div>
+        <button 
+          onClick={handleReset}
+          className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-xl transition-colors"
+          title={t('common.reset', 'Réinitialiser')}
+        >
+          <RefreshCw size={20} />
+        </button>
       </div>
 
       <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/50 rounded-2xl p-5 mb-8 flex items-start gap-4">
         <Info className="text-amber-500 shrink-0 mt-0.5" size={24} />
         <div className="text-sm text-amber-800 dark:text-amber-200">
-          <p className="font-bold mb-1">Le Nisab actuel (Seuil de richesse)</p>
-          <p className="mb-2">La Zakat est obligatoire si votre richesse nette atteint ou dépasse le Nisab pendant une année lunaire (Hawl).</p>
+          <p className="font-bold mb-1">{t('tools.zakat.nissabRef', 'Le Nisab actuel (Seuil de richesse)')}</p>
+          <p className="mb-2">{t('tools.zakat.nissabInfo', 'La Zakat est obligatoire si votre richesse nette atteint ou dépasse le Nisab pendant une année lunaire (Hawl).')}</p>
           <div className="grid grid-cols-2 gap-4 mt-3">
              <div className="bg-amber-100/50 dark:bg-amber-900/30 p-2 rounded-lg text-center">
                 <span className="block text-xs uppercase opacity-70 font-bold">Base Or (85g)</span>
@@ -130,21 +154,21 @@ export const ZakatCalculator: React.FC = () => {
             animate={{ scale: zakatDue > 0 ? 1.02 : 1 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <h3 className="uppercase tracking-widest text-xs font-bold mb-6 text-amber-100">Bilan Zakat</h3>
+            <h3 className="uppercase tracking-widest text-xs font-bold mb-6 text-amber-100">{t('tools.zakat.resultsTitle', 'Bilan Zakat')}</h3>
             
             <div className="space-y-3 mb-8">
                <div className="flex justify-between items-center text-sm border-b border-amber-400/30 pb-2">
-                 <span>Richesse totale estimée</span>
+                 <span>{t('tools.zakat.totalAssets', 'Richesse totale estimée')}</span>
                  <span className="font-mono">{total.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})}</span>
                </div>
                <div className="flex justify-between items-center text-sm border-b border-amber-400/30 pb-2 text-amber-200">
-                 <span>Nisab (Base Or)</span>
+                 <span>{t('tools.zakat.nissabRef', 'Nisab (Base Or)')}</span>
                  <span className="font-mono">{nisab.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})}</span>
                </div>
             </div>
 
             <div className="bg-amber-600/50 rounded-2xl p-6 text-center shadow-inner">
-               <span className="block text-amber-200 text-sm font-bold uppercase tracking-widest mb-2">Montant de Zakat dû</span>
+               <span className="block text-amber-200 text-sm font-bold uppercase tracking-widest mb-2">{t('tools.zakat.zakatDue', 'Montant de Zakat dû')}</span>
                <span className="block text-4xl sm:text-5xl font-black tabular-nums tracking-tight">
                  {zakatDue.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})}
                </span>
@@ -152,7 +176,7 @@ export const ZakatCalculator: React.FC = () => {
 
             {total > 0 && total < nisab && (
               <p className="text-center mt-6 text-sm font-medium bg-white/20 p-3 rounded-xl border border-white/30">
-                Votre richesse n'a pas atteint le Nisab. La Zakat n'est pas obligatoire.
+                {t('tools.zakat.notEligible', 'Votre richesse n\'a pas atteint le Nisab. La Zakat n\'est pas obligatoire.')}
               </p>
             )}
 

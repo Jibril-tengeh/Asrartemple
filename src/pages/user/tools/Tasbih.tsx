@@ -3,6 +3,7 @@ import { Activity, ArrowLeft, RefreshCw, Volume2, VolumeX, Settings, Target, Sav
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface Zikr {
   id: string;
@@ -113,10 +114,21 @@ export const Tasbih: React.FC = () => {
     localStorage.setItem('tasbih_settings', JSON.stringify({ sound, vibe, lastActiveId: activeId }));
   };
 
-  const triggerVibration = (type: 'tap' | 'success') => {
-    if (!vibrationEnabled || !navigator.vibrate) return;
-    if (type === 'tap') navigator.vibrate(40);
-    if (type === 'success') navigator.vibrate([100, 50, 100, 50, 100]);
+  const triggerVibration = async (type: 'tap' | 'success') => {
+    if (!vibrationEnabled) return;
+    try {
+      if (type === 'tap') {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      } else if (type === 'success') {
+        await Haptics.notification({ type: 'SUCCESS' as any });
+      }
+    } catch (e) {
+      // Fallback to web API if Capacitor is not available
+      if (navigator.vibrate) {
+        if (type === 'tap') navigator.vibrate(40);
+        if (type === 'success') navigator.vibrate([100, 50, 100, 50, 100]);
+      }
+    }
   };
 
   const playClick = () => {
