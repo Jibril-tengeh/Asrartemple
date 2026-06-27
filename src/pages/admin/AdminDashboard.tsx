@@ -10,8 +10,8 @@ import {
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import Editor from '@monaco-editor/react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';

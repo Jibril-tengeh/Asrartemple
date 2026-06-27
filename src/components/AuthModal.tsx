@@ -36,9 +36,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         const docSnap = await getDoc(userRef);
         
         let isUserAdmin = false;
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
         if (docSnap.exists() && docSnap.data().role === 'admin') {
           isUserAdmin = true;
-        } else if (result.user.email === 'jibriltengeh4@gmail.com') {
+        } else if (result.user.email && adminEmails.includes(result.user.email)) {
           // Auto-promote the specified email to admin if not already
           if (docSnap.exists()) {
              await updateDoc(userRef, { role: 'admin' });
@@ -72,8 +73,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       setError('');
       setLoading(true);
-      await signInWithGoogle();
-      onClose();
+      const result = await signInWithGoogle();
+      if (result?.user) {
+        const userRef = doc(db, 'users', result.user.uid);
+        const docSnap = await getDoc(userRef);
+        
+        let isUserAdmin = false;
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
+        if (docSnap.exists() && docSnap.data().role === 'admin') {
+          isUserAdmin = true;
+        } else if (result.user.email && adminEmails.includes(result.user.email)) {
+          if (docSnap.exists()) {
+             await updateDoc(userRef, { role: 'admin' });
+          } else {
+             await setDoc(userRef, { email: result.user.email, role: 'admin', createdAt: new Date() });
+          }
+          isUserAdmin = true;
+        }
+        
+        if (isUserAdmin) {
+          onClose();
+          navigate('/admin');
+        } else {
+          await auth.signOut();
+          setError("Accès refusé. Vous n'êtes pas administrateur.");
+          setLoading(false);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError('Erreur lors de la connexion avec Google.');

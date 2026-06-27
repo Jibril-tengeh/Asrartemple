@@ -44,15 +44,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const userRef = doc(db, 'users', firebaseUser.uid);
         
+        // Auto-promote to admin in DB if email matches
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
+        if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
+          getDoc(userRef).then(async (snap) => {
+             if (snap.exists() && snap.data().role !== 'admin') {
+                try {
+                  const { updateDoc } = await import('firebase/firestore');
+                  await updateDoc(userRef, { role: 'admin' });
+                } catch (e) { console.error(e) }
+             } else if (!snap.exists()) {
+                try {
+                  const { setDoc } = await import('firebase/firestore');
+                  await setDoc(userRef, { email: firebaseUser.email, role: 'admin', createdAt: new Date() });
+                } catch (e) { console.error(e) }
+             }
+          });
+        }
+        
         // Listen to user document changes to update role/ban status in real-time
         unsubscribeDoc = onSnapshot(userRef, (docSnap) => {
+          let currentRole = 'user';
+          if (docSnap.exists()) {
+            currentRole = docSnap.data().role || 'user';
+          }
+          const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
+          if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
+             currentRole = 'admin';
+          }
           if (docSnap.exists()) {
             const data = docSnap.data();
             setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               name: firebaseUser.displayName,
-              role: data.role || 'user',
+              role: currentRole,
               isBanned: data.isBanned || false,
               mysteryToolsDisabled: data.mysteryToolsDisabled || false,
               isTrusted: data.isTrusted || false,
@@ -65,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               name: firebaseUser.displayName,
-              role: 'user',
+              role: currentRole,
               isBanned: false,
               mysteryToolsDisabled: false,
               isTrusted: false,
