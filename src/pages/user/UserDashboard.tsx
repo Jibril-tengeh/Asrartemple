@@ -129,9 +129,9 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           
           {lastReadPosition && (
             <div className="relative z-10 mt-auto">
-              <Link to="/tools/quran?resume=true" className="inline-flex items-center gap-2 bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-4 py-2 rounded-xl transition-colors shadow-sm">
-                <BookOpen size={18} />
-                Reprendre: {lastReadPosition.surahName} (Verset {lastReadPosition.ayahNumberInSurah})
+              <Link to="/tools/quran?resume=true" className="inline-flex items-center gap-1.5 bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-3 py-1.5 rounded-lg text-sm transition-colors shadow-sm">
+                <BookOpen size={16} />
+                Reprendre : {lastReadPosition.surahName} (Verset {lastReadPosition.ayahNumberInSurah})
               </Link>
             </div>
           )}

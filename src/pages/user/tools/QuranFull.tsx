@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toPng } from 'html-to-image';
 import { useAudio } from '../../../contexts/AudioContext';
 import { get, set } from 'idb-keyval';
+import { surahTranslations } from '../../../data/surahTranslations';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -138,7 +139,7 @@ interface SurahData {
 }
 
 export const QuranFull: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [surahs, setSurahs] = useState<SurahMeta[]>([]);
   const [isPlayingFromCache, setIsPlayingFromCache] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1102,9 +1103,9 @@ export const QuranFull: React.FC = () => {
     }
   };
 
-  const handleAyahTouchStart = (ayah: { text: string, numberInSurah: number }, isTajweed: boolean) => {
+  const handleAyahTouchStart = (ayah: { text: string, numberInSurah: number, surahName?: string, surahNumber?: number, number?: number }, isTajweed: boolean) => {
     const timer = setTimeout(() => {
-      setZoomedAyah({ text: ayah.text, numberInSurah: ayah.numberInSurah, isTajweed });
+      setZoomedAyah({ text: ayah.text, numberInSurah: ayah.numberInSurah, isTajweed, surahName: ayah.surahName, surahNumber: ayah.surahNumber, ayahNumber: ayah.number });
       // Vibrate if supported to indicate long press
       if (navigator.vibrate) navigator.vibrate(50);
     }, 500);
@@ -1301,12 +1302,16 @@ export const QuranFull: React.FC = () => {
     }
   };
 
-  const filteredSurahs = surahs.filter(s => 
-    s.englishName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.englishNameTranslation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.name.includes(searchTerm) ||
-    s.number.toString() === searchTerm.trim()
-  );
+  const filteredSurahs = surahs.filter(s => {
+    const translation = surahTranslations[s.number]?.[language as keyof typeof surahTranslations[1]];
+    return (
+      s.englishName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.englishNameTranslation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.name.includes(searchTerm) ||
+      s.number.toString() === searchTerm.trim() ||
+      (translation && translation.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
 
   return (
     <div 
@@ -1427,21 +1432,21 @@ export const QuranFull: React.FC = () => {
                   className="flex items-center justify-between py-4 px-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left w-full cursor-pointer"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="w-8 text-2xl sm:text-3xl font-light text-gray-800 dark:text-gray-200 flex justify-center">
+                    <div className="w-8 text-[18px] sm:text-[24px] font-light text-gray-800 dark:text-gray-200 flex justify-center">
                       {surah.number}
                     </div>
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-[17px] font-medium text-[#2d7d45] dark:text-[#45b066]">{surah.englishName}</h3>
+                        <h3 className="text-[11px] font-medium text-[#2d7d45] dark:text-[#45b066]">{surah.englishName}</h3>
                         {downloadedItems.surah?.includes(surah.number) && (
-                          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
+                          <span className="flex items-center gap-1 text-[6px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
                             <CloudOff size={10} /> {t('offlineReady', 'Offline')}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        {surah.englishNameTranslation}
-                        <span className="text-[11px] opacity-70">
+                      <div className="flex items-center gap-1.5 text-[7px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        {surahTranslations[surah.number]?.[language as keyof typeof surahTranslations[1]] || surah.englishNameTranslation}
+                        <span className="text-[5px] opacity-70">
                           {surah.revelationType === 'Meccan' ? '🕋' : '🕌'}
                         </span>
                       </div>
@@ -1449,7 +1454,7 @@ export const QuranFull: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <span className="font-arabic text-3xl sm:text-4xl text-gray-900 dark:text-white" style={{ fontFamily: '"Amiri", serif' }}>
+                      <span className="font-arabic text-[24px] sm:text-[30px] text-gray-900 dark:text-white" style={{ fontFamily: '"Amiri", serif' }}>
                         {surah.name.replace('سُورَةُ ', '')}
                       </span>
                     </div>
@@ -1599,6 +1604,18 @@ export const QuranFull: React.FC = () => {
                          <div className="flex justify-between items-center mb-2">
                            <h4 className="font-bold text-gray-900 dark:text-white">{p.name}</h4>
                            <div className="flex gap-2">
+                             <button onClick={() => {
+                               const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
+                               const tracks = p.ayahs.map(a => ({
+                                 id: `roqya-${a.number}`,
+                                 title: `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}`,
+                                 artist: "Roqya",
+                                 url: `https://cdn.islamic.network/quran/audio/128/${reciterApiId}/${a.number}.mp3`
+                               }));
+                               playPlaylist(tracks, 0);
+                             }} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg shadow-sm border border-emerald-100 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/50" title="Jouer la playlist">
+                               <Play size={16} />
+                             </button>
                              <button onClick={() => {
                                const text = p.name + '\n\n' + p.ayahs.map(a => `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}: \n${a.text}`).join('\n\n');
                                const blob = new Blob([text], { type: 'text/plain' });
@@ -2225,7 +2242,16 @@ export const QuranFull: React.FC = () => {
                          <p className="font-arabic">{zoomedAyah.text}</p>
                        )}
                      </div>
-                     <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex items-center justify-center gap-4 w-full flex-wrap" id="zoomed-ayah-actions">
+                     <div id="image-footer" style={{ display: 'none' }} className="absolute bottom-6 left-6 right-6 justify-between items-end opacity-80 z-0">
+                       <div className="flex flex-col gap-1 items-start text-emerald-800 dark:text-emerald-200">
+                         <span className="font-bold text-xl tracking-tight">AsrarHub</span>
+                       </div>
+                       <div className="flex flex-col gap-1 items-end text-emerald-800 dark:text-emerald-200">
+                         <span className="font-bold text-lg font-arabic">{zoomedAyah.surahName?.replace('سُورَةُ ', '') || ''}</span>
+                         <span className="text-xs font-semibold uppercase tracking-widest">Verset {zoomedAyah.numberInSurah}</span>
+                       </div>
+                     </div>
+                     <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex items-center justify-center gap-4 w-full flex-wrap relative z-10" id="zoomed-ayah-actions">
                        <div className="flex flex-col gap-3 mr-auto">
                          <div className="flex items-center gap-2" id="zoomed-bg-selector">
                            {ZOOM_BACKGROUNDS.map((bg, idx) => (
@@ -2274,6 +2300,8 @@ export const QuranFull: React.FC = () => {
                              if (actionButtons) actionButtons.style.display = 'none';
                              const closeBtn = document.querySelector('.absolute.top-4.right-4') as HTMLElement;
                              if (closeBtn) closeBtn.style.display = 'none';
+                             const imageFooter = document.getElementById('image-footer');
+                             if (imageFooter) imageFooter.style.display = 'flex';
                              
                              const originalConsoleError = console.error;
                              console.error = (...args) => {
@@ -2287,6 +2315,7 @@ export const QuranFull: React.FC = () => {
                                  console.error = originalConsoleError;
                                  if (actionButtons) actionButtons.style.display = 'flex';
                                  if (closeBtn) closeBtn.style.display = 'block';
+                                 if (imageFooter) imageFooter.style.display = 'none';
                                  
                                  const link = document.createElement('a');
                                  link.download = `verset-${zoomedAyah.surahName || 'quran'}-${zoomedAyah.numberInSurah}.png`;
@@ -2298,6 +2327,7 @@ export const QuranFull: React.FC = () => {
                                  console.error = originalConsoleError;
                                  if (actionButtons) actionButtons.style.display = 'flex';
                                  if (closeBtn) closeBtn.style.display = 'block';
+                                 if (imageFooter) imageFooter.style.display = 'none';
                                });
                            }
                          }}
@@ -2881,9 +2911,9 @@ export const QuranFull: React.FC = () => {
                                   className={`inline transition-colors ${playingAyah === ayah.number ? 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 rounded-lg px-1' : ''}`}
                                   onContextMenu={(e) => {
                                     e.preventDefault();
-                                    setZoomedAyah({ text: ayahText, numberInSurah: ayah.numberInSurah, isTajweed: !!isTajweed });
+                                    setZoomedAyah({ text: ayahText, numberInSurah: ayah.numberInSurah, isTajweed: !!isTajweed, surahName: surahInfo.name, surahNumber: surahInfo.number, ayahNumber: ayah.number });
                                   }}
-                                  onTouchStart={() => handleAyahTouchStart({ text: ayahText, numberInSurah: ayah.numberInSurah }, !!isTajweed)}
+                                  onTouchStart={() => handleAyahTouchStart({ text: ayahText, numberInSurah: ayah.numberInSurah, surahName: surahInfo.name, surahNumber: surahInfo.number, number: ayah.number }, !!isTajweed)}
                                   onTouchEnd={handleAyahTouchEnd}
                                 >
                                   <span 
@@ -2979,7 +3009,7 @@ export const QuranFull: React.FC = () => {
                                const text = ayah.numberInSurah === 1 && (ayah.surah?.number || surahArabic.number) !== 1 && (ayah.surah?.number || surahArabic.number) !== 9 
                                  ? rawText.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\s*/, '') 
                                  : rawText;
-                               setZoomedAyah({ text, numberInSurah: ayah.numberInSurah, isTajweed: !!isTajweed });
+                               setZoomedAyah({ text, numberInSurah: ayah.numberInSurah, isTajweed: !!isTajweed, surahName: surahInfo.name, surahNumber: surahInfo.number, ayahNumber: ayah.number });
                              }}
                              onTouchStart={() => {
                                const isTajweed = MUSHAF_OPTIONS.find(m => m.id === fontFamily)?.isTajweed;
@@ -2987,7 +3017,7 @@ export const QuranFull: React.FC = () => {
                                const text = ayah.numberInSurah === 1 && (ayah.surah?.number || surahArabic.number) !== 1 && (ayah.surah?.number || surahArabic.number) !== 9 
                                  ? rawText.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, '').replace(/^بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\s*/, '') 
                                  : rawText;
-                               handleAyahTouchStart({ text, numberInSurah: ayah.numberInSurah }, !!isTajweed);
+                               handleAyahTouchStart({ text, numberInSurah: ayah.numberInSurah, surahName: surahInfo.name, surahNumber: surahInfo.number, number: ayah.number }, !!isTajweed);
                              }}
                              onTouchEnd={handleAyahTouchEnd}
                            >
