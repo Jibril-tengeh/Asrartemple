@@ -30,6 +30,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-i18next": "^17.0.8",
+    "react-image-crop": "^11.1.2",
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.18.0",
     "recharts": "^3.9.0",
