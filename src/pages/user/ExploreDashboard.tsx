@@ -4,66 +4,66 @@ import { Compass, Book, Shield, Heart, Sparkles, Moon, Sun, ArrowRight, Wallet, 
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 
-const categories = [
-  {
-    id: 'protection',
-    title: 'Protection (Tahsin)',
-    description: 'Boucliers spirituels, protection contre le mauvais œil et la sorcellerie.',
-    icon: Shield,
-    color: 'from-blue-500 to-indigo-600',
-    count: 24,
-  },
-  {
-    id: 'fath',
-    title: 'Ouverture (Fath)',
-    description: 'Pour le déblocage des situations difficiles et le succès professionnel.',
-    icon: Sun,
-    color: 'from-amber-400 to-orange-500',
-    count: 18,
-  },
-  {
-    id: 'rizq',
-    title: 'Subsistance (Rizq)',
-    description: 'Secrets pour l\'attirance de la richesse, la chance et l\'abondance.',
-    icon: Wallet,
-    color: 'from-emerald-400 to-teal-500',
-    count: 35,
-  },
-  {
-    id: 'shifa',
-    title: 'Guérison (Shifa)',
-    description: 'Remèdes et invocations pour la santé physique et spirituelle.',
-    icon: Activity,
-    color: 'from-rose-400 to-pink-500',
-    count: 12,
-  },
-  {
-    id: 'mahabba',
-    title: 'Amour (Mahabba)',
-    description: 'Pour l\'entente familiale, le mariage et se faire aimer par les créatures.',
-    icon: Heart,
-    color: 'from-purple-400 to-fuchsia-500',
-    count: 15,
-  },
-  {
-    id: 'ilm_huruf',
-    title: 'Science des Lettres',
-    description: 'Exploration d\'Ilm al-Huruf et les secrets des lettres de l\'alphabet arabe.',
-    icon: Moon,
-    color: 'from-slate-600 to-black',
-    count: 8,
-  }
-];
-
-const sagesses = [
-  { arabic: "مَن عَرَفَ نَفْسَهُ فَقَدْ عَرَفَ رَبَّهُ", french: "Celui qui connaît son âme, connaît son Seigneur.", source: "Sagesse Soufie" },
-  { arabic: "وَاصْبِرْ فَإِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ", french: "Et sois patient. Car Allah ne laisse pas perdre la récompense des gens de bien.", source: "Coran 11:115" },
-  { arabic: "إِنَّ مَعَ الْعُسْرِ يُسْرًا", french: "Certes, avec la difficulté est la facilité.", source: "Coran 94:6" },
-  { arabic: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ", french: "Louange à Allah par la grâce de qui s'accomplissent les bonnes œuvres.", source: "Invocation prophétique" },
-];
-
 export const ExploreDashboard: React.FC = () => {
   const { t } = useLanguage();
+
+  const categories = [
+    {
+      id: 'protection',
+      title: t('exploreDashboard.cat.protection.title', 'Protection (Tahsin)'),
+      description: t('exploreDashboard.cat.protection.desc', 'Boucliers spirituels, protection contre le mauvais œil et la sorcellerie.'),
+      icon: Shield,
+      color: 'from-blue-500 to-indigo-600',
+      count: 24,
+    },
+    {
+      id: 'fath',
+      title: t('exploreDashboard.cat.fath.title', 'Ouverture (Fath)'),
+      description: t('exploreDashboard.cat.fath.desc', 'Pour le déblocage des situations difficiles et le succès professionnel.'),
+      icon: Sun,
+      color: 'from-amber-400 to-orange-500',
+      count: 18,
+    },
+    {
+      id: 'rizq',
+      title: t('exploreDashboard.cat.rizq.title', 'Subsistance (Rizq)'),
+      description: t('exploreDashboard.cat.rizq.desc', 'Secrets pour l\'attirance de la richesse, la chance et l\'abondance.'),
+      icon: Wallet,
+      color: 'from-emerald-400 to-teal-500',
+      count: 35,
+    },
+    {
+      id: 'shifa',
+      title: t('exploreDashboard.cat.shifa.title', 'Guérison (Shifa)'),
+      description: t('exploreDashboard.cat.shifa.desc', 'Remèdes et invocations pour la santé physique et spirituelle.'),
+      icon: Activity,
+      color: 'from-rose-400 to-pink-500',
+      count: 12,
+    },
+    {
+      id: 'mahabba',
+      title: t('exploreDashboard.cat.mahabba.title', 'Amour (Mahabba)'),
+      description: t('exploreDashboard.cat.mahabba.desc', 'Pour l\'entente familiale, le mariage et se faire aimer par les créatures.'),
+      icon: Heart,
+      color: 'from-purple-400 to-fuchsia-500',
+      count: 15,
+    },
+    {
+      id: 'ilm_huruf',
+      title: t('exploreDashboard.cat.ilm_huruf.title', 'Science des Lettres'),
+      description: t('exploreDashboard.cat.ilm_huruf.desc', 'Exploration d\'Ilm al-Huruf et les secrets des lettres de l\'alphabet arabe.'),
+      icon: Moon,
+      color: 'from-slate-600 to-black',
+      count: 8,
+    }
+  ];
+
+  const sagesses = [
+    { arabic: "مَن عَرَفَ نَفْسَهُ فَقَدْ عَرَفَ رَبَّهُ", french: t('exploreDashboard.wisdom.1.text', "Celui qui connaît son âme, connaît son Seigneur."), source: t('exploreDashboard.wisdom.1.source', "Sagesse Soufie") },
+    { arabic: "وَاصْبِرْ فَإِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ", french: t('exploreDashboard.wisdom.2.text', "Et sois patient. Car Allah ne laisse pas perdre la récompense des gens de bien."), source: t('exploreDashboard.wisdom.2.source', "Coran 11:115") },
+    { arabic: "إِنَّ مَعَ الْعُسْرِ يُسْرًا", french: t('exploreDashboard.wisdom.3.text', "Certes, avec la difficulté est la facilité."), source: t('exploreDashboard.wisdom.3.source', "Coran 94:6") },
+    { arabic: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ", french: t('exploreDashboard.wisdom.4.text', "Louange à Allah par la grâce de qui s'accomplissent les bonnes œuvres."), source: t('exploreDashboard.wisdom.4.source', "Invocation prophétique") },
+  ];
   const [sagesse, setSagesse] = useState(sagesses[0]);
 
   useEffect(() => {

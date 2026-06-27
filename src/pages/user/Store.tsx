@@ -58,7 +58,7 @@ export const Store: React.FC = () => {
       }).catch(console.error);
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Lien copié dans le presse-papier !');
+      alert(t('store.linkCopied', 'Lien copié dans le presse-papier !'));
     }
   };
 
@@ -78,8 +78,8 @@ export const Store: React.FC = () => {
   const products = [
     {
       id: 1,
-      name: 'Bague de Souleymane',
-      description: 'Bague gravée avec le sceau de Souleymane pour la protection et l\'ouverture.',
+      name: t('store.items.bagueTitle', 'Bague de Souleymane'),
+      description: t('store.items.bagueDesc', 'Bague gravée avec le sceau de Souleymane pour la protection et l\'ouverture.'),
       image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop',
       icon: Shield,
       color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
@@ -89,8 +89,8 @@ export const Store: React.FC = () => {
     },
     {
       id: 2,
-      name: 'Encens Bakhour Royal',
-      description: 'Encens préparé avec des herbes sacrées pour purifier l\'espace avant les rituels.',
+      name: t('store.items.encensTitle', 'Encens Bakhour Royal'),
+      description: t('store.items.encensDesc', 'Encens préparé avec des herbes sacrées pour purifier l\'espace avant les rituels.'),
       image: 'https://images.unsplash.com/photo-1608681290333-e994e432c74d?q=80&w=800&auto=format&fit=crop',
       icon: Sparkles,
       color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
@@ -100,8 +100,8 @@ export const Store: React.FC = () => {
     },
     {
       id: 3,
-      name: "Livre: Shams al-Ma'arif",
-      description: "Livre de référence classique de l'ésotérisme (copie traduite et annotée).",
+      name: t('store.items.livreTitle', "Livre: Shams al-Ma'arif"),
+      description: t('store.items.livreDesc', "Livre de référence classique de l'ésotérisme (copie traduite et annotée)."),
       image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop',
       icon: Book,
       color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
@@ -111,8 +111,8 @@ export const Store: React.FC = () => {
     },
     {
       id: 4,
-      name: "Talisman d'Ouverture",
-      description: 'Talisman personnalisé préparé selon votre poids mystique (Abjad).',
+      name: t('store.items.talismanTitle', "Talisman d'Ouverture"),
+      description: t('store.items.talismanDesc', 'Talisman personnalisé préparé selon votre poids mystique (Abjad).'),
       image: 'https://images.unsplash.com/photo-1590033816738-900406607ea6?q=80&w=800&auto=format&fit=crop',
       icon: Zap,
       color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -229,7 +229,7 @@ export const Store: React.FC = () => {
             onClick={() => setIsSortOpen(!isSortOpen)}
             className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm"
           >
-            Trier par: {sortOption}
+            {t('store.sortBy', 'Trier par:')} {t(`store.sort.${sortOption.toLowerCase()}`, sortOption)}
             <ChevronDown size={16} />
           </button>
           
@@ -252,7 +252,7 @@ export const Store: React.FC = () => {
                       }}
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${sortOption === option ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-gray-700 dark:text-gray-300'}`}
                     >
-                      {option}
+                      {t(`store.sort.${option.toLowerCase()}`, option)}
                     </button>
                   ))}
                 </motion.div>
@@ -287,7 +287,7 @@ export const Store: React.FC = () => {
                 <button
                   onClick={(e) => toggleFavorite(product.id, e)}
                   className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-md backdrop-blur-md bg-white/80 dark:bg-gray-900/80 text-gray-500 hover:text-red-500 transition-colors"
-                  aria-label={favorites.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  aria-label={favorites.includes(product.id) ? t('store.removeFavorite', "Retirer des favoris") : t('store.addFavorite', "Ajouter aux favoris")}
                 >
                   <Heart 
                     size={20} 
@@ -310,7 +310,7 @@ export const Store: React.FC = () => {
                     }}
                     className={`py-2 sm:py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold transition-transform hover:scale-[1.02] active:scale-[0.98] ${layoutMode === 'list' ? 'px-6 text-sm sm:text-base' : 'w-full'}`}
                   >
-                    En savoir plus
+                    {t('store.learnMore', 'En savoir plus')}
                   </button>
                 </div>
               </div>
@@ -318,7 +318,7 @@ export const Store: React.FC = () => {
           ))}
           {!isLoading && filteredProducts.length === 0 && (
             <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400">
-              Aucun article trouvé pour cette recherche.
+              {t('store.noItems', 'Aucun article trouvé pour cette recherche.')}
             </div>
           )}
         </AnimatePresence>
@@ -347,7 +347,7 @@ export const Store: React.FC = () => {
                   <button 
                     onClick={() => handleShare(selectedProduct)}
                     className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-                    title="Partager"
+                    title={t('common.share', "Partager")}
                   >
                     <Share2 size={20} />
                   </button>
@@ -368,7 +368,7 @@ export const Store: React.FC = () => {
                     {t(`store.categories.${selectedProduct.category.toLowerCase()}`, selectedProduct.category)}
                   </span>
                   <span className="text-sm text-gray-400">
-                    Ajouté en {new Date(selectedProduct.date).getFullYear()}
+                    {t('store.addedIn', 'Ajouté en')} {new Date(selectedProduct.date).getFullYear()}
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
@@ -385,24 +385,24 @@ export const Store: React.FC = () => {
                     }`}
                   >
                     {isAutoScrolling ? <Pause size={18} /> : <Play size={18} />}
-                    {isAutoScrolling ? 'Pause Défilement Auto' : 'Activer Défilement Auto'}
+                    {isAutoScrolling ? t('store.pauseScroll', 'Pause Défilement Auto') : t('store.startScroll', 'Activer Défilement Auto')}
                   </button>
                 </div>
 
                 <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                   {selectedProduct.description} 
                   <br/><br/>
-                  Ceci est un aperçu rapide. Pour plus de détails sur l'utilisation et les bienfaits de ce produit, veuillez contacter notre support ou vous référer à la documentation complète une fois acquis.
+                  {t('store.quickPreview', "Ceci est un aperçu rapide. Pour plus de détails sur l'utilisation et les bienfaits de ce produit, veuillez contacter notre support ou vous référer à la documentation complète une fois acquis.")}
                   <br/><br/>
-                  *Note*: Lorsque le défilement automatique est activé, le texte défilera lentement pour vous permettre de lire ou réciter sans utiliser vos mains.
+                  {t('store.autoScrollNote', "*Note*: Lorsque le défilement automatique est activé, le texte défilera lentement pour vous permettre de lire ou réciter sans utiliser vos mains.")}
                   <br/><br/>
-                  (Plus de contenu pour tester le défilement...)
+                  {t('store.moreContent', "(Plus de contenu pour tester le défilement...)")}
                   <br/><br/>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus.
                 </p>
 
                 <div className="mb-8">
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Évaluer l'efficacité spirituelle :</div>
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('store.rateSpiritual', "Évaluer l'efficacité spirituelle :")}</div>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -422,12 +422,12 @@ export const Store: React.FC = () => {
 
                 <div className="flex gap-4">
                   <button className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors">
-                    Visiter
+                    {t('store.visit', 'Visiter')}
                   </button>
                   <button 
                     onClick={() => handleShare(selectedProduct)}
                     className="w-16 flex items-center justify-center rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    title="Partager"
+                    title={t('common.share', "Partager")}
                   >
                     <Share2 size={24} className="text-gray-500 dark:text-gray-400" />
                   </button>

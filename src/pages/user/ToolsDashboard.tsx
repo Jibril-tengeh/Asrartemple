@@ -356,18 +356,36 @@ export const ToolsDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8">
+      <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-8 relative">
         <button
           onClick={() => setActiveTab('simple')}
-          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'simple' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          className={`relative flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'simple' ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          {t('toolsDashboard.simpleTools')}
+          {activeTab === 'simple' && (
+            <motion.div
+              layoutId="activeTabTools"
+              className="absolute inset-0 bg-white dark:bg-gray-700 shadow-sm rounded-lg"
+              initial={false}
+              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              style={{ zIndex: 0 }}
+            />
+          )}
+          <span className="relative z-10">{t('toolsDashboard.simpleTools', 'Outils Simples')}</span>
         </button>
         <button
           onClick={() => setActiveTab('advanced')}
-          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'advanced' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          className={`relative flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === 'advanced' ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          {t('toolsDashboard.advancedTools')}
+          {activeTab === 'advanced' && (
+            <motion.div
+              layoutId="activeTabTools"
+              className="absolute inset-0 bg-white dark:bg-gray-700 shadow-sm rounded-lg"
+              initial={false}
+              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              style={{ zIndex: 0 }}
+            />
+          )}
+          <span className="relative z-10">{t('toolsDashboard.advancedTools', 'Outils Avancés')}</span>
         </button>
       </div>
 
@@ -454,55 +472,59 @@ export const ToolsDashboard: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        {displayedTools.map((tool, index) => {
-          const content = (
-            <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${!tool.comingSoon ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
-              {/* Background Decoration */}
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20`}></div>
-              
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
-                    <tool.icon size={20} />
-                  </div>
-                  <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
-                    {t(`tools.${tool.id}.title`) !== `tools.${tool.id}.title` ? t(`tools.${tool.id}.title`) : tool.title}
-                    {tool.comingSoon && (
-                      <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
-                        Bientôt
-                      </span>
-                    )}
-                  </h3>
-                </div>
+      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <AnimatePresence mode="popLayout">
+          {displayedTools.map((tool, index) => {
+            const content = (
+              <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${!tool.comingSoon ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
+                {/* Background Decoration */}
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20`}></div>
                 
-                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors line-clamp-3">
-                  {t(`tools.${tool.id}.description`) !== `tools.${tool.id}.description` ? t(`tools.${tool.id}.description`) : tool.description}
-                </p>
-              </div>
-            </div>
-          );
-
-          return (
-            <motion.div
-              key={tool.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              {tool.comingSoon ? (
-                <div className="cursor-not-allowed">
-                  {content}
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
+                      <tool.icon size={20} />
+                    </div>
+                    <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
+                      {t(`tools.${tool.id}.title`) !== `tools.${tool.id}.title` ? t(`tools.${tool.id}.title`) : tool.title}
+                      {tool.comingSoon && (
+                        <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
+                          Bientôt
+                        </span>
+                      )}
+                    </h3>
+                  </div>
+                  
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors line-clamp-3">
+                    {t(`tools.${tool.id}.description`) !== `tools.${tool.id}.description` ? t(`tools.${tool.id}.description`) : tool.description}
+                  </p>
                 </div>
-              ) : (
-                <Link to={tool.path} className="block h-full">
-                  {content}
-                </Link>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+              </div>
+            );
+
+            return (
+              <motion.div
+                layout
+                key={tool.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+              >
+                {tool.comingSoon ? (
+                  <div className="cursor-not-allowed">
+                    {content}
+                  </div>
+                ) : (
+                  <Link to={tool.path} className="block h-full">
+                    {content}
+                  </Link>
+                )}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };

@@ -50,16 +50,14 @@ export const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
-      }, (error) => {
-        console.error("Header notifications onSnapshot error:", error);
-      });
-      return () => unsubscribe();
-    }
-  }, [user]);
+    const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
+    }, (error) => {
+      console.error("Header notifications onSnapshot error:", error);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const changeLanguage = (lang: 'fr' | 'en' | 'ha') => {
     setLanguage(lang);
@@ -117,54 +115,52 @@ export const Header: React.FC = () => {
             </motion.div>
           </Link>
 
-          {user && (
-            <div className="relative" ref={notifMenuRef}>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                className="relative p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell size={18} />
-                {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-emerald-600 dark:border-emerald-800"></span>
-                )}
-              </motion.button>
-              <AnimatePresence>
-                {notifMenuOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 flex flex-col"
-                  >
-                    <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-900 dark:text-white">
-                      {language === 'fr' ? 'Notifications' : language === 'ha' ? 'Sanarwa' : 'Notifications'}
+          <div className="relative" ref={notifMenuRef}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+              className="relative p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell size={18} />
+              {notifications.length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-emerald-600 dark:border-emerald-800"></span>
+              )}
+            </motion.button>
+            <AnimatePresence>
+              {notifMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 flex flex-col"
+                >
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-700 font-bold text-sm text-gray-900 dark:text-white">
+                    {language === 'fr' ? 'Notifications' : language === 'ha' ? 'Sanarwa' : 'Notifications'}
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-sm text-gray-500 text-center">{language === 'fr' ? 'Aucune notification' : language === 'ha' ? 'Babu sanarwa' : 'No notifications'}</div>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto">
+                      {notifications.map(notif => {
+                        const lang = language;
+                        const title = (notif as any)[`title_${lang}`] || notif.title;
+                        const message = (notif as any)[`message_${lang}`] || notif.message;
+                        return (
+                        <div key={notif.id} className="p-3 border-b border-gray-50 dark:border-gray-750 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                          <h4 className="text-xs font-bold text-gray-900 dark:text-white">{title}</h4>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{new Date(notif.date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US')}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{message}</p>
+                        </div>
+                        );
+                      })}
                     </div>
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-sm text-gray-500 text-center">{language === 'fr' ? 'Aucune notification' : language === 'ha' ? 'Babu sanarwa' : 'No notifications'}</div>
-                    ) : (
-                      <div className="max-h-60 overflow-y-auto">
-                        {notifications.map(notif => {
-                          const lang = language;
-                          const title = (notif as any)[`title_${lang}`] || notif.title;
-                          const message = (notif as any)[`message_${lang}`] || notif.message;
-                          return (
-                          <div key={notif.id} className="p-3 border-b border-gray-50 dark:border-gray-750 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                            <h4 className="text-xs font-bold text-gray-900 dark:text-white">{title}</h4>
-                            <p className="text-[10px] text-gray-500 mt-0.5">{new Date(notif.date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US')}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{message}</p>
-                          </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <div className="relative" ref={langMenuRef}>
             <motion.button

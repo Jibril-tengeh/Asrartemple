@@ -5,20 +5,21 @@ import { db } from '../../../lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
-const defaultLexiqueData = [
-  { term: "Alif (أ)", category: "Lettres", description: "Première lettre de l'alphabet arabe. Sa valeur numérique est 1. Elle symbolise l'Unicité Divine (Tawhid) et le principe de toute création." },
-  { term: "Ba' (ب)", category: "Lettres", description: "Deuxième lettre. Valeur numérique 2. Symbolise le commencement de la création, car le Coran commence par le Bismillah." },
-  { term: "Ha' (هـ)", category: "Lettres", description: "Valeur numérique 5. Représente l'Essence Divine (Huwa) et le souffle de vie." },
-  { term: "Zikr / Dhikr", category: "Concepts", description: "Le 'rappel' ou 'l'invocation'. Pratique spirituelle consistant à répéter les Noms de Dieu ou des formules sacrées." },
-  { term: "Wird", category: "Concepts", description: "Un exercice spirituel structuré et répété quotidiennement à des moments précis (souvent matin et soir)." },
-  { term: "Talsam", category: "Concepts", description: "Formule ou sceau mystique condensant une énergie spirituelle ou une supplication prolongée." },
-  { term: "Nombre 7", category: "Nombres", description: "Nombre hautement symbolique : 7 cieux, 7 terres, 7 circumambulations (Tawaf), 7 versets de la Fatiha." },
-  { term: "Nombre 66", category: "Nombres", description: "Valeur numérique du Nom Majestueux 'Allah' selon le système Abjad classique." },
-  { term: "Khatim", category: "Concepts", description: "Un carré magique ou sceau utilisé pour concentrer et canaliser les énergies d'un verset ou d'un Nom Divin." },
-];
-
 export const Lexique: React.FC = () => {
   const { language, t } = useLanguage();
+
+  const defaultLexiqueData = [
+    { term: t('lexique.items.alif.term', "Alif (أ)"), category: t('lexique.categories.letters', "Lettres"), description: t('lexique.items.alif.desc', "Première lettre de l'alphabet arabe. Sa valeur numérique est 1. Elle symbolise l'Unicité Divine (Tawhid) et le principe de toute création.") },
+    { term: t('lexique.items.ba.term', "Ba' (ب)"), category: t('lexique.categories.letters', "Lettres"), description: t('lexique.items.ba.desc', "Deuxième lettre. Valeur numérique 2. Symbolise le commencement de la création, car le Coran commence par le Bismillah.") },
+    { term: t('lexique.items.ha.term', "Ha' (هـ)"), category: t('lexique.categories.letters', "Lettres"), description: t('lexique.items.ha.desc', "Valeur numérique 5. Représente l'Essence Divine (Huwa) et le souffle de vie.") },
+    { term: t('lexique.items.zikr.term', "Zikr / Dhikr"), category: t('lexique.categories.concepts', "Concepts"), description: t('lexique.items.zikr.desc', "Le 'rappel' ou 'l'invocation'. Pratique spirituelle consistant à répéter les Noms de Dieu ou des formules sacrées.") },
+    { term: t('lexique.items.wird.term', "Wird"), category: t('lexique.categories.concepts', "Concepts"), description: t('lexique.items.wird.desc', "Un exercice spirituel structuré et répété quotidiennement à des moments précis (souvent matin et soir).") },
+    { term: t('lexique.items.talsam.term', "Talsam"), category: t('lexique.categories.concepts', "Concepts"), description: t('lexique.items.talsam.desc', "Formule ou sceau mystique condensant une énergie spirituelle ou une supplication prolongée.") },
+    { term: t('lexique.items.num7.term', "Nombre 7"), category: t('lexique.categories.numbers', "Nombres"), description: t('lexique.items.num7.desc', "Nombre hautement symbolique : 7 cieux, 7 terres, 7 circumambulations (Tawaf), 7 versets de la Fatiha.") },
+    { term: t('lexique.items.num66.term', "Nombre 66"), category: t('lexique.categories.numbers', "Nombres"), description: t('lexique.items.num66.desc', "Valeur numérique du Nom Majestueux 'Allah' selon le système Abjad classique.") },
+    { term: t('lexique.items.khatim.term', "Khatim"), category: t('lexique.categories.concepts', "Concepts"), description: t('lexique.items.khatim.desc', "Un carré magique ou sceau utilisé pour concentrer et canaliser les énergies d'un verset ou d'un Nom Divin.") },
+  ];
+
   const [search, setSearch] = useState('');
   const [lexiqueData, setLexiqueData] = useState<any[]>(defaultLexiqueData);
 

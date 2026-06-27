@@ -55,7 +55,7 @@ export const SecretDetail: React.FC = () => {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium">Chargement...</p>
+          <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium">{t('loading', 'Chargement...')}</p>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export const SecretDetail: React.FC = () => {
           <button 
             onClick={() => setReadingMode(!readingMode)}
             className={`p-2 rounded-full transition-colors flex items-center gap-2 ${readingMode ? 'bg-[#f4ebd0] text-[#8b6e3f] dark:bg-[#383120] dark:text-[#d4c39c]' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}`}
-            title="Mode Lecture"
+            title={t('readingMode', "Mode Lecture")}
           >
             <BookType size={22} />
           </button>

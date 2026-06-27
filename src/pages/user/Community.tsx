@@ -4,6 +4,7 @@ import { Users, Send, MessageSquare, AlertCircle, CheckCircle } from 'lucide-rea
 import { db } from '../../lib/firebase';
 import { collection, addDoc, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Post {
   id: string;
@@ -15,6 +16,7 @@ interface Post {
 }
 
 export const Community: React.FC = () => {
+  const { language, t } = useLanguage();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPostContent, setNewPostContent] = useState('');
@@ -56,7 +58,7 @@ export const Community: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      setFeedback({ type: 'error', message: 'Vous devez être connecté pour publier.' });
+      setFeedback({ type: 'error', message: t('community.mustBeLoggedIn', 'Vous devez être connecté pour publier.') });
       return;
     }
     if (!newPostContent.trim()) return;
@@ -73,10 +75,10 @@ export const Community: React.FC = () => {
         createdAt: new Date()
       });
       setNewPostContent('');
-      setFeedback({ type: 'success', message: user.isTrusted ? 'Publié avec succès !' : 'Votre message est en attente de modération.' });
+      setFeedback({ type: 'success', message: user.isTrusted ? t('community.publishedSuccess', 'Publié avec succès !') : t('community.pendingModeration', 'Votre message est en attente de modération.') });
     } catch (error) {
       console.error("Error adding post", error);
-      setFeedback({ type: 'error', message: 'Erreur lors de la publication.' });
+      setFeedback({ type: 'error', message: t('community.publishError', 'Erreur lors de la publication.') });
     } finally {
       setIsSubmitting(false);
     }
@@ -89,17 +91,17 @@ export const Community: React.FC = () => {
           <Users size={28} />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Communauté</h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Échangez et partagez avec la communauté</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{t('community.title', 'Communauté')}</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">{t('community.subtitle', 'Échangez et partagez avec la communauté')}</p>
         </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
-        <h2 className="font-bold text-gray-900 dark:text-white mb-4">Créer une publication</h2>
+        <h2 className="font-bold text-gray-900 dark:text-white mb-4">{t('community.createPost', 'Créer une publication')}</h2>
         {user ? (
           <form onSubmit={handleSubmit}>
             <textarea
-              placeholder="Partagez une question, une expérience, ou un conseil..."
+              placeholder={t('community.postPlaceholder', "Partagez une question, une expérience, ou un conseil...")}
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
               className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 resize-none h-32 mb-4"
@@ -117,9 +119,9 @@ export const Community: React.FC = () => {
                 disabled={isSubmitting || !newPostContent.trim()}
                 className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
               >
-                {isSubmitting ? 'Publication...' : (
+                {isSubmitting ? t('community.publishing', 'Publication...') : (
                   <>
-                    <Send size={18} /> Publier
+                    <Send size={18} /> {t('community.publish', 'Publier')}
                   </>
                 )}
               </button>
@@ -127,7 +129,7 @@ export const Community: React.FC = () => {
           </form>
         ) : (
           <div className="text-center p-6 bg-gray-50 dark:bg-gray-750 rounded-xl">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Vous devez être connecté pour participer à la communauté.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{t('community.mustBeLoggedInDesc', 'Vous devez être connecté pour participer à la communauté.')}</p>
           </div>
         )}
       </div>
@@ -135,11 +137,11 @@ export const Community: React.FC = () => {
       <div className="space-y-4">
         <h2 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <MessageSquare size={20} className="text-emerald-500" />
-          Publications Récentes
+          {t('community.recentPosts', 'Publications Récentes')}
         </h2>
         {posts.length === 0 ? (
           <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 text-gray-500">
-            Aucune publication pour le moment.
+            {t('community.noPosts', 'Aucune publication pour le moment.')}
           </div>
         ) : (
           posts.map(post => (
@@ -157,13 +159,13 @@ export const Community: React.FC = () => {
                   <div>
                     <h3 className="font-bold text-gray-900 dark:text-white text-sm">{post.authorName}</h3>
                     <p className="text-xs text-gray-500">
-                      {post.createdAt?.seconds ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('fr-FR') : 'Récent'}
+                      {post.createdAt?.seconds ? new Date(post.createdAt.seconds * 1000).toLocaleDateString(language === 'ha' ? 'ha-NG' : (language === 'en' ? 'en-US' : 'fr-FR')) : t('community.recent', 'Récent')}
                     </p>
                   </div>
                 </div>
                 {user?.role === 'admin' && post.status !== 'approved' && (
                   <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-600">
-                    En attente
+                    {t('community.pending', 'En attente')}
                   </span>
                 )}
               </div>
