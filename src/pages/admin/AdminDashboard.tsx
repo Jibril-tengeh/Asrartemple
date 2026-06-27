@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
+import { AuthModal } from '../../components/AuthModal';
 import { 
   Settings, Users, BarChart3, Database, Shield, LayoutDashboard, 
-  Book, ToggleLeft, Volume2, Save, Search, Plus, Trash2, Edit2 
+  Book, ToggleLeft, Volume2, Save, Search, Plus, Trash2, Edit2, FileText
 } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import Editor from '@monaco-editor/react';
 
-type AdminTab = 'overview' | 'users' | 'community' | 'features' | 'ruqyah' | 'content' | 'notifications' | 'settings';
+type AdminTab = 'overview' | 'users' | 'community' | 'features' | 'ruqyah' | 'content' | 'notifications' | 'settings' | 'articles';
+
+interface Article {
+  id: string;
+  title: string;
+  thumbnail: string;
+  content: string;
+  type: 'richtext' | 'code';
+  createdAt: number;
+}
 
 interface Term {
   id: string;
@@ -84,13 +99,20 @@ export const AdminDashboard: React.FC = () => {
     title_ha: '', message_ha: ''
   });
 
+  // Articles State
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [newArticle, setNewArticle] = useState<Partial<Article>>({
+    title: '', thumbnail: '', content: '', type: 'richtext'
+  });
+
   const [activeLangTab, setActiveLangTab] = useState<'fr' | 'en' | 'ha'>('fr');
 
   // Mock Stats
   const stats = [
     { title: 'Utilisateurs Actifs', value: users.length.toString(), change: '+12%', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
     { title: 'Outils Utilisés (7j)', value: '8,432', change: '+5%', icon: BarChart3, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { title: 'Mots du Lexique', value: lexiqueTerms.length.toString(), change: '+2', icon: Book, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+    { title: 'Articles Publiés', value: articles.length.toString(), change: '+1', icon: FileText, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
   ];
 
   useEffect(() => {
@@ -118,12 +140,17 @@ export const AdminDashboard: React.FC = () => {
       setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
     }, (error) => console.error("Admin Notifs error", error));
 
+    const unsubscribeArticles = onSnapshot(query(collection(db, 'articles'), orderBy('createdAt', 'desc')), (snapshot) => {
+      setArticles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article)));
+    }, (error) => console.error("Admin Articles error", error));
+
     return () => {
       unsubscribeUsers();
       unsubscribeLexique();
       unsubscribeAudios();
       unsubscribePosts();
       unsubscribeNotifs();
+      unsubscribeArticles();
     };
   }, []);
 
@@ -291,6 +318,7 @@ export const AdminDashboard: React.FC = () => {
       ruqyahAudios,
       communityPosts,
       notifications,
+      articles,
       settings: {
         audioEnabled,
         maintenanceMode
@@ -307,11 +335,52 @@ export const AdminDashboard: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleSaveArticle = async () => {
+    if (!newArticle.title || !newArticle.content) return;
+    try {
+      if (editingArticle) {
+        await updateDoc(doc(db, 'articles', editingArticle.id), {
+          title: newArticle.title,
+          thumbnail: newArticle.thumbnail,
+          content: newArticle.content,
+          type: newArticle.type
+        });
+        setEditingArticle(null);
+      } else {
+        await addDoc(collection(db, 'articles'), {
+          title: newArticle.title,
+          thumbnail: newArticle.thumbnail,
+          content: newArticle.content,
+          type: newArticle.type || 'richtext',
+          createdAt: Date.now()
+        });
+      }
+      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext' });
+    } catch (error) {
+      console.error("Error saving article", error);
+    }
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'articles', id));
+    } catch (error) {
+      console.error("Error deleting article", error);
+    }
+  };
+
+  const editArticle = (article: Article) => {
+    setEditingArticle(article);
+    setNewArticle({ title: article.title, thumbnail: article.thumbnail, content: article.content, type: article.type });
+    setActiveTab('articles');
+  };
+
   const renderTabNavigation = () => (
     <div className="flex overflow-x-auto pb-4 mb-6 hide-scrollbar gap-2">
       {[
         { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard },
         { id: 'users', label: 'Utilisateurs', icon: Users },
+        { id: 'articles', label: 'Articles', icon: FileText },
         { id: 'community', label: 'Communauté', icon: Users },
         { id: 'notifications', label: 'Notifications', icon: Volume2 },
         { id: 'features', label: 'Fonctionnalités', icon: ToggleLeft },
@@ -663,6 +732,122 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  const renderArticles = () => (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 className="font-bold text-gray-900 dark:text-white mb-6">
+          {editingArticle ? "Éditer l'Article" : "Nouvel Article"}
+        </h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Titre de l'article"
+            value={newArticle.title || ''}
+            onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
+            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+          />
+          <input
+            type="text"
+            placeholder="URL de l'image (Thumbnail d'accroche)"
+            value={newArticle.thumbnail || ''}
+            onChange={(e) => setNewArticle({ ...newArticle, thumbnail: e.target.value })}
+            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+          />
+          
+          <div className="flex gap-4 mb-2">
+            <button
+              onClick={() => setNewArticle({ ...newArticle, type: 'richtext' })}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                newArticle.type === 'richtext' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+              }`}
+            >
+              Éditeur de Texte
+            </button>
+            <button
+              onClick={() => setNewArticle({ ...newArticle, type: 'code' })}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                newArticle.type === 'code' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+              }`}
+            >
+              Éditeur de Code
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden min-h-[300px]">
+            {newArticle.type === 'richtext' ? (
+              <ReactQuill 
+                theme="snow" 
+                value={newArticle.content || ''} 
+                onChange={(val: any) => setNewArticle({ ...newArticle, content: val })} 
+                className="h-full bg-white text-gray-900"
+              />
+            ) : (
+              <Editor
+                height="300px"
+                defaultLanguage="javascript"
+                theme="vs-dark"
+                value={newArticle.content || ''}
+                onChange={(val) => setNewArticle({ ...newArticle, content: val || '' })}
+                options={{ minimap: { enabled: false } }}
+              />
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveArticle}
+              className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              <Plus size={18} /> {editingArticle ? "Mettre à jour" : "Ajouter l'Article"}
+            </button>
+            {editingArticle && (
+              <button
+                onClick={() => {
+                  setEditingArticle(null);
+                  setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext' });
+                }}
+                className="mt-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                Annuler
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mt-6">
+        <h3 className="font-bold text-gray-900 dark:text-white mb-6">Articles ({articles.length})</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {articles.map((article) => (
+            <div key={article.id} className="p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl flex gap-4">
+              {article.thumbnail && (
+                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                  <img src={article.thumbnail} alt={article.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-gray-900 dark:text-white">{article.title}</h4>
+                  <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
+                    {article.type === 'richtext' ? 'Texte' : 'Code'}
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => editArticle(article)} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => handleDeleteArticle(article.id)} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCommunity = () => (
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -817,6 +1002,17 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <AuthModal isOpen={true} onClose={() => navigate('/')} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none min-h-screen">
       <div className="flex items-center gap-4 mb-8">
@@ -839,6 +1035,7 @@ export const AdminDashboard: React.FC = () => {
       >
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'users' && renderUsers()}
+        {activeTab === 'articles' && renderArticles()}
         {activeTab === 'community' && renderCommunity()}
         {activeTab === 'notifications' && renderNotifications()}
         {activeTab === 'features' && renderFeatures()}

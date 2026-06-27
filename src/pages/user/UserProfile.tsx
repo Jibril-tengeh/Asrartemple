@@ -260,6 +260,15 @@ export const UserProfile: React.FC = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] flex-col">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Profil</h2>
+        <p className="text-gray-500">Créez des données locales ou connectez-vous si vous êtes administrateur.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none">
       

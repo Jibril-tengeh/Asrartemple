@@ -66,10 +66,7 @@ const renderTajweed = (text: string) => {
   });
 };
 
-const SurahBanner = ({ number, numberOfAyahs, isTajweed, fontFamily, fontSizePx }: { number: number, numberOfAyahs: number, isTajweed?: boolean, fontFamily?: string, fontSizePx?: number }) => {
-  const tajweedText = "بِسْمِ [h:1[ٱ]للَّهِ [h:2[ٱ][l[ل]رَّحْمَ[n[ـٰ]نِ [h:3[ٱ][l[ل]رَّح[p[ِي]مِ";
-  const normalText = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
-
+const SurahBanner = ({ number, name, numberOfAyahs, fontFamily, fontSizePx }: { number: number, name: string, numberOfAyahs: number, fontFamily?: string, fontSizePx?: number }) => {
   return (
     <div className="w-full mb-8 flex items-center justify-between relative overflow-hidden select-none px-2 sm:px-4 py-8">
       {/* Left box: Surah number */}
@@ -78,17 +75,11 @@ const SurahBanner = ({ number, numberOfAyahs, isTajweed, fontFamily, fontSizePx 
          <span className="font-arabic text-xl sm:text-3xl text-gray-800 dark:text-gray-200">{toArabicNumeral(number)}</span>
       </div>
 
-      {/* Center: Basmala */}
+      {/* Center: Surah Name */}
       <div className="flex-1 flex items-center justify-center z-10 px-2 sm:px-6 text-center">
-        {number !== 9 ? (
-          <h2 className="font-arabic text-gray-900 dark:text-white leading-relaxed" style={{ fontFamily: fontFamily || '"Amiri Quran", serif', fontSize: fontSizePx ? `${fontSizePx}px` : 'clamp(1.75rem, 4vw, 2.5rem)' }}>
-            {isTajweed ? renderTajweed(tajweedText) : normalText}
-          </h2>
-        ) : (
-          <h2 className="font-arabic text-gray-900 dark:text-white leading-relaxed" style={{ fontFamily: fontFamily || '"Amiri Quran", serif', fontSize: fontSizePx ? `${fontSizePx}px` : 'clamp(1.75rem, 4vw, 2.5rem)' }}>
-            سُورَةُ التَّوْبَةِ
-          </h2>
-        )}
+        <h2 className="font-arabic text-emerald-800 dark:text-emerald-300 leading-relaxed font-bold" style={{ fontFamily: fontFamily || '"Amiri Quran", serif', fontSize: fontSizePx ? `${fontSizePx + 8}px` : 'clamp(2rem, 5vw, 3rem)' }}>
+          {name}
+        </h2>
       </div>
 
       {/* Right box: Ayah count */}
@@ -531,6 +522,7 @@ export const QuranFull: React.FC = () => {
   const [downloadingOffline, setDownloadingOffline] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadMessage, setDownloadMessage] = useState<string>('');
+  const [hideDownloadToast, setHideDownloadToast] = useState(false);
 
   const [downloadedItems, setDownloadedItems] = useState<{ [key: string]: number[] }>(() => {
     try {
@@ -715,6 +707,7 @@ export const QuranFull: React.FC = () => {
   const downloadForOffline = async (type: 'surah' | 'page' | 'hizbQuarter' | 'juz' | 'ruku', specificIds?: number[], resumeId?: string) => {
     setShowDownloadModal(false);
     setDownloadingOffline(true);
+    setHideDownloadToast(false);
     
     let itemsToDownload: number[] = [];
     let initialProgress = 0;
@@ -1425,13 +1418,13 @@ export const QuranFull: React.FC = () => {
           ) : viewMode === 'surah' ? (
             <div className="flex flex-col bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl shadow-sm sm:border border-gray-100 dark:border-gray-800 overflow-hidden">
               {filteredSurahs.map((surah, i) => (
-                <motion.button
+                <motion.div
                   key={surah.number}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.02, 0.2) }}
                   onClick={() => loadContent('surah', surah.number)}
-                  className="flex items-center justify-between py-4 px-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left w-full"
+                  className="flex items-center justify-between py-4 px-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left w-full cursor-pointer"
                 >
                   <div className="flex items-center gap-6">
                     <div className="w-8 text-2xl sm:text-3xl font-light text-gray-800 dark:text-gray-200 flex justify-center">
@@ -1454,12 +1447,26 @@ export const QuranFull: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-arabic text-3xl sm:text-4xl text-gray-900 dark:text-white" style={{ fontFamily: '"Amiri", serif' }}>
-                      {surah.name.replace('سُورَةُ ', '')}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <span className="font-arabic text-3xl sm:text-4xl text-gray-900 dark:text-white" style={{ fontFamily: '"Amiri", serif' }}>
+                        {surah.name.replace('سُورَةُ ', '')}
+                      </span>
+                    </div>
+                    {!downloadedItems.surah?.includes(surah.number) && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadForOffline('surah', [surah.number]);
+                        }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-gray-800 dark:hover:bg-emerald-900/40 dark:hover:text-emerald-400 transition-colors"
+                        title={t('downloadOffline', 'Télécharger (Hors ligne)')}
+                      >
+                        <Download size={18} />
+                      </button>
+                    )}
                   </div>
-                </motion.button>
+                </motion.div>
               ))}
             </div>
           ) : (
@@ -2806,10 +2813,17 @@ export const QuranFull: React.FC = () => {
                     );
                   }
 
+                  const currentFontSize = 15 + fontSize;
+                  const getJustifyClass = (text: string) => {
+                    if (text.length < 60) return 'text-right';
+                    if (currentFontSize > 28) return 'text-right sm:text-justify';
+                    return 'text-justify';
+                  };
+
                   if (readingMode === 'mushaf') {
                     return (
                       <div className="w-full" dir="rtl">
-                        <div className="text-justify font-arabic text-gray-900 dark:text-[#e4e4e7]" style={{...getArabicStyle(), lineHeight: '2.5'}}>
+                        <div className={`font-arabic text-gray-900 dark:text-[#e4e4e7] ${currentFontSize > 28 ? 'text-right sm:text-justify' : 'text-justify'}`} style={{...getArabicStyle(), lineHeight: '2.5'}}>
                           {filteredAyahs.map((ayah) => {
                             const i = surahArabic.ayahs.findIndex(a => a.number === ayah.number);
                             const prevAyah = i > 0 ? surahArabic.ayahs[i - 1] : null;
@@ -2853,7 +2867,7 @@ export const QuranFull: React.FC = () => {
                                 )}
                                 {isNewSurah && showArabic && (
                                   <div className="block w-full my-8">
-                                    <SurahBanner number={surahInfo.number} numberOfAyahs={surahInfo.numberOfAyahs || 0} isTajweed={!!isTajweed} fontFamily={getArabicStyle().fontFamily} fontSizePx={17 + fontSize} />
+                                    <SurahBanner number={surahInfo.number} name={surahInfo.name} numberOfAyahs={surahInfo.numberOfAyahs || 0} fontFamily={getArabicStyle().fontFamily} fontSizePx={17 + fontSize} />
                                     {surahInfo.number !== 1 && surahInfo.number !== 9 && (
                                       <div className="text-center mt-6 mb-2 text-gray-900 dark:text-[#e4e4e7] font-arabic" style={getArabicStyle()}>
                                         {isTajweed ? renderTajweed("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ") : "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"}
@@ -2939,7 +2953,7 @@ export const QuranFull: React.FC = () => {
                       {isNewSurah && showArabic && (
                         <div className="w-full my-6 flex flex-col items-center">
                           <div className="w-full">
-                            <SurahBanner number={surahInfo.number} numberOfAyahs={surahInfo.numberOfAyahs || 0} isTajweed={!!isTajweed} fontFamily={getArabicStyle().fontFamily} fontSizePx={17 + fontSize} />
+                            <SurahBanner number={surahInfo.number} name={surahInfo.name} numberOfAyahs={surahInfo.numberOfAyahs || 0} fontFamily={getArabicStyle().fontFamily} fontSizePx={17 + fontSize} />
                           </div>
                           {surahInfo.number !== 1 && surahInfo.number !== 9 && (
                             <div className="text-center mt-6 mb-2 text-gray-900 dark:text-[#e4e4e7] font-arabic" style={getArabicStyle()}>
@@ -2956,7 +2970,7 @@ export const QuranFull: React.FC = () => {
                        {showArabic && (
                          <div className="w-full text-right" dir="rtl">
                            <p 
-                             className="font-arabic text-gray-900 dark:text-white text-justify" 
+                             className={`font-arabic text-gray-900 dark:text-white ${getJustifyClass(ayah.text)}`} 
                              style={getArabicStyle()}
                              onContextMenu={(e) => {
                                e.preventDefault();
@@ -3114,21 +3128,41 @@ export const QuranFull: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[350] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 border border-gray-200 dark:border-gray-700 w-[90%] max-w-sm flex flex-col gap-2"
+            className={`fixed z-[350] bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 transition-all ${hideDownloadToast ? 'bottom-20 sm:bottom-6 right-4 sm:right-6 rounded-full p-3' : 'bottom-6 left-1/2 -translate-x-1/2 rounded-2xl p-4 w-[90%] max-w-sm flex flex-col gap-2'}`}
           >
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+            {hideDownloadToast ? (
+              <button 
+                onClick={() => setHideDownloadToast(false)} 
+                className="flex items-center justify-center gap-2" 
+                title="Afficher le téléchargement"
+              >
                 <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                {downloadMessage || 'Téléchargement...'}
-              </span>
-              <span className="text-emerald-500 font-bold text-sm">{downloadProgress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-              <div 
-                className="bg-emerald-500 h-full transition-all duration-300"
-                style={{ width: `${downloadProgress}%` }}
-              />
-            </div>
+                <span className="text-emerald-500 font-bold text-sm">{downloadProgress}%</span>
+              </button>
+            ) : (
+              <>
+                <div className="flex justify-between items-center pr-6 relative">
+                  <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    {downloadMessage || 'Téléchargement...'}
+                  </span>
+                  <span className="text-emerald-500 font-bold text-sm">{downloadProgress}%</span>
+                  <button 
+                    onClick={() => setHideDownloadToast(true)}
+                    className="absolute -right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                    title="Masquer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-emerald-500 h-full transition-all duration-300"
+                    style={{ width: `${downloadProgress}%` }}
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Moon, Sun, Languages, User, Sparkles, Users, Shield, LogOut, LogIn, Bell, Store } from 'lucide-react';
+import { Moon, Sun, Languages, User, Users, Shield, LogOut, LogIn, Bell, Store } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut, db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router-dom';
-import { AuthModal } from './AuthModal';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
@@ -23,7 +22,6 @@ export const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
@@ -66,6 +64,29 @@ export const Header: React.FC = () => {
     setLangMenuOpen(false);
   };
 
+  const secretClickCount = useRef(0);
+  const secretClickTimeout = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+
+  const handleSecretClick = () => {
+    if (user?.role === 'admin') return;
+    
+    secretClickCount.current += 1;
+    
+    if (secretClickTimeout.current) {
+      clearTimeout(secretClickTimeout.current);
+    }
+    
+    if (secretClickCount.current >= 20) {
+      navigate('/admin');
+      secretClickCount.current = 0;
+    } else {
+      secretClickTimeout.current = setTimeout(() => {
+        secretClickCount.current = 0;
+      }, 1500);
+    }
+  };
+
   return (
     <motion.header 
       initial={{ y: -100 }}
@@ -76,16 +97,10 @@ export const Header: React.FC = () => {
           ? 'py-3 bg-emerald-600 dark:bg-emerald-800 shadow-lg' 
           : 'py-4 bg-emerald-600 dark:bg-emerald-800'
       } px-6`}
+      onClick={handleSecretClick}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center group">
-          <motion.div 
-            whileHover={{ rotate: 180 }}
-            transition={{ duration: 0.5 }}
-            className="mr-2 text-white"
-          >
-            <Sparkles size={20} />
-          </motion.div>
           <span className="text-xl font-extrabold text-white tracking-tight transition-all">
             AsrarHub
           </span>
@@ -93,19 +108,6 @@ export const Header: React.FC = () => {
         
         <div className="flex items-center space-x-2 sm:space-x-3">
           
-          {user?.role === 'admin' && (
-            <Link to="/admin">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
-                aria-label="Admin Dashboard"
-              >
-                <Shield size={18} />
-              </motion.div>
-            </Link>
-          )}
-
           <Link to="/community">
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -244,35 +246,8 @@ export const Header: React.FC = () => {
               )}
             </motion.div>
           </Link>
-
-          {user ? (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={signOut}
-              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
-              aria-label="Sign Out"
-            >
-              <LogOut size={18} />
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setAuthModalOpen(true)}
-              className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
-              aria-label="Sign In"
-            >
-              <LogIn size={18} />
-            </motion.button>
-          )}
         </div>
       </div>
-      
-      <AuthModal 
-        isOpen={authModalOpen} 
-        onClose={() => setAuthModalOpen(false)} 
-      />
     </motion.header>
   );
 };
