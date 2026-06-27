@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon } from 'lucide-react';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -457,6 +457,42 @@ export const UserProfile: React.FC = () => {
             <span className={`font-medium text-sm ${theme === 'system' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{t('profile.theme.auto', 'Automatique')}</span>
           </button>
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <RefreshCw className="text-emerald-500" size={20} />
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Maintenance</h2>
+        </div>
+        
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+          Vider le cache peut résoudre les problèmes de lecture audio ou libérer de l'espace sur votre appareil.
+        </p>
+
+        <button
+          onClick={async () => {
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              for (const registration of registrations) {
+                await registration.unregister();
+              }
+            }
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              for (const key of keys) {
+                await caches.delete(key);
+              }
+            }
+            localStorage.removeItem('quran_downloaded_items');
+            localStorage.removeItem('quran_paused_downloads');
+            alert('Cache vidé avec succès. La page va se recharger.');
+            window.location.reload();
+          }}
+          className="flex items-center justify-center gap-2 w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-xl px-5 py-3 font-bold transition-colors"
+        >
+          <RefreshCw size={18} />
+          Vider le cache
+        </button>
       </div>
 
     </div>

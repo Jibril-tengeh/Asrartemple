@@ -105,6 +105,9 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
     return matchesSearch && matchesFilter;
   });
 
+  // Force Vite HMR invalidation
+  // console.log("UserDashboard loaded");
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       {/* Banner Section */}

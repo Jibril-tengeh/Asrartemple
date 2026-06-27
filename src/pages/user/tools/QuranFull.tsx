@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, ArrowLeft, ArrowRight, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check, Bookmark, BookmarkCheck, Share2, RefreshCw, Moon, Sun, Activity, Clock, TrendingUp, Copy, Image as ImageIcon, Maximize, Minimize2, ListPlus, ListMusic, GripVertical } from 'lucide-react';
+import { BookOpen, ArrowLeft, ArrowRight, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check, Bookmark, BookmarkCheck, Share2, RefreshCw, Moon, Sun, Activity, Clock, TrendingUp, Copy, Image as ImageIcon, Maximize, Minimize2, ListPlus, ListMusic, GripVertical, Database, CloudOff } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -149,6 +149,7 @@ interface SurahData {
 export const QuranFull: React.FC = () => {
   const { t } = useLanguage();
   const [surahs, setSurahs] = useState<SurahMeta[]>([]);
+  const [isPlayingFromCache, setIsPlayingFromCache] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -787,6 +788,34 @@ export const QuranFull: React.FC = () => {
           return prev;
         });
 
+        try {
+          const mainEditionData = await fetchWithCache(`https://api.alquran.cloud/v1/${type}/${s}/${reciterApiId}`);
+          if (mainEditionData && mainEditionData.data && mainEditionData.data.ayahs) {
+            const audioCache = await caches.open('quran-audio-cache');
+            let audioProcessed = 0;
+            const ayahs = mainEditionData.data.ayahs;
+            for (const ayah of ayahs) {
+              if (ayah.audio) {
+                const cached = await audioCache.match(ayah.audio);
+                if (!cached) {
+                   try {
+                     const response = await fetch(ayah.audio);
+                     if (response.ok) {
+                       await audioCache.put(ayah.audio, response);
+                     }
+                   } catch(e) { console.warn("Failed to cache audio", ayah.audio) }
+                }
+              }
+              audioProcessed++;
+              if (audioProcessed % 5 === 0) {
+                 setDownloadMessage(`Téléchargement de l'audio... (${s}) ${Math.round((audioProcessed / ayahs.length) * 100)}%`);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to download audio for offline mode", e);
+        }
+
         remainingIdsToProcess.shift(); // Remove the successfully processed item
         processed++;
         setDownloadProgress(Math.round((processed / totalItems) * 100));
@@ -868,7 +897,7 @@ export const QuranFull: React.FC = () => {
     }
   }, [selectedReciterId]);
 
-  const playAudio = (ayah: Ayah, isRepeat = false, playOnlyOne = false) => {
+  const playAudio = async (ayah: Ayah, isRepeat = false, playOnlyOne = false) => {
     if (!ayah.audio) return;
     
     if (audioRef.current) {
@@ -888,7 +917,23 @@ export const QuranFull: React.FC = () => {
       playOnlyOneRef.current = playOnlyOne;
     }
 
-    const audio = new Audio(ayah.audio);
+    let playableUrl = ayah.audio;
+    let loadedFromCache = false;
+    try {
+      const cache = await caches.open('quran-audio-cache');
+      const response = await cache.match(ayah.audio);
+      if (response) {
+        const blob = await response.blob();
+        playableUrl = URL.createObjectURL(blob);
+        loadedFromCache = true;
+      }
+    } catch (e) {
+      console.warn('Failed to load audio from cache', e);
+    }
+    
+    setIsPlayingFromCache(loadedFromCache);
+
+    const audio = new Audio(playableUrl);
     audioRef.current = audio;
     
     const playPromise = audio.play();
@@ -1393,7 +1438,14 @@ export const QuranFull: React.FC = () => {
                       {surah.number}
                     </div>
                     <div className="flex flex-col">
-                      <h3 className="text-[17px] font-medium text-[#2d7d45] dark:text-[#45b066]">{surah.englishName}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[17px] font-medium text-[#2d7d45] dark:text-[#45b066]">{surah.englishName}</h3>
+                        {downloadedItems.surah?.includes(surah.number) && (
+                          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-md">
+                            <CloudOff size={10} /> {t('offlineReady', 'Offline')}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                         {surah.englishNameTranslation}
                         <span className="text-[11px] opacity-70">
@@ -2976,17 +3028,19 @@ export const QuranFull: React.FC = () => {
                              <>
                                <button 
                                  onClick={() => playAudio(ayah)}
-                                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAyah === ayah.number && !playOnlyOneRef.current ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
+                                 className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAyah === ayah.number && !playOnlyOneRef.current ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
                                  title="Jouer à partir de ce verset"
                                >
                                  {playingAyah === ayah.number && !playOnlyOneRef.current ? <Pause size={18} /> : <Play size={18} className="ml-1" />}
+                                 {playingAyah === ayah.number && !playOnlyOneRef.current && isPlayingFromCache && <Database size={10} className="absolute bottom-0 right-0 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-gray-800 rounded-full" />}
                                </button>
                                <button 
                                  onClick={() => playAudio(ayah, false, true)}
-                                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAyah === ayah.number && playOnlyOneRef.current ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
+                                 className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors ${playingAyah === ayah.number && playOnlyOneRef.current ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
                                  title="Jouer uniquement ce verset"
                                >
                                  {playingAyah === ayah.number && playOnlyOneRef.current ? <Pause size={18} /> : <Volume2 size={18} />}
+                                 {playingAyah === ayah.number && playOnlyOneRef.current && isPlayingFromCache && <Database size={10} className="absolute bottom-0 right-0 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-gray-800 rounded-full" />}
                                </button>
                              </>
                            )}
@@ -2996,7 +3050,7 @@ export const QuranFull: React.FC = () => {
                                setBookmarkNote(existing ? existing.note : '');
                                setBookmarkModalAyah(ayah);
                              }}
-                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${bookmarks.some(b => b.ayahNumber === ayah.number) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
+                             className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors ${bookmarks.some(b => b.ayahNumber === ayah.number) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
                              title="Ajouter un signet / note"
                            >
                              {bookmarks.some(b => b.ayahNumber === ayah.number) ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
@@ -3034,7 +3088,7 @@ export const QuranFull: React.FC = () => {
                                });
                                alert('Position de lecture sauvegardée !');
                              }}
-                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${lastReadPosition?.ayahNumber === ayah.number ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
+                             className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors ${lastReadPosition?.ayahNumber === ayah.number ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400'}`}
                              title="Sauvegarder ma position ici"
                            >
                              <Check size={18} />

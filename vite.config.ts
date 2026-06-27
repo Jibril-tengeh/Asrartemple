@@ -71,7 +71,8 @@ export default defineConfig(() => {
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
-                }
+                },
+                rangeRequests: true
               }
             }
           ]

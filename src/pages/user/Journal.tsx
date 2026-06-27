@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Plus, Calendar, CheckCircle2, Save } from 'lucide-react';
+import { Book, Plus, Calendar, CheckCircle2, Save, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -20,6 +20,17 @@ export const Journal: React.FC = () => {
   const [currentProgress, setCurrentProgress] = useState('');
   const [currentWirds, setCurrentWirds] = useState<string[]>([]);
   const [wirdInput, setWirdInput] = useState('');
+  const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+
+  const toggleEntry = (id: string) => {
+    const newSet = new Set(expandedEntryIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setExpandedEntryIds(newSet);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('asrar_journal');
@@ -163,48 +174,75 @@ export const Journal: React.FC = () => {
           </div>
         )}
 
-        {entries.map(entry => (
+        {entries.map(entry => {
+          const isExpanded = expandedEntryIds.has(entry.id);
+          return (
           <motion.div 
             key={entry.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => toggleEntry(entry.id)}
           >
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium mb-4">
-              <Calendar size={16} />
-              {new Date(entry.date).toLocaleDateString(language === 'ha' ? 'ha-NG' : (language === 'en' ? 'en-US' : 'fr-FR'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                <Calendar size={16} />
+                {new Date(entry.date).toLocaleDateString(language === 'ha' ? 'ha-NG' : (language === 'en' ? 'en-US' : 'fr-FR'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+              <ChevronDown size={20} className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
             </div>
             
-            {entry.wirdsCompleted.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.wirdsLabel')}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {entry.wirdsCompleted.map((wird, idx) => (
-                    <span key={idx} className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-800/30">
-                      <CheckCircle2 size={12} /> {wird}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            {/* Preview text if not expanded */}
+            {!isExpanded && (entry.progress || entry.thoughts) && (
+               <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-1 mt-2">
+                 {entry.progress || entry.thoughts}
+               </p>
             )}
 
-            {entry.progress && (
-              <div className="mb-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
-                 <h4 className="text-xs uppercase tracking-widest font-bold text-blue-500 mb-1">{t('journal.studies')}</h4>
-                 <p className="text-sm text-gray-800 dark:text-gray-200">{entry.progress}</p>
-              </div>
-            )}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4">
+                    {entry.wirdsCompleted.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.wirdsLabel')}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {entry.wirdsCompleted.map((wird, idx) => (
+                            <span key={idx} className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-800/30">
+                              <CheckCircle2 size={12} /> {wird}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-            {entry.thoughts && (
-              <div>
-                <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.reflections')}</h4>
-                <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-serif">
-                  {entry.thoughts}
-                </p>
-              </div>
-            )}
+                    {entry.progress && (
+                      <div className="mb-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                         <h4 className="text-xs uppercase tracking-widest font-bold text-blue-500 mb-1">{t('journal.studies')}</h4>
+                         <p className="text-sm text-gray-800 dark:text-gray-200">{entry.progress}</p>
+                      </div>
+                    )}
+
+                    {entry.thoughts && (
+                      <div>
+                        <h4 className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2">{t('journal.reflections')}</h4>
+                        <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-serif">
+                          {entry.thoughts}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       <AnimatePresence>
