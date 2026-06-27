@@ -10,8 +10,7 @@ import {
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import { TipTapEditor } from '../../components/TipTapEditor';
 import Editor from '@monaco-editor/react';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -443,6 +442,17 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteAllArticles = async () => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer TOUS les articles ? Cette action est irréversible.")) return;
+    try {
+      const promises = articles.map(article => deleteDoc(doc(db, 'articles', article.id)));
+      await Promise.all(promises);
+      alert("Tous les articles ont été supprimés.");
+    } catch (error) {
+      console.error("Error deleting all articles", error);
+    }
+  };
+
   const editArticle = (article: Article) => {
     setEditingArticle(article);
     setNewArticle({ title: article.title, thumbnail: article.thumbnail, content: article.content, type: article.type });
@@ -806,18 +816,6 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-      ['link', 'image', 'video'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['clean']
-    ],
-  };
-
   const renderArticles = () => (
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -898,12 +896,10 @@ export const AdminDashboard: React.FC = () => {
 
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden min-h-[300px]">
             {newArticle.type === 'richtext' ? (
-              <ReactQuill 
-                theme="snow" 
-                modules={quillModules}
+              <TipTapEditor 
                 value={newArticle.content || ''} 
                 onChange={(val: any) => setNewArticle({ ...newArticle, content: val })} 
-                className="h-full bg-white text-gray-900"
+                className="h-full"
               />
             ) : (
               <Editor
@@ -947,7 +943,17 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mt-6">
-        <h3 className="font-bold text-gray-900 dark:text-white mb-6">Articles ({articles.length})</h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-bold text-gray-900 dark:text-white">Articles ({articles.length})</h3>
+          {articles.length > 0 && (
+            <button
+              onClick={handleDeleteAllArticles}
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors"
+            >
+              <Trash2 size={16} /> Effacer tout
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {articles.map((article) => (
             <div key={article.id} className="p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl flex gap-4">

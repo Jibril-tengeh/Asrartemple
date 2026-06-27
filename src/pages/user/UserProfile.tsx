@@ -260,15 +260,6 @@ export const UserProfile: React.FC = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] flex-col">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Profil</h2>
-        <p className="text-gray-500">Créez des données locales ou connectez-vous si vous êtes administrateur.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none">
       
@@ -283,13 +274,15 @@ export const UserProfile: React.FC = () => {
               <ImageIcon size={48} className="text-emerald-500" />
             </div>
           )}
-          <button 
-            onClick={() => coverInputRef.current?.click()}
-            disabled={uploading}
-            className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-100 disabled:opacity-50"
-          >
-            {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={18} />}
-          </button>
+          {user && (
+            <button 
+              onClick={() => coverInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute bottom-3 right-3 bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors opacity-100 disabled:opacity-50"
+            >
+              {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={18} />}
+            </button>
+          )}
         </div>
 
         {/* Profile Info */}
@@ -305,13 +298,15 @@ export const UserProfile: React.FC = () => {
                   )}
                 </div>
               </div>
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={16} />}
-              </button>
+              {user && (
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  {uploading ? <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <Camera size={16} />}
+                </button>
+              )}
             </div>
             
             <div className="text-center sm:text-left mb-2 sm:mb-4">
@@ -324,13 +319,15 @@ export const UserProfile: React.FC = () => {
             </div>
           </div>
 
-          <button 
-            onClick={handleLogout}
-            className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-colors text-sm font-medium"
-          >
-            <LogOut size={18} />
-            <span>{t('profile.logout', 'Déconnexion')}</span>
-          </button>
+          {user && (
+            <button 
+              onClick={handleLogout}
+              className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-colors text-sm font-medium"
+            >
+              <LogOut size={18} />
+              <span>{t('profile.logout', 'Déconnexion')}</span>
+            </button>
+          )}
         </div>
       </div>
 
