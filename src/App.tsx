@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 const UserDashboard = React.lazy(() => import('./pages/user/UserDashboard').then(m => ({ default: m.UserDashboard })));
@@ -61,6 +61,9 @@ export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(
     localStorage.getItem('hasCompletedOnboarding') === 'true'
   );
+  
+  const location = useLocation();
+  const isRuqyahPlayer = location.pathname === '/tools/ruqyah';
 
   React.useEffect(() => {
     let lastCheckedMinute = -1;
@@ -110,7 +113,7 @@ export default function App() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
         <Header />
         <DailyRewardHandler />
-        <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20 pt-20">
+        <main className={`flex-1 text-gray-900 dark:text-gray-100 pb-20 ${isRuqyahPlayer ? '' : 'pt-20'}`}>
           <React.Suspense fallback={
               <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>

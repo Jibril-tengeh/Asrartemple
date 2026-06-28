@@ -61,7 +61,7 @@ export const Store: React.FC = () => {
     detectCountry();
   }, []);
 
-  const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'stripe' | 'paystack') => {
+  const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack') => {
     if (!user) {
       alert("Veuillez vous connecter pour effectuer un achat.");
       return;
