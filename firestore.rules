@@ -4,7 +4,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null && (
+        request.auth.token.email == 'sbireino@gmail.com' || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
     
     match /users/{userId} {
@@ -12,23 +15,23 @@ service cloud.firestore {
       allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
     
-    match /lexique_terms/{termId} {
+    match /lexique_terms/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
-    match /ruqyah_audios/{audioId} {
+    match /ruqyah_audios/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
-    match /community_posts/{postId} {
+    match /community_posts/{document=**} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
     
-    match /notifications/{notifId} {
+    match /notifications/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
@@ -38,7 +41,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    match /articles/{articleId} {
+    match /articles/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }

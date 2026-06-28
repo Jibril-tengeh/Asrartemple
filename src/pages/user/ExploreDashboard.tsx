@@ -6,6 +6,9 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
+import { BannerAd } from '../../components/BannerAd';
+import { PremiumWrapper } from '../../components/PremiumWrapper';
+
 export const ExploreDashboard: React.FC = () => {
   const { t } = useLanguage();
 
@@ -99,6 +102,8 @@ export const ExploreDashboard: React.FC = () => {
   };
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
+      <BannerAd />
+      
       {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -289,7 +294,10 @@ export const ExploreDashboard: React.FC = () => {
                   </div>
                 )}
                 <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-emerald-500 transition-colors">{article.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-emerald-500 transition-colors">
+                    {article.isPremium && <Sparkles size={16} className="inline mr-2 text-violet-500" />}
+                    {article.title}
+                  </h3>
                   <div className="mt-auto flex items-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                     Lire l'article <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -339,24 +347,71 @@ export const ExploreDashboard: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-6 lg:p-10 hide-scrollbar bg-gray-50 dark:bg-gray-900">
               <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
-                {selectedArticle.thumbnail && (
-                  <div className="w-full h-64 md:h-80 overflow-hidden relative">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-                    <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-0 left-0 p-6 z-20">
-                      <h1 className="text-2xl md:text-3xl font-black text-white">{selectedArticle.title}</h1>
+                {selectedArticle.isPremium ? (
+                  <PremiumWrapper 
+                    fallbackTitle={selectedArticle.title} 
+                    fallbackMessage="Cet article est exclusif aux membres Premium. Débloquez-le pour lire la suite."
+                    previewContent={
+                      <>
+                        {selectedArticle.thumbnail && (
+                          <div className="w-full h-64 md:h-80 overflow-hidden relative">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                            <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                            <div className="absolute bottom-0 left-0 p-6 z-20">
+                              <h1 className="text-2xl md:text-3xl font-black text-white">{selectedArticle.title}</h1>
+                            </div>
+                          </div>
+                        )}
+                        {!selectedArticle.thumbnail && (
+                          <div className="p-6 md:p-10 border-b border-gray-100 dark:border-gray-700">
+                            <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{selectedArticle.title}</h1>
+                          </div>
+                        )}
+                        <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none article-content">
+                          <div dangerouslySetInnerHTML={{ __html: (selectedArticle.content || '').substring(0, 300) + '...' }} />
+                        </div>
+                      </>
+                    }
+                  >
+                    {selectedArticle.thumbnail && (
+                      <div className="w-full h-64 md:h-80 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                        <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 left-0 p-6 z-20">
+                          <h1 className="text-2xl md:text-3xl font-black text-white">{selectedArticle.title}</h1>
+                        </div>
+                      </div>
+                    )}
+                    {!selectedArticle.thumbnail && (
+                      <div className="p-6 md:p-10 border-b border-gray-100 dark:border-gray-700">
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{selectedArticle.title}</h1>
+                      </div>
+                    )}
+                    <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none article-content">
+                      <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
                     </div>
-                  </div>
+                  </PremiumWrapper>
+                ) : (
+                  <>
+                    {selectedArticle.thumbnail && (
+                      <div className="w-full h-64 md:h-80 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                        <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 left-0 p-6 z-20">
+                          <h1 className="text-2xl md:text-3xl font-black text-white">{selectedArticle.title}</h1>
+                        </div>
+                      </div>
+                    )}
+                    {!selectedArticle.thumbnail && (
+                      <div className="p-6 md:p-10 border-b border-gray-100 dark:border-gray-700">
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{selectedArticle.title}</h1>
+                      </div>
+                    )}
+                    <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none article-content">
+                      <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
+                    </div>
+                  </>
                 )}
-                {!selectedArticle.thumbnail && (
-                  <div className="p-6 md:p-10 border-b border-gray-100 dark:border-gray-700">
-                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{selectedArticle.title}</h1>
-                  </div>
-                )}
-                
-                <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none article-content">
-                  <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
-                </div>
               </div>
             </div>
           </div>

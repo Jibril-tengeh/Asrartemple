@@ -45,6 +45,7 @@ import { AudioPlayer } from './components/AudioPlayer';
 const DailyDhikrTracker = React.lazy(() => import('./pages/user/tools/DailyDhikrTracker').then(m => ({ default: m.DailyDhikrTracker })));
 
 import { Onboarding } from './pages/Onboarding';
+import { DailyRewardHandler } from './components/DailyRewardHandler';
 
 const Store = React.lazy(() => import('./pages/user/Store').then(m => ({ default: m.Store })));
 
@@ -105,6 +106,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
       <Header />
+      <DailyRewardHandler />
       <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20 pt-20">
         <React.Suspense fallback={
             <div className="flex flex-col items-center justify-center min-h-[60vh]">

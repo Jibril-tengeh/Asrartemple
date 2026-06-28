@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebase';
+import { doc, updateDoc, increment } from 'firebase/firestore';
 import { ShoppingBag, Star, Shield, Zap, Sparkles, Book, LayoutGrid, Square, List, Heart, Search, ChevronDown, X, Share2, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PremiumBadge } from '../../components/PremiumBadge';
 
 type LayoutMode = 'grid1' | 'grid2' | 'list';
 type SortOption = 'Date' | 'Popularité' | 'Alphabétique';
 
 export const Store: React.FC = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('grid2');
   const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
   const [sortOption, setSortOption] = useState<SortOption>('Date');
@@ -19,6 +24,48 @@ export const Store: React.FC = () => {
   const [productRatings, setProductRatings] = useState<Record<number, number>>({});
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handlePurchase = async (product: any, usePoints: boolean = false) => {
+    if (!user) {
+      alert("Veuillez vous connecter pour effectuer un achat.");
+      return;
+    }
+
+    if (usePoints) {
+      if ((user.spiritualPoints || 0) < product.pointsCost) {
+        alert("Vous n'avez pas assez de points spirituels.");
+        return;
+      }
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          spiritualPoints: increment(-product.pointsCost)
+        });
+        alert(`Vous avez échangé ${product.pointsCost} points contre: ${product.name} !`);
+        setSelectedProduct(null);
+      } catch (err) {
+        console.error("Erreur lors de l'échange de points", err);
+        alert("Une erreur est survenue.");
+      }
+    } else {
+      if (product.category === 'Abonnements') {
+        const tier = product.name.includes('Pro') ? 'pro' : 'premium';
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            subscriptionTier: tier
+          });
+          alert(`Félicitations ! Vous êtes maintenant abonné au niveau ${tier.toUpperCase()}.`);
+          setSelectedProduct(null);
+        } catch (err) {
+          console.error("Erreur lors de l'abonnement", err);
+          alert("Une erreur est survenue.");
+        }
+      } else {
+        alert(`Redirection vers le paiement pour: ${product.name} (${product.price}).`);
+      }
+    }
+  };
 
   useEffect(() => {
     // Simulate initial data loading
@@ -73,7 +120,7 @@ export const Store: React.FC = () => {
     );
   };
 
-  const categories = ['Tous', 'Bagues', 'Encens', 'Livres', 'Talismans'];
+  const categories = ['Tous', 'Bagues', 'Encens', 'Livres', 'Talismans', 'Numérique', 'Abonnements'];
 
   const products = [
     {
@@ -85,7 +132,9 @@ export const Store: React.FC = () => {
       color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
       category: 'Bagues',
       date: '2023-01-01',
-      popularity: 85
+      popularity: 85,
+      price: '50€',
+      pointsCost: 500
     },
     {
       id: 2,
@@ -96,7 +145,9 @@ export const Store: React.FC = () => {
       color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
       category: 'Encens',
       date: '2023-05-15',
-      popularity: 92
+      popularity: 92,
+      price: '25€',
+      pointsCost: 250
     },
     {
       id: 3,
@@ -107,7 +158,9 @@ export const Store: React.FC = () => {
       color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
       category: 'Livres',
       date: '2022-11-20',
-      popularity: 98
+      popularity: 98,
+      price: '40€',
+      pointsCost: 400
     },
     {
       id: 4,
@@ -118,7 +171,61 @@ export const Store: React.FC = () => {
       color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
       category: 'Talismans',
       date: '2024-02-10',
-      popularity: 75
+      popularity: 75,
+      price: '80€',
+      pointsCost: 800
+    },
+    {
+      id: 5,
+      name: 'E-book : Sirr Al Asrar Avancé',
+      description: 'Découvrez les secrets cachés de la science des lettres et des carrés magiques. Un manuel complet pour les initiés.',
+      image: 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?q=80&w=800&auto=format&fit=crop',
+      icon: Book,
+      color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+      category: 'Numérique',
+      date: '2024-03-01',
+      popularity: 90,
+      price: '15€',
+      pointsCost: 150
+    },
+    {
+      id: 6,
+      name: 'Webinaire Exclusif : Les 99 Noms',
+      description: 'Accès à un webinaire privé sur l\'utilisation des 99 noms d\'Allah dans le zikr et la guérison.',
+      image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop',
+      icon: Play,
+      color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
+      category: 'Numérique',
+      date: '2024-03-10',
+      popularity: 88,
+      price: '30€',
+      pointsCost: 300
+    },
+    {
+      id: 7,
+      name: 'Abonnement Premium (Mensuel)',
+      description: 'Débloquez les tutoriels Sirr Al Asrar avancés, outils illimités, et supprimez toutes les publicités.',
+      image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800&auto=format&fit=crop',
+      icon: Star,
+      color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+      category: 'Abonnements',
+      date: '2024-01-01',
+      popularity: 99,
+      price: '9.99€/mois',
+      pointsCost: null
+    },
+    {
+      id: 8,
+      name: 'Consultation Spirituelle (Pro)',
+      description: 'Consultation personnalisée et accès complet à toutes les fonctionnalités de l\'application (Tiers Pro).',
+      image: 'https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=800&auto=format&fit=crop',
+      icon: Shield,
+      color: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
+      category: 'Abonnements',
+      date: '2024-01-15',
+      popularity: 95,
+      price: '49.99€/mois',
+      pointsCost: null
     }
   ];
 
@@ -161,6 +268,7 @@ export const Store: React.FC = () => {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <ShoppingBag className="text-amber-500" />
             {t('store.title', 'Boutique Spirituelle')}
+            <PremiumBadge />
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm sm:text-base">
             {t('store.subtitle', 'Découvrez notre sélection de produits, livres et talismans pour accompagner votre pratique.')}
@@ -298,9 +406,18 @@ export const Store: React.FC = () => {
 
               <div className={`p-4 sm:p-5 flex-1 flex flex-col`}>
                 <h3 className={`font-bold text-gray-900 dark:text-white mb-2 ${layoutMode === 'list' ? 'text-base sm:text-xl' : 'text-lg'}`}>{product.name}</h3>
-                <p className={`text-sm text-gray-500 dark:text-gray-400 flex-1 mb-4 sm:mb-6 ${layoutMode === 'list' ? 'line-clamp-2 sm:line-clamp-3' : 'line-clamp-2'}`}>
+                <p className={`text-sm text-gray-500 dark:text-gray-400 flex-1 mb-2 ${layoutMode === 'list' ? 'line-clamp-2 sm:line-clamp-3' : 'line-clamp-2'}`}>
                   {product.description}
                 </p>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{product.price}</span>
+                  {product.pointsCost && (
+                    <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles size={12} />
+                      ou {product.pointsCost} pts
+                    </span>
+                  )}
+                </div>
                 
                 <div className={layoutMode === 'list' ? 'mt-auto flex justify-end' : 'mt-auto'}>
                   <button 
@@ -371,9 +488,19 @@ export const Store: React.FC = () => {
                     {t('store.addedIn', 'Ajouté en')} {new Date(selectedProduct.date).getFullYear()}
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   {selectedProduct.name}
                 </h2>
+
+                <div className="flex flex-wrap items-center gap-3 mb-6">
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{selectedProduct.price}</span>
+                  {selectedProduct.pointsCost && (
+                    <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold shadow-sm">
+                      <Sparkles size={16} />
+                      ou utiliser {selectedProduct.pointsCost} points
+                    </span>
+                  )}
+                </div>
                 
                 <div className="mb-6">
                   <button 
@@ -420,27 +547,41 @@ export const Store: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <button className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors">
-                    {t('store.visit', 'Visiter')}
-                  </button>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {selectedProduct.pointsCost && (
+                    <button 
+                      onClick={() => handlePurchase(selectedProduct, true)}
+                      className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <Sparkles size={20} />
+                      Utiliser {selectedProduct.pointsCost} pts
+                    </button>
+                  )}
                   <button 
-                    onClick={() => handleShare(selectedProduct)}
-                    className="w-16 flex items-center justify-center rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    title={t('common.share', "Partager")}
+                    onClick={() => handlePurchase(selectedProduct, false)}
+                    className="flex-1 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:bg-gray-800 dark:hover:bg-gray-100"
                   >
-                    <Share2 size={24} className="text-gray-500 dark:text-gray-400" />
+                    Acheter ({selectedProduct.price})
                   </button>
-                  <button 
-                    onClick={() => toggleFavorite(selectedProduct.id, { stopPropagation: () => {} } as any)}
-                    className={`w-16 flex items-center justify-center rounded-xl border-2 transition-colors ${
-                      favorites.includes(selectedProduct.id) 
-                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10' 
-                        : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <Heart size={24} className={favorites.includes(selectedProduct.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleShare(selectedProduct)}
+                      className="w-14 sm:w-16 flex items-center justify-center rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      title={t('common.share', "Partager")}
+                    >
+                      <Share2 size={24} className="text-gray-500 dark:text-gray-400" />
+                    </button>
+                    <button 
+                      onClick={() => toggleFavorite(selectedProduct.id, { stopPropagation: () => {} } as any)}
+                      className={`w-14 sm:w-16 flex items-center justify-center rounded-xl border-2 transition-colors ${
+                        favorites.includes(selectedProduct.id) 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-500/10' 
+                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <Heart size={24} className={favorites.includes(selectedProduct.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

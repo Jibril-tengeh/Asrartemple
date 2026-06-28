@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, Key, Shield, Eye, Hexagon, Coins, Scale, Moon, ListTodo, Layers, Shuffle, Target, Lightbulb, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -274,12 +276,17 @@ const tools = [
   }
 ];
 
+import { BannerAd } from '../../components/BannerAd';
+
 export const ToolsDashboard: React.FC = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
   const [featureToggles, setFeatureToggles] = useState<any>({});
+  const [premiumModalOpen, setPremiumModalOpen] = useState<{ isOpen: boolean, title: string }>({ isOpen: false, title: '' });
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('hasSeenMysticToolsGuide');
@@ -363,6 +370,7 @@ export const ToolsDashboard: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
+      <BannerAd />
       <div className="mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Compass className="text-emerald-500" />
@@ -495,6 +503,7 @@ export const ToolsDashboard: React.FC = () => {
           {displayedTools.map((tool, index) => {
             const status = featureToggles[`tool_${tool.id}`] || 'active';
             const isMaintenance = status === 'maintenance';
+            const isPremium = status === 'premium';
 
             const content = (
               <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${(!tool.comingSoon && !isMaintenance) ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
@@ -503,8 +512,13 @@ export const ToolsDashboard: React.FC = () => {
                 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm ${(!tool.comingSoon && !isMaintenance) ? 'group-hover:scale-110 transition-transform' : ''}`}>
+                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm ${(!tool.comingSoon && !isMaintenance) ? 'group-hover:scale-110 transition-transform relative' : 'relative'}`}>
                       <tool.icon size={20} />
+                      {isPremium && (
+                        <div className="absolute -top-1 -right-1 bg-violet-500 text-white p-0.5 rounded-full shadow border border-white dark:border-gray-800">
+                          <Sparkles size={10} />
+                        </div>
+                      )}
                     </div>
                     <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
                       {t(`tools.${tool.id}.title`) !== `tools.${tool.id}.title` ? t(`tools.${tool.id}.title`) : tool.title}
@@ -516,6 +530,11 @@ export const ToolsDashboard: React.FC = () => {
                       {isMaintenance && !tool.comingSoon && (
                         <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
                           Maintenance
+                        </span>
+                      )}
+                      {isPremium && !tool.comingSoon && !isMaintenance && (
+                        <span className="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
+                          Premium
                         </span>
                       )}
                     </h3>
@@ -542,15 +561,53 @@ export const ToolsDashboard: React.FC = () => {
                     {content}
                   </div>
                 ) : (
-                  <Link to={tool.path} className="block h-full">
+                  <div 
+                    onClick={() => {
+                      if (isPremium && user?.subscriptionTier !== 'premium' && user?.subscriptionTier !== 'pro') {
+                        setPremiumModalOpen({ isOpen: true, title: tool.title });
+                      } else {
+                        navigate(tool.path);
+                      }
+                    }} 
+                    className="block h-full cursor-pointer"
+                  >
                     {content}
-                  </Link>
+                  </div>
                 )}
               </motion.div>
             );
           })}
         </AnimatePresence>
       </motion.div>
+
+      {/* Premium Access Modal */}
+      {premiumModalOpen.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-full flex items-center justify-center shadow-lg mb-6 shadow-violet-500/30">
+              <Sparkles size={32} className="text-white" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">{premiumModalOpen.title}</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+              Cet outil est réservé aux membres Premium. Débloquez-le pour y accéder.
+            </p>
+            <div className="flex gap-4 w-full">
+              <button 
+                onClick={() => setPremiumModalOpen({ isOpen: false, title: '' })}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-900 dark:text-white"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={() => navigate('/store')}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:from-amber-500 hover:to-orange-600 transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                Débloquer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

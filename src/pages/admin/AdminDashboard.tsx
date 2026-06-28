@@ -30,6 +30,7 @@ interface Article {
   type: 'richtext' | 'code';
   status?: string;
   publishDate?: string;
+  isPremium?: boolean;
   createdAt: number;
 }
 
@@ -466,7 +467,8 @@ export const AdminDashboard: React.FC = () => {
           content: newArticle.content,
           type: newArticle.type || 'richtext',
           status: newArticle.status || 'Draft',
-          publishDate: newArticle.publishDate || ''
+          publishDate: newArticle.publishDate || '',
+          isPremium: newArticle.isPremium || false
         });
         setEditingArticle(null);
         showToast("Article mis à jour avec succès !");
@@ -478,6 +480,7 @@ export const AdminDashboard: React.FC = () => {
           type: newArticle.type || 'richtext',
           status: newArticle.status || 'Draft',
           publishDate: newArticle.publishDate || '',
+          isPremium: newArticle.isPremium || false,
           createdAt: Date.now()
         });
         showToast("Article publié avec succès !");
@@ -849,11 +852,13 @@ export const AdminDashboard: React.FC = () => {
                     onChange={(e) => handleToggleFeature(`tool_${tool.id}`, e.target.value)}
                     className={`text-xs font-semibold px-3 py-1.5 rounded-lg border-0 cursor-pointer ${
                       status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' :
+                      status === 'premium' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400' :
                       status === 'maintenance' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' :
                       'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
                     }`}
                   >
                     <option value="active">Actif</option>
+                    <option value="premium">Premium</option>
                     <option value="maintenance">Maintenance</option>
                     <option value="inactive">Inactif</option>
                   </select>
@@ -997,6 +1002,19 @@ export const AdminDashboard: React.FC = () => {
               className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
               title="Date de planification"
             />
+          </div>
+
+          <div className="flex items-center gap-3 bg-violet-50 dark:bg-violet-900/10 p-3 rounded-xl border border-violet-100 dark:border-violet-800/30">
+            <input 
+              type="checkbox" 
+              id="isPremiumArticle" 
+              checked={newArticle.isPremium || false}
+              onChange={(e) => setNewArticle({ ...newArticle, isPremium: e.target.checked })}
+              className="w-5 h-5 text-violet-600 rounded focus:ring-violet-500"
+            />
+            <label htmlFor="isPremiumArticle" className="text-sm font-bold text-gray-900 dark:text-white cursor-pointer">
+              Article Premium (Réservé aux abonnés)
+            </label>
           </div>
 
           <input

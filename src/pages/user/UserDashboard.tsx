@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark, Flame } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
@@ -13,6 +14,7 @@ interface Props {
 
 export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const location = useLocation();
   const [items, setItems] = useState<AsrarItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,6 +122,16 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           <div className="relative z-10 flex flex-col justify-center mb-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider backdrop-blur-sm">{t('dashboardContent.announcement', 'Annonce')}</span>
+              {user?.streakDays !== undefined && user.streakDays > 0 && (
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="bg-orange-500/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm border border-orange-400/50"
+                >
+                  <Flame size={12} className="text-yellow-300" />
+                  {user.streakDays} Jours de suite
+                </motion.div>
+              )}
             </div>
             <h3 className="text-xl sm:text-2xl font-bold mb-2">{t('dashboardContent.announcementTitle', 'Nouvelles mises à jour disponibles !')}</h3>
             <p className="text-emerald-50 dark:text-emerald-100 max-w-lg text-sm sm:text-base">

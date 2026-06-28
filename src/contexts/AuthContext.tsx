@@ -14,6 +14,12 @@ interface UserData {
   emailVerified: boolean;
   photoURL?: string | null;
   coverPhotoURL?: string | null;
+  spiritualPoints?: number;
+  lastDailyRewardDate?: string;
+  subscriptionTier?: 'free' | 'premium' | 'pro';
+  hideAds?: boolean;
+  streakDays?: number;
+  purchasedItems?: string[];
 }
 
 interface AuthContextType {
@@ -84,7 +90,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isTrusted: data.isTrusted || false,
               emailVerified: firebaseUser.emailVerified,
               photoURL: data.photoURL || firebaseUser.photoURL || null,
-              coverPhotoURL: data.coverPhotoURL || null
+              coverPhotoURL: data.coverPhotoURL || null,
+              spiritualPoints: data.spiritualPoints || 0,
+              lastDailyRewardDate: data.lastDailyRewardDate,
+              subscriptionTier: data.subscriptionTier || 'free',
+              hideAds: data.hideAds || false,
+              streakDays: data.streakDays || 0,
+              purchasedItems: data.purchasedItems || []
             });
           } else {
             setUser({
@@ -97,7 +109,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isTrusted: false,
               emailVerified: firebaseUser.emailVerified,
               photoURL: firebaseUser.photoURL || null,
-              coverPhotoURL: null
+              coverPhotoURL: null,
+              spiritualPoints: 0,
+              subscriptionTier: 'free',
+              hideAds: false,
+              streakDays: 0,
+              purchasedItems: []
             });
           }
           setLoading(false);

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Eye, ArrowLeft, RefreshCw, Key, Flame, Wind, Droplets, Mountain, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Eye, ArrowLeft, RefreshCw, Key, Flame, Wind, Droplets, Mountain, Sparkles, Lock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { PremiumWrapper } from '../../../components/PremiumWrapper';
 
 export const SirrAlAsrar: React.FC = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [motherName, setMotherName] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -74,15 +78,37 @@ export const SirrAlAsrar: React.FC = () => {
     }, 2000); // 2 seconds of deep thinking
   };
 
-  return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none min-h-screen">
+  const previewUI = (
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 border-none pointer-events-none">
       <div className="flex items-center gap-4 mb-6">
-        <Link 
-          to="/tools" 
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </Link>
+        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        <div>
+          <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+          <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <div className="h-10 w-full bg-gray-100 dark:bg-gray-700 rounded-xl mb-4"></div>
+        <div className="h-10 w-full bg-gray-100 dark:bg-gray-700 rounded-xl mb-6"></div>
+        <div className="h-12 w-full bg-violet-100 dark:bg-violet-900/30 rounded-xl"></div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl"></div>
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl"></div>
+      </div>
+    </div>
+  );
+
+  return (
+    <PremiumWrapper fallbackTitle="Sirr Al-Asrar" previewContent={previewUI}>
+      <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none min-h-screen">
+        <div className="flex items-center gap-4 mb-6">
+          <Link 
+            to="/tools" 
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+          >
+            <ArrowLeft size={24} />
+          </Link>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Eye className="text-violet-600" />
@@ -238,6 +264,7 @@ export const SirrAlAsrar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </PremiumWrapper>
   );
 };

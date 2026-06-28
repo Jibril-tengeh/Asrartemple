@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { PremiumBadge } from '../../components/PremiumBadge';
+import { ReferralCenter } from '../../components/ReferralCenter';
 import { signOut, db, auth } from '../../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -310,12 +312,21 @@ export const UserProfile: React.FC = () => {
             </div>
             
             <div className="text-center sm:text-left mb-2 sm:mb-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center justify-center sm:justify-start gap-2">
                 {user?.name || t('profile.defaultName', 'Profil & Préférences')}
+                <PremiumBadge />
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {user?.email || t('profile.defaultEmail', 'Gérez vos paramètres et rappels spirituels')}
               </p>
+              {user && (
+                <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
+                  <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1.5 border border-emerald-100 dark:border-emerald-800">
+                    <Sparkles size={14} />
+                    <span>{user?.spiritualPoints || 0} pts</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -347,6 +358,7 @@ export const UserProfile: React.FC = () => {
       />
 
       <GamificationBadges />
+      <ReferralCenter />
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
 
@@ -462,6 +474,66 @@ export const UserProfile: React.FC = () => {
             <Smartphone size={24} className={theme === 'system' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'} />
             <span className={`font-medium text-sm ${theme === 'system' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{t('profile.theme.auto', 'Automatique')}</span>
           </button>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="text-emerald-500" size={20} />
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Abonnement & Achats</h2>
+        </div>
+        
+        {user?.subscriptionTier === 'premium' || user?.subscriptionTier === 'pro' ? (
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50 dark:bg-gray-800/50 gap-4 mb-4">
+              <div className="flex flex-col">
+                <h3 className="font-bold text-gray-900 dark:text-white">Désactiver les publicités</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Masquer les bannières promotionnelles dans l'application</p>
+              </div>
+              <div 
+                onClick={async () => {
+                  try {
+                    const userRef = doc(db, 'users', user.uid);
+                    await setDoc(userRef, { hideAds: !user?.hideAds }, { merge: true });
+                  } catch (e) {
+                    console.error('Error toggling ads', e);
+                  }
+                }}
+                className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${user?.hideAds ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+              >
+                <motion.div 
+                  className="w-4 h-4 bg-white rounded-full shadow-sm"
+                  animate={{ x: user?.hideAds ? 24 : 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Passez à la version Premium pour débloquer toutes les fonctionnalités et supprimer les publicités.
+          </p>
+        )}
+
+        <div>
+          <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <Save className="text-gray-400" size={18} />
+            Historique d'achats
+          </h3>
+          {user?.purchasedItems && user.purchasedItems.length > 0 ? (
+            <div className="space-y-3">
+              {user.purchasedItems.map((item, idx) => (
+                <div key={idx} className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{item}</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">Acheté</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Aucun achat pour le moment.</p>
+            </div>
+          )}
         </div>
       </div>
 
