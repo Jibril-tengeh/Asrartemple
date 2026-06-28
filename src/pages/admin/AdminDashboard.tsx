@@ -1164,13 +1164,44 @@ export const AdminDashboard: React.FC = () => {
                     <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
                       {article.type === 'richtext' ? 'Texte' : 'Code'}
                     </span>
-                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                      article.status === 'Published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                      article.status === 'Archived' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    }`}>
-                      {article.status === 'Published' ? 'Publié' : article.status === 'Archived' ? 'Archivé' : 'Brouillon'}
-                    </span>
+                    <select
+                      value={article.status}
+                      onChange={async (e) => {
+                        try {
+                          await updateDoc(doc(db, 'articles', article.id), { status: e.target.value });
+                          showToast("Statut mis à jour");
+                        } catch (err) {
+                          showToast("Erreur", "error");
+                        }
+                      }}
+                      className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border-0 cursor-pointer ${
+                        article.status === 'Published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                        article.status === 'Archived' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      }`}
+                    >
+                      <option value="Published">Publié</option>
+                      <option value="Draft">Brouillon</option>
+                      <option value="Archived">Archivé</option>
+                    </select>
+                    
+                    <button
+                      onClick={async () => {
+                        try {
+                          await updateDoc(doc(db, 'articles', article.id), { isPremium: !article.isPremium });
+                          showToast("Statut Premium mis à jour");
+                        } catch (err) {
+                          showToast("Erreur", "error");
+                        }
+                      }}
+                      className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-violet-200 dark:border-violet-800 transition-colors ${
+                        article.isPremium 
+                          ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' 
+                          : 'bg-transparent text-gray-400 hover:text-violet-500 hover:border-violet-300'
+                      }`}
+                    >
+                      {article.isPremium ? '★ Premium' : '☆ Standard'}
+                    </button>
                   </div>
                   {article.publishDate && (
                     <p className="text-xs text-gray-500 mt-1">Plannifié: {new Date(article.publishDate).toLocaleDateString()}</p>
@@ -1311,19 +1342,19 @@ export const AdminDashboard: React.FC = () => {
             <div>
               <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Shield size={18} className="text-red-500" />
-                Mode Maintenance
+                Mode Maintenance Global
               </h4>
-              <p className="text-sm text-gray-500 mt-1">Afficher une page de maintenance aux utilisateurs (Mock).</p>
+              <p className="text-sm text-gray-500 mt-1">Bloque l'accès à toute l'application pour les utilisateurs non-administrateurs.</p>
             </div>
             <button
-              onClick={() => setMaintenanceMode(!maintenanceMode)}
+              onClick={() => handleToggleFeature('globalMaintenanceMode', featureToggles['globalMaintenanceMode'] === true)}
               className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
-                maintenanceMode ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
+                featureToggles['globalMaintenanceMode'] ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
               }`}
             >
               <div
                 className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
-                  maintenanceMode ? 'translate-x-6' : 'translate-x-0'
+                  featureToggles['globalMaintenanceMode'] ? 'translate-x-6' : 'translate-x-0'
                 }`}
               />
             </button>

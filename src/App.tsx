@@ -47,6 +47,8 @@ const DailyDhikrTracker = React.lazy(() => import('./pages/user/tools/DailyDhikr
 import { Onboarding } from './pages/Onboarding';
 import { DailyRewardHandler } from './components/DailyRewardHandler';
 
+import { MaintenanceOverlay } from './components/MaintenanceOverlay';
+
 const Store = React.lazy(() => import('./pages/user/Store').then(m => ({ default: m.Store })));
 
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -104,66 +106,68 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
-      <Header />
-      <DailyRewardHandler />
-      <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20 pt-20">
-        <React.Suspense fallback={
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-              <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-500 font-medium">Chargement...</p>
-            </div>
-          }>
-          <Routes>
-          <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
-          <Route path="/user/dashboard" element={<UserDashboard />} />
-          <Route path="/secret/:id" element={<SecretDetail />} />
-          <Route path="/explore" element={<ExploreDashboard />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/explore/quizz" element={<Quizz />} />
-          <Route path="/explore/lexique" element={<Lexique />} />
-          <Route path="/explore/calendar" element={<CalendarConverter />} />
-          <Route path="/tools" element={<ToolsDashboard />} />
-          <Route path="/tools/abjad" element={<AbjadCalculator />} />
-          <Route path="/tools/planetary" element={<PlanetaryHours />} />
-          <Route path="/tools/tasbih" element={<Tasbih />} />
-          <Route path="/tools/khatim" element={<KhatimGenerator />} />
-          <Route path="/tools/asma" element={<Asma />} />
-          <Route path="/tools/talsam" element={<Talsam />} />
-          <Route path="/tools/istikhara" element={<Istikhara />} />
-          <Route path="/tools/ruqyah" element={<Ruqyah />} />
-          <Route path="/tools/sirr" element={<SirrAlAsrar />} />
-          <Route path="/tools/zairja" element={<Zairja />} />
-          <Route path="/tools/zakat" element={<ZakatCalculator />} />
-          <Route path="/tools/faraid" element={<FaraidCalculator />} />
-          <Route path="/tools/dreams" element={<DreamJournal />} />
-          <Route path="/tools/elemental" element={<ElementalAnalyzer />} />
-          <Route path="/tools/geomancy" element={<Geomancy />} />
-          <Route path="/tools/letters" element={<ScienceOfLetters />} />
-          <Route path="/tools/personal-wird" element={<PersonalWird />} />
-          <Route path="/tools/daily-dhikr" element={<DailyDhikrTracker />} />
-          <Route path="/tools/lunar-mansions" element={<LunarMansions />} />
-          <Route path="/tools/spiritual-compatibility" element={<SpiritualCompatibility />} />
-          <Route path="/tools/ilm-jafar" element={<IlmJafar />} />
-          <Route path="/tools/grand-oaths" element={<GrandOaths />} />
-          <Route path="/tools/99names" element={<NamesOfAllah />} />
-          <Route path="/tools/rouhaniyya" element={<RouhaniyyaExtractor />} />
-          <Route path="/tools/taksir" element={<Taksir />} />
-          <Route path="/tools/quran" element={<QuranFull />} />
-          <Route path="/tools/khouddam" element={<KhouddamExtractor />} />
-          <Route path="/tools/awfaq" element={<AwfaqAdvanced />} />
-          <Route path="/tools/quranic-faal" element={<QuranicFaal />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
-        </Routes>
-          </React.Suspense>
-      </main>
-      <AudioPlayer />
-      <BottomNav />
-    </div>
+    <MaintenanceOverlay>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
+        <Header />
+        <DailyRewardHandler />
+        <main className="flex-1 text-gray-900 dark:text-gray-100 pb-20 pt-20">
+          <React.Suspense fallback={
+              <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-500 font-medium">Chargement...</p>
+              </div>
+            }>
+            <Routes>
+            <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
+            <Route path="/user/dashboard" element={<UserDashboard />} />
+            <Route path="/secret/:id" element={<SecretDetail />} />
+            <Route path="/explore" element={<ExploreDashboard />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/explore/quizz" element={<Quizz />} />
+            <Route path="/explore/lexique" element={<Lexique />} />
+            <Route path="/explore/calendar" element={<CalendarConverter />} />
+            <Route path="/tools" element={<ToolsDashboard />} />
+            <Route path="/tools/abjad" element={<AbjadCalculator />} />
+            <Route path="/tools/planetary" element={<PlanetaryHours />} />
+            <Route path="/tools/tasbih" element={<Tasbih />} />
+            <Route path="/tools/khatim" element={<KhatimGenerator />} />
+            <Route path="/tools/asma" element={<Asma />} />
+            <Route path="/tools/talsam" element={<Talsam />} />
+            <Route path="/tools/istikhara" element={<Istikhara />} />
+            <Route path="/tools/ruqyah" element={<Ruqyah />} />
+            <Route path="/tools/sirr" element={<SirrAlAsrar />} />
+            <Route path="/tools/zairja" element={<Zairja />} />
+            <Route path="/tools/zakat" element={<ZakatCalculator />} />
+            <Route path="/tools/faraid" element={<FaraidCalculator />} />
+            <Route path="/tools/dreams" element={<DreamJournal />} />
+            <Route path="/tools/elemental" element={<ElementalAnalyzer />} />
+            <Route path="/tools/geomancy" element={<Geomancy />} />
+            <Route path="/tools/letters" element={<ScienceOfLetters />} />
+            <Route path="/tools/personal-wird" element={<PersonalWird />} />
+            <Route path="/tools/daily-dhikr" element={<DailyDhikrTracker />} />
+            <Route path="/tools/lunar-mansions" element={<LunarMansions />} />
+            <Route path="/tools/spiritual-compatibility" element={<SpiritualCompatibility />} />
+            <Route path="/tools/ilm-jafar" element={<IlmJafar />} />
+            <Route path="/tools/grand-oaths" element={<GrandOaths />} />
+            <Route path="/tools/99names" element={<NamesOfAllah />} />
+            <Route path="/tools/rouhaniyya" element={<RouhaniyyaExtractor />} />
+            <Route path="/tools/taksir" element={<Taksir />} />
+            <Route path="/tools/quran" element={<QuranFull />} />
+            <Route path="/tools/khouddam" element={<KhouddamExtractor />} />
+            <Route path="/tools/awfaq" element={<AwfaqAdvanced />} />
+            <Route path="/tools/quranic-faal" element={<QuranicFaal />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/journal" element={<Journal />} />
+            <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
+          </Routes>
+            </React.Suspense>
+        </main>
+        <AudioPlayer />
+        <BottomNav />
+      </div>
+    </MaintenanceOverlay>
   );
 }
