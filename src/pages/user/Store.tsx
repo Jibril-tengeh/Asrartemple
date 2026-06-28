@@ -70,7 +70,7 @@ export const Store: React.FC = () => {
 
     if (usePoints) {
       if ((user.spiritualPoints || 0) < product.pointsCost) {
-        alert("Vous n'avez pas assez de points spirituels.");
+        alert("Vous n'avez pas assez de points spirituels. (Solde: " + (user.spiritualPoints || 0) + ")");
         return;
       }
       try {
@@ -82,41 +82,39 @@ export const Store: React.FC = () => {
         setSelectedProduct(null);
       } catch (err) {
         console.error("Erreur lors de l'échange de points", err);
-        alert("Une erreur est survenue.");
+        alert("Une erreur est survenue lors de l'échange.");
       }
     } else {
-      if (product.category === 'Abonnements') {
-        const tier = product.name.includes('Pro') ? 'pro' : 'premium';
-        try {
-          if (paymentMethod === 'stripe') {
-            const url = await StripeService.createCheckoutSession(user.uid, user.email || '');
-            window.location.href = url;
-          } else if (paymentMethod === 'paystack') {
-            await PaystackService.initializePaystackPayment(
-              user.email || 'user@example.com',
-              paystackConfig.amount,
-              paystackConfig.currency,
-              user.uid,
-              (reference) => {
-                alert(`Paiement réussi avec Paystack! Réf: ${reference}`);
-                setSelectedProduct(null);
-              },
-              () => {
-                console.log("Paystack modal closed");
-              }
-            );
-          } else {
-             // For testing or quick fallback
-             if (tier === 'pro') {
-               alert(`Redirection vers le paiement pour: ${product.name} (${product.price}).`);
-             }
-          }
-        } catch (err) {
-          console.error("Erreur lors de l'abonnement", err);
-          alert("Une erreur est survenue lors de l'initialisation du paiement.");
+      // For all products (subscriptions and one-time), we will default to paystack if not specified,
+      // or handle stripe/paystack directly.
+      const method = paymentMethod || 'paystack'; // Default to Paystack for regular purchases
+      
+      try {
+        if (method === 'stripe') {
+          const url = await StripeService.createCheckoutSession(user.uid, user.email || '');
+          window.location.href = url;
+        } else if (method === 'paystack') {
+          const numericPrice = parseInt(product.price) || 15;
+          const ratio = numericPrice / 15;
+          const finalAmount = Math.round(paystackConfig.amount * ratio);
+
+          await PaystackService.initializePaystackPayment(
+            user.email || 'user@example.com',
+            finalAmount,
+            paystackConfig.currency,
+            user.uid,
+            (reference) => {
+              alert(`Paiement réussi avec Paystack! Réf: ${reference}`);
+              setSelectedProduct(null);
+            },
+            () => {
+              console.log("Paystack modal closed");
+            }
+          );
         }
-      } else {
-        alert(`Redirection vers le paiement pour: ${product.name} (${product.price}).`);
+      } catch (err) {
+        console.error("Erreur lors du paiement", err);
+        alert("Une erreur est survenue lors de l'initialisation du paiement.");
       }
     }
   };
