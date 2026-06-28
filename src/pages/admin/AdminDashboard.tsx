@@ -487,9 +487,9 @@ export const AdminDashboard: React.FC = () => {
       }
       setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '' });
       localStorage.removeItem('asrarhub_article_draft');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving article:", error);
-      showToast("Erreur lors de la publication de l'article.", "error");
+      showToast(`Erreur : ${error?.message || "Erreur lors de la publication de l'article."}`, "error");
     }
   };
 

@@ -5,14 +5,9 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth != null && (
-        request.auth.uid == 'vX1d1eD0qf' || // Fallback if we know the UID, but we don't.
-        request.auth.token.email == 'sbireino@gmail.com' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        (request.auth.token.email == 'sbireino@gmail.com' || request.auth.token.email == 'jibriltengeh4@gmail.com') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
-    }
-    
-    match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.token.email == 'sbireino@gmail.com';
     }
 
     match /users/{userId} {
@@ -37,7 +32,7 @@ service cloud.firestore {
     }
     
     match /notifications/{document=**} {
-      allow read: if true; // changed to true so everyone can read notifications
+      allow read: if true;
       allow write: if isAdmin();
     }
     
@@ -50,5 +45,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
   }
 }
+
