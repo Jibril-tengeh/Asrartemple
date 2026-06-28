@@ -3118,13 +3118,18 @@ export const QuranFull: React.FC = () => {
                              <ListPlus size={18} />
                            </button>
                            <button
-                             onClick={() => {
+                             onClick={async () => {
                                const shareText = `${ayah.text}\n\n[Coran ${ayah.surah?.number || surahArabic.number}:${ayah.numberInSurah}]`;
                                if (navigator.share) {
-                                 navigator.share({ title: 'Verset du Coran', text: shareText });
+                                 try {
+                                   await navigator.share({ title: 'Verset du Coran', text: shareText, url: window.location.href });
+                                 } catch(e: any) {
+                                   if (e.name !== 'AbortError') {
+                                     console.error(e);
+                                   }
+                                 }
                                } else {
-                                 navigator.clipboard.writeText(shareText);
-                                 alert('Verset copié dans le presse-papier !');
+                                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)} ${encodeURIComponent(window.location.href)}`, '_blank');
                                }
                              }}
                              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400"

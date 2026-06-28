@@ -93,13 +93,36 @@ export const ExploreDashboard: React.FC = () => {
           title: t('exploreDashboard.wisdomShareTitle'),
           text: `"${sagesse.arabic}"\n\n${sagesse.french}\n— ${sagesse.source}`,
         });
-      } catch (err) {
-        console.error('Erreur de partage', err);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Erreur de partage', err);
+        }
       }
     } else {
       alert(t('exploreDashboard.shareErrorText'));
     }
   };
+
+  const handleShareArticle = async (article: any) => {
+    // Strip HTML and get a snippet
+    const snippet = article.content.replace(/<[^>]+>/g, '').substring(0, 100) + '...';
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: `Lire l'article "${article.title}" : ${snippet}`,
+          url: window.location.href,
+        });
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+        }
+      }
+    } else {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Lire l'article "${article.title}" : ${snippet}`)} ${encodeURIComponent(window.location.href)}`, '_blank');
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       <BannerAd />
@@ -341,9 +364,14 @@ export const ExploreDashboard: React.FC = () => {
               <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                 <FileText size={20} /> Lecture
               </h3>
-              <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleShareArticle(selectedArticle)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-emerald-500" title="Partager">
+                  <Share2 size={20} />
+                </button>
+                <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500" title="Fermer">
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-6 lg:p-10 hide-scrollbar bg-gray-50 dark:bg-gray-900">
               <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">

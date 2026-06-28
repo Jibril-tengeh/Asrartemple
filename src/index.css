@@ -62,3 +62,38 @@ body {
   word-break: break-all;
 }
 
+.ql-editor {
+  min-height: 120px;
+  max-height: 60vh;
+}
+
+.ql-toolbar {
+  position: sticky !important;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+}
+
+.dark .ql-toolbar {
+  background-color: #111827; /* gray-900 */
+}
+
+/* Ensure post content wraps correctly */
+.post-content-wrapper {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+.post-content-wrapper * {
+  max-width: 100%;
+}
+.post-content-wrapper table {
+  table-layout: fixed;
+  width: 100%;
+}
+.post-content-wrapper pre, .post-content-wrapper code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+

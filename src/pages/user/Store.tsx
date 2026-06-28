@@ -6,6 +6,8 @@ import { doc, updateDoc, increment } from 'firebase/firestore';
 import { ShoppingBag, Star, Shield, Zap, Sparkles, Book, LayoutGrid, Square, List, Heart, Search, ChevronDown, X, Share2, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumBadge } from '../../components/PremiumBadge';
+import { StripeService } from '../../services/StripeService';
+import { PaystackService } from '../../services/PaystackService';
 
 type LayoutMode = 'grid1' | 'grid2' | 'list';
 type SortOption = 'Date' | 'Popularité' | 'Alphabétique';
@@ -24,8 +26,43 @@ export const Store: React.FC = () => {
   const [productRatings, setProductRatings] = useState<Record<number, number>>({});
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [paystackConfig, setPaystackConfig] = useState({ currency: 'GHS', amount: 150 });
 
-  const handlePurchase = async (product: any, usePoints: boolean = false) => {
+  useEffect(() => {
+    // Attempt to auto-detect country and currency for Paystack
+    const detectCountry = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        const countryCode = data.country_code; // e.g. "GH", "NG", "ZA", "KE", "CI", "SN"
+
+        let currency = 'GHS';
+        let amount = 150; // default 150 GHS (approx 10 USD)
+
+        switch(countryCode) {
+          case 'GH': currency = 'GHS'; amount = 150; break;
+          case 'NG': currency = 'NGN'; amount = 15000; break;
+          case 'ZA': currency = 'ZAR'; amount = 200; break;
+          case 'KE': currency = 'KES'; amount = 1500; break;
+          // For Francophone West/Central Africa
+          case 'CI': case 'SN': case 'ML': case 'BF': case 'TG': case 'BJ': case 'NE': case 'GW':
+            currency = 'XOF'; amount = 6000; break;
+          case 'CM': case 'GA': case 'CG': case 'TD': case 'CF': case 'GQ':
+            currency = 'XAF'; amount = 6000; break;
+          case 'RW': currency = 'RWF'; amount = 13000; break;
+          case 'UG': currency = 'UGX'; amount = 38000; break;
+          default: currency = 'USD'; amount = 10; break;
+        }
+        
+        setPaystackConfig({ currency, amount });
+      } catch (e) {
+        console.error("Could not detect country, defaulting to GHS", e);
+      }
+    };
+    detectCountry();
+  }, []);
+
+  const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'stripe' | 'paystack') => {
     if (!user) {
       alert("Veuillez vous connecter pour effectuer un achat.");
       return;
@@ -51,15 +88,32 @@ export const Store: React.FC = () => {
       if (product.category === 'Abonnements') {
         const tier = product.name.includes('Pro') ? 'pro' : 'premium';
         try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            subscriptionTier: tier
-          });
-          alert(`Félicitations ! Vous êtes maintenant abonné au niveau ${tier.toUpperCase()}.`);
-          setSelectedProduct(null);
+          if (paymentMethod === 'stripe') {
+            const url = await StripeService.createCheckoutSession(user.uid, user.email || '');
+            window.location.href = url;
+          } else if (paymentMethod === 'paystack') {
+            await PaystackService.initializePaystackPayment(
+              user.email || 'user@example.com',
+              paystackConfig.amount,
+              paystackConfig.currency,
+              user.uid,
+              (reference) => {
+                alert(`Paiement réussi avec Paystack! Réf: ${reference}`);
+                setSelectedProduct(null);
+              },
+              () => {
+                console.log("Paystack modal closed");
+              }
+            );
+          } else {
+             // For testing or quick fallback
+             if (tier === 'pro') {
+               alert(`Redirection vers le paiement pour: ${product.name} (${product.price}).`);
+             }
+          }
         } catch (err) {
           console.error("Erreur lors de l'abonnement", err);
-          alert("Une erreur est survenue.");
+          alert("Une erreur est survenue lors de l'initialisation du paiement.");
         }
       } else {
         alert(`Redirection vers le paiement pour: ${product.name} (${product.price}).`);
@@ -203,15 +257,15 @@ export const Store: React.FC = () => {
     },
     {
       id: 7,
-      name: 'Abonnement Premium (Mensuel)',
-      description: 'Débloquez les tutoriels Sirr Al Asrar avancés, outils illimités, et supprimez toutes les publicités.',
+      name: 'Abonnement Premium (3 Mois)',
+      description: 'Débloquez les tutoriels Sirr Al Asrar avancés, outils illimités, et supprimez toutes les publicités pendant 3 mois. Renouvelable.',
       image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800&auto=format&fit=crop',
       icon: Star,
       color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
       category: 'Abonnements',
       date: '2024-01-01',
       popularity: 99,
-      price: '9.99€/mois',
+      price: '10 USD / 3 mois',
       pointsCost: null
     },
     {
@@ -557,12 +611,29 @@ export const Store: React.FC = () => {
                       Utiliser {selectedProduct.pointsCost} pts
                     </button>
                   )}
-                  <button 
-                    onClick={() => handlePurchase(selectedProduct, false)}
-                    className="flex-1 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:bg-gray-800 dark:hover:bg-gray-100"
-                  >
-                    Acheter ({selectedProduct.price})
-                  </button>
+                  {selectedProduct.category === 'Abonnements' ? (
+                    <div className="flex flex-col flex-1 gap-2">
+                      <button 
+                        onClick={() => handlePurchase(selectedProduct, false, 'stripe')}
+                        className="py-3 bg-[#635BFF] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#4B45D6]"
+                      >
+                        Payer avec Stripe ({selectedProduct.price})
+                      </button>
+                      <button 
+                        onClick={() => handlePurchase(selectedProduct, false, 'paystack')}
+                        className="py-3 bg-[#0BA4DB] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#0983AF]"
+                      >
+                        Payer avec Paystack ({paystackConfig.amount} {paystackConfig.currency})
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => handlePurchase(selectedProduct, false)}
+                      className="flex-1 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:bg-gray-800 dark:hover:bg-gray-100"
+                    >
+                      Acheter ({selectedProduct.price})
+                    </button>
+                  )}
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleShare(selectedProduct)}
