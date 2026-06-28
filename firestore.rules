@@ -5,7 +5,12 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth != null && (
-        ('email' in request.auth.token && (request.auth.token.email == 'sbireino@gmail.com' || request.auth.token.email == 'jibriltengeh4@gmail.com')) ||
+        ('email' in request.auth.token && (
+          request.auth.token.email == 'sbireino@gmail.com' || 
+          request.auth.token.email == 'jibriltengeh4@gmail.com' ||
+          request.auth.token.email == 'jibriltengeh57@gmail.com' ||
+          request.auth.token.email == 'tenibawwal10@gmail.com'
+        )) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
