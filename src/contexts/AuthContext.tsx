@@ -51,19 +51,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userRef = doc(db, 'users', firebaseUser.uid);
         
         // Auto-promote to admin in DB if email matches
-        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
-        if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'];
+        if (firebaseUser.email && adminEmails.includes(firebaseUser.email.toLowerCase())) {
           getDoc(userRef).then(async (snap) => {
              if (snap.exists() && snap.data().role !== 'admin') {
                 try {
                   const { updateDoc } = await import('firebase/firestore');
                   await updateDoc(userRef, { role: 'admin' });
-                } catch (e) { console.error(e) }
+                } catch (e) { console.error("Auto-promote update error:", e) }
              } else if (!snap.exists()) {
                 try {
                   const { setDoc } = await import('firebase/firestore');
                   await setDoc(userRef, { email: firebaseUser.email, role: 'admin', createdAt: new Date() });
-                } catch (e) { console.error(e) }
+                } catch (e) { console.error("Auto-promote set error:", e) }
              }
           });
         }
@@ -74,8 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (docSnap.exists()) {
             currentRole = docSnap.data().role || 'user';
           }
-          const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
-          if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
+          const adminEmailsList = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'];
+          if (firebaseUser.email && adminEmailsList.includes(firebaseUser.email.toLowerCase())) {
              currentRole = 'admin';
           }
           if (docSnap.exists()) {

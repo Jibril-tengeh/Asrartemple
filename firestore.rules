@@ -3,16 +3,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    function isEmailAdmin() {
+      return request.auth != null && 
+             request.auth.token != null && 
+             'email' in request.auth.token && (
+               request.auth.token.email == 'sbireino@gmail.com' || 
+               request.auth.token.email == 'jibriltengeh4@gmail.com' ||
+               request.auth.token.email == 'jibriltengeh57@gmail.com' ||
+               request.auth.token.email == 'tenibawwal10@gmail.com'
+             );
+    }
+
+    function isDocAdmin() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin';
+    }
+
     function isAdmin() {
-      return request.auth != null && (
-        ('email' in request.auth.token && (
-          request.auth.token.email == 'sbireino@gmail.com' || 
-          request.auth.token.email == 'jibriltengeh4@gmail.com' ||
-          request.auth.token.email == 'jibriltengeh57@gmail.com' ||
-          request.auth.token.email == 'tenibawwal10@gmail.com'
-        )) ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
+      return isEmailAdmin() || isDocAdmin();
     }
 
     match /ruqyah_playlists/{document} {
