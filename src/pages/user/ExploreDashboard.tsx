@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Compass, Book, Shield, Heart, Sparkles, Moon, Sun, ArrowRight, Wallet, Activity, Share2, HelpCircle, FileText, Download } from 'lucide-react';
+import { Compass, Book, Shield, Heart, Sparkles, Moon, Sun, ArrowRight, Wallet, Activity, Share2, HelpCircle, FileText, Download, Eye, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 export const ExploreDashboard: React.FC = () => {
   const { t } = useLanguage();
@@ -65,11 +67,20 @@ export const ExploreDashboard: React.FC = () => {
     { arabic: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ", french: t('exploreDashboard.wisdom.4.text', "Louange à Allah par la grâce de qui s'accomplissent les bonnes œuvres."), source: t('exploreDashboard.wisdom.4.source', "Invocation prophétique") },
   ];
   const [sagesse, setSagesse] = useState(sagesses[0]);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
 
   useEffect(() => {
     // Randomize daily wisdom based on current day (pseudo-random)
     const today = new Date().getDate();
     setSagesse(sagesses[today % sagesses.length]);
+
+    const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), limit(3));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setArticles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => console.error("Error fetching articles", error));
+
+    return () => unsubscribe();
   }, []);
 
   const handleShare = async () => {
@@ -261,6 +272,34 @@ export const ExploreDashboard: React.FC = () => {
         
       </div>
 
+      {/* Derniers Articles */}
+      {articles.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Derniers Articles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {articles.map((article) => (
+              <div key={article.id} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer group" onClick={() => setSelectedArticle(article)}>
+                {article.thumbnail ? (
+                  <div className="h-48 overflow-hidden">
+                    <img src={article.thumbnail} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                ) : (
+                  <div className="h-48 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                    <FileText size={48} className="text-emerald-200 dark:text-emerald-800" />
+                  </div>
+                )}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-emerald-500 transition-colors">{article.title}</h3>
+                  <div className="mt-auto flex items-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                    Lire l'article <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Lunar Phase Widget */}
       <div className="mt-6 bg-slate-900 rounded-2xl p-6 shadow-sm overflow-hidden relative border border-slate-800">
         <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -285,6 +324,50 @@ export const ExploreDashboard: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Article Modal */}
+      {selectedArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                <FileText size={20} /> Lecture
+              </h3>
+              <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 lg:p-10 hide-scrollbar bg-gray-50 dark:bg-gray-900">
+              <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
+                {selectedArticle.thumbnail && (
+                  <div className="w-full h-64 md:h-80 overflow-hidden relative">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                    <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-0 left-0 p-6 z-20">
+                      <h1 className="text-2xl md:text-3xl font-black text-white">{selectedArticle.title}</h1>
+                    </div>
+                  </div>
+                )}
+                {!selectedArticle.thumbnail && (
+                  <div className="p-6 md:p-10 border-b border-gray-100 dark:border-gray-700">
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{selectedArticle.title}</h1>
+                  </div>
+                )}
+                
+                <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none">
+                  {selectedArticle.type === 'richtext' ? (
+                    <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
+                  ) : (
+                    <pre className="p-4 rounded-xl bg-gray-900 text-gray-100 overflow-x-auto text-sm font-mono">
+                      <code>{selectedArticle.content}</code>
+                    </pre>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -4,6 +4,9 @@ import { Calculator, Clock, Activity, Compass, BookOpen, Star, Sparkles, Users, 
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+
 const tools = [
   // Simple Tools
   {
@@ -276,12 +279,23 @@ export const ToolsDashboard: React.FC = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
+  const [featureToggles, setFeatureToggles] = useState<any>({});
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('hasSeenMysticToolsGuide');
     if (!hasSeenGuide) {
       setShowGuide(true);
     }
+    
+    const unsubscribeFeatures = onSnapshot(doc(db, 'settings', 'features'), (docSnap) => {
+      if (docSnap.exists()) {
+        setFeatureToggles(docSnap.data());
+      } else {
+        setFeatureToggles({});
+      }
+    });
+
+    return () => unsubscribeFeatures();
   }, []);
 
   const closeGuide = () => {
@@ -341,7 +355,11 @@ export const ToolsDashboard: React.FC = () => {
     }
   ];
 
-  const displayedTools = tools.filter(tool => tool.level === activeTab);
+  const displayedTools = tools.filter(tool => {
+    if (tool.level !== activeTab) return false;
+    const status = featureToggles[`tool_${tool.id}`] || 'active';
+    return status !== 'inactive';
+  });
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
@@ -475,14 +493,17 @@ export const ToolsDashboard: React.FC = () => {
       <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <AnimatePresence mode="popLayout">
           {displayedTools.map((tool, index) => {
+            const status = featureToggles[`tool_${tool.id}`] || 'active';
+            const isMaintenance = status === 'maintenance';
+
             const content = (
-              <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${!tool.comingSoon ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
+              <div className={`h-full rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 p-4 transition-all duration-300 relative overflow-hidden group ${(!tool.comingSoon && !isMaintenance) ? 'hover:shadow-md hover:-translate-y-1' : 'opacity-75'}`}>
                 {/* Background Decoration */}
-                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} rounded-bl-full opacity-10 transition-opacity group-hover:opacity-20`}></div>
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} rounded-bl-full opacity-10 transition-opacity ${(!tool.comingSoon && !isMaintenance) ? 'group-hover:opacity-20' : ''}`}></div>
                 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
+                    <div className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${tool.color} text-white flex items-center justify-center shadow-sm ${(!tool.comingSoon && !isMaintenance) ? 'group-hover:scale-110 transition-transform' : ''}`}>
                       <tool.icon size={20} />
                     </div>
                     <h3 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
@@ -490,6 +511,11 @@ export const ToolsDashboard: React.FC = () => {
                       {tool.comingSoon && (
                         <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
                           Bientôt
+                        </span>
+                      )}
+                      {isMaintenance && !tool.comingSoon && (
+                        <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest shrink-0">
+                          Maintenance
                         </span>
                       )}
                     </h3>
@@ -511,7 +537,7 @@ export const ToolsDashboard: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
               >
-                {tool.comingSoon ? (
+                {(tool.comingSoon || isMaintenance) ? (
                   <div className="cursor-not-allowed">
                     {content}
                   </div>

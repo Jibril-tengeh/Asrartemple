@@ -79,17 +79,54 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
-      audioRef.current.src = currentTrack.url;
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(e => {
-          if (e.name !== 'AbortError') {
-            console.error("Audio playback error:", e);
+    let objectUrl: string | null = null;
+
+    const loadAudio = async () => {
+      if (audioRef.current && currentTrack) {
+        try {
+          const cache = await caches.open('quran-audio-cache');
+          const response = await cache.match(currentTrack.url);
+          
+          if (response) {
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              if (audioRef.current) {
+                audioRef.current.src = reader.result as string;
+                audioRef.current.play().catch(e => console.error("Audio playback error:", e));
+              }
+            };
+            return; // Exit early since FileReader is async
+          } else {
+            audioRef.current.src = currentTrack.url;
           }
-        });
+
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(e => {
+              if (e.name !== 'AbortError') {
+                console.error("Audio playback error:", e);
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Cache error", error);
+          if (audioRef.current) {
+            audioRef.current.src = currentTrack.url;
+            audioRef.current.play().catch(e => console.error(e));
+          }
+        }
       }
-    }
+    };
+
+    loadAudio();
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, [currentTrack]);
 
   const playTrack = (track: Track) => {

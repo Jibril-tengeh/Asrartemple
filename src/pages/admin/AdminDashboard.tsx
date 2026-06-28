@@ -8,10 +8,15 @@ import {
   Eye, Image as ImageIcon, Crop as CropIcon, X, Upload
 } from 'lucide-react';
 import { db } from '../../lib/firebase';
-import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy, setDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { TipTapEditor } from '../../components/TipTapEditor';
-import Editor from '@monaco-editor/react';
+import SimpleEditor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup';
+import 'prismjs/themes/prism-tomorrow.css';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -23,6 +28,8 @@ interface Article {
   thumbnail: string;
   content: string;
   type: 'richtext' | 'code';
+  status?: string;
+  publishDate?: string;
   createdAt: number;
 }
 
@@ -67,6 +74,13 @@ interface Notification {
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+  
   // Settings State
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -92,6 +106,9 @@ export const AdminDashboard: React.FC = () => {
 
   // Community State
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
+
+  // Features State
+  const [featureToggles, setFeatureToggles] = useState<any>({});
 
   // Notifications State
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -156,10 +173,26 @@ export const AdminDashboard: React.FC = () => {
       const canvas = document.createElement('canvas');
       const scaleX = imageRef.current.naturalWidth / imageRef.current.width;
       const scaleY = imageRef.current.naturalHeight / imageRef.current.height;
-      canvas.width = completedCrop.width;
-      canvas.height = completedCrop.height;
+      
+      const pixelRatio = window.devicePixelRatio || 1;
+      const destWidth = completedCrop.width * scaleX;
+      const destHeight = completedCrop.height * scaleY;
+      
+      // Keep within reasonable limits to avoid Firestore 1MB limit
+      const MAX_WIDTH = 1200;
+      let finalWidth = destWidth;
+      let finalHeight = destHeight;
+      if (finalWidth > MAX_WIDTH) {
+         finalHeight = (MAX_WIDTH / finalWidth) * finalHeight;
+         finalWidth = MAX_WIDTH;
+      }
+
+      canvas.width = finalWidth;
+      canvas.height = finalHeight;
+      
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(
           imageRef.current,
           completedCrop.x * scaleX,
@@ -168,8 +201,8 @@ export const AdminDashboard: React.FC = () => {
           completedCrop.height * scaleY,
           0,
           0,
-          completedCrop.width,
-          completedCrop.height
+          finalWidth,
+          finalHeight
         );
         const base64Image = canvas.toDataURL('image/jpeg', 0.8);
         setNewArticle({ ...newArticle, thumbnail: base64Image });
@@ -217,6 +250,14 @@ export const AdminDashboard: React.FC = () => {
       setArticles(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article)));
     }, (error) => console.error("Admin Articles error", error));
 
+    const unsubscribeFeatures = onSnapshot(doc(db, 'settings', 'features'), (docSnap) => {
+      if (docSnap.exists()) {
+        setFeatureToggles(docSnap.data());
+      } else {
+        setFeatureToggles({});
+      }
+    }, (error) => console.error("Admin Features error", error));
+
     return () => {
       unsubscribeUsers();
       unsubscribeLexique();
@@ -224,6 +265,7 @@ export const AdminDashboard: React.FC = () => {
       unsubscribePosts();
       unsubscribeNotifs();
       unsubscribeArticles();
+      unsubscribeFeatures();
     };
   }, []);
 
@@ -409,36 +451,52 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleSaveArticle = async () => {
-    if (!newArticle.title || !newArticle.content) return;
     try {
+      console.log("Saving article:", newArticle);
+      const isContentEmpty = !newArticle.content || newArticle.content === '<p></p>' || newArticle.content.trim() === '';
+      if (!newArticle.title || isContentEmpty) {
+        showToast("Titre et contenu requis.", "error");
+        return;
+      }
+      
       if (editingArticle) {
         await updateDoc(doc(db, 'articles', editingArticle.id), {
           title: newArticle.title,
-          thumbnail: newArticle.thumbnail,
+          thumbnail: newArticle.thumbnail || '',
           content: newArticle.content,
-          type: newArticle.type
+          type: newArticle.type || 'richtext',
+          status: newArticle.status || 'Draft',
+          publishDate: newArticle.publishDate || ''
         });
         setEditingArticle(null);
+        showToast("Article mis à jour avec succès !");
       } else {
         await addDoc(collection(db, 'articles'), {
           title: newArticle.title,
-          thumbnail: newArticle.thumbnail,
+          thumbnail: newArticle.thumbnail || '',
           content: newArticle.content,
           type: newArticle.type || 'richtext',
+          status: newArticle.status || 'Draft',
+          publishDate: newArticle.publishDate || '',
           createdAt: Date.now()
         });
+        showToast("Article publié avec succès !");
       }
-      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext' });
+      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '' });
+      localStorage.removeItem('asrarhub_article_draft');
     } catch (error) {
-      console.error("Error saving article", error);
+      console.error("Error saving article:", error);
+      showToast("Erreur lors de la publication de l'article.", "error");
     }
   };
 
   const handleDeleteArticle = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'articles', id));
+      showToast("Article supprimé.");
     } catch (error) {
       console.error("Error deleting article", error);
+      showToast("Erreur lors de la suppression.", "error");
     }
   };
 
@@ -447,15 +505,23 @@ export const AdminDashboard: React.FC = () => {
     try {
       const promises = articles.map(article => deleteDoc(doc(db, 'articles', article.id)));
       await Promise.all(promises);
-      alert("Tous les articles ont été supprimés.");
+      showToast("Tous les articles ont été supprimés.");
     } catch (error) {
       console.error("Error deleting all articles", error);
+      showToast("Erreur lors de la suppression.", "error");
     }
   };
 
   const editArticle = (article: Article) => {
     setEditingArticle(article);
-    setNewArticle({ title: article.title, thumbnail: article.thumbnail, content: article.content, type: article.type });
+    setNewArticle({ 
+      title: article.title, 
+      thumbnail: article.thumbnail, 
+      content: article.content, 
+      type: article.type,
+      status: article.status || 'Draft',
+      publishDate: article.publishDate || ''
+    });
     setActiveTab('articles');
   };
 
@@ -717,36 +783,119 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  const handleToggleFeature = async (featureId: string, currentValue: boolean | string) => {
+    try {
+      const newValue = typeof currentValue === 'boolean' ? !currentValue : (currentValue === 'active' ? 'maintenance' : (currentValue === 'maintenance' ? 'inactive' : 'active'));
+      await setDoc(doc(db, 'settings', 'features'), {
+        [featureId]: newValue
+      }, { merge: true });
+      showToast(`Fonctionnalité mise à jour : ${newValue}`);
+    } catch (error) {
+      console.error("Error toggling feature", error);
+      showToast("Erreur lors de la mise à jour.", "error");
+    }
+  };
+
+  const ALL_USER_TOOLS = [
+    { id: 'ruqyah', label: 'Module Ruqyah', desc: 'Accès aux versets de protection et guérison' },
+    { id: 'abjad', label: 'Calculateur Abjad', desc: 'Outil de numérologie arabe' },
+    { id: 'dreams', label: 'Journal des Rêves', desc: 'Fonctionnalité de suivi et interprétation' },
+    { id: 'zakat', label: 'Calculateur Zakat', desc: 'Module de calcul des aumônes' },
+    { id: 'asma', label: 'Asma al-Husna', desc: 'Les 99 Noms d\'Allah et leurs secrets' },
+    { id: 'awfaq', label: 'Awfaq Advanced', desc: 'Générateur de carrés magiques' },
+    { id: 'dhikr', label: 'Daily Dhikr Tracker', desc: 'Suivi quotidien des invocations' },
+    { id: 'elements', label: 'Elemental Analyzer', desc: 'Analyse des 4 éléments' },
+    { id: 'faraid', label: 'Faraid Calculator', desc: 'Calcul de l\'héritage islamique' },
+    { id: 'geomancy', label: 'Geomancy', desc: 'Outil de géomancie (Ilm al-Raml)' },
+    { id: 'grandoaths', label: 'Grand Oaths', desc: 'Grands serments spirituels' },
+    { id: 'ilmjafar', label: 'Ilm Jafar', desc: 'Science des lettres et des nombres' },
+    { id: 'istikhara', label: 'Istikhara', desc: 'Outil de consultation' },
+    { id: 'khatim', label: 'Khatim Generator', desc: 'Générateur de sceaux' },
+    { id: 'khouddam', label: 'Khouddam Extractor', desc: 'Extraction des serviteurs spirituels' },
+    { id: 'lunarmansions', label: 'Lunar Mansions', desc: 'Les demeures lunaires' },
+    { id: 'wird', label: 'Personal Wird', desc: 'Générateur de Wird personnel' },
+    { id: 'planetary', label: 'Planetary Hours', desc: 'Heures planétaires' },
+    { id: 'quran', label: 'Quran Full', desc: 'Explorateur du Coran' },
+    { id: 'quranicfaal', label: 'Quranic Faal', desc: 'Tirage de sorts coraniques' },
+    { id: 'rouhaniyya', label: 'Rouhaniyya Extractor', desc: 'Extraction spirituelle' },
+    { id: 'scienceofletters', label: 'Science of Letters', desc: 'Science des lettres (Ilm al-Huruf)' },
+    { id: 'sirralasrar', label: 'Sirr Al Asrar', desc: 'Le secret des secrets' },
+    { id: 'compatibility', label: 'Spiritual Compatibility', desc: 'Compatibilité spirituelle' },
+    { id: 'taksir', label: 'Taksir', desc: 'Brisement des lettres' },
+    { id: 'talsam', label: 'Talsam', desc: 'Générateur de talismans' },
+    { id: 'tasbih', label: 'Tasbih', desc: 'Chapelet virtuel' },
+    { id: 'zairja', label: 'Zairja', desc: 'Machine divinatoire' }
+  ];
+
   const renderFeatures = () => (
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 className="font-bold text-gray-900 dark:text-white mb-6">Gestion des Outils Utilisateur</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Gérez l'accès aux différents outils de l'application. Vous pouvez les activer, les désactiver ou les mettre en maintenance.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {ALL_USER_TOOLS.map((tool) => {
+            const status = featureToggles[`tool_${tool.id}`] || 'active';
+            return (
+              <div key={tool.id} className="flex flex-col p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-3">
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white">{tool.label}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{tool.desc}</p>
+                </div>
+                <div className="flex items-center gap-2 mt-auto">
+                  <select
+                    value={status}
+                    onChange={(e) => handleToggleFeature(`tool_${tool.id}`, e.target.value)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border-0 cursor-pointer ${
+                      status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' :
+                      status === 'maintenance' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' :
+                      'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+                    }`}
+                  >
+                    <option value="active">Actif</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="inactive">Inactif</option>
+                  </select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 className="font-bold text-gray-900 dark:text-white mb-6">Gestion des Accès Admin</h3>
         <div className="space-y-4">
           {[
-            { id: 'ruqyah', label: 'Module Ruqyah', desc: 'Accès aux versets de protection et guérison', active: true },
-            { id: 'abjad', label: 'Calculateur Abjad', desc: 'Outil de numérologie arabe', active: true },
-            { id: 'dreams', label: 'Journal des Rêves', desc: 'Fonctionnalité de suivi et interprétation', active: true },
-            { id: 'zakat', label: 'Calculateur Zakat', desc: 'Module de calcul des aumônes', active: true }
-          ].map((tool) => (
-            <div key={tool.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-4">
-              <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">{tool.label}</h4>
-                <p className="text-sm text-gray-500 mt-1">{tool.desc}</p>
-              </div>
-              <button
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
-                  tool.active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              >
-                <div
-                  className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
-                    tool.active ? 'translate-x-6' : 'translate-x-0'
+            { id: 'admin_users', label: 'Gestion Utilisateurs' },
+            { id: 'admin_articles', label: 'Gestion Articles' },
+            { id: 'admin_community', label: 'Modération Communauté' },
+            { id: 'admin_notifications', label: 'Envoi Notifications' },
+            { id: 'admin_ruqyah', label: 'Gestion Audios Ruqyah' },
+            { id: 'admin_lexique', label: 'Gestion Lexique' }
+          ].map((tool) => {
+             const active = featureToggles[`admin_tool_${tool.id}`] !== false; // Active by default
+             return (
+              <div key={tool.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-4">
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white">{tool.label}</h4>
+                </div>
+                <button
+                  onClick={() => handleToggleFeature(`admin_tool_${tool.id}`, active)}
+                  className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+                    active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
-                />
-              </button>
-            </div>
-          ))}
-          <p className="text-xs text-gray-400 mt-4 italic">* Les modifications ici sont simulées pour l'exemple.</p>
+                >
+                  <div
+                    className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
+                      active ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -830,6 +979,26 @@ export const AdminDashboard: React.FC = () => {
           )}
         </div>
         <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select
+              value={newArticle.status || 'Draft'}
+              onChange={(e) => setNewArticle({ ...newArticle, status: e.target.value })}
+              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="Draft">Brouillon</option>
+              <option value="Published">Publié</option>
+              <option value="Archived">Archivé</option>
+            </select>
+            
+            <input
+              type="date"
+              value={newArticle.publishDate || ''}
+              onChange={(e) => setNewArticle({ ...newArticle, publishDate: e.target.value })}
+              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+              title="Date de planification"
+            />
+          </div>
+
           <input
             type="text"
             placeholder="Titre de l'article"
@@ -902,14 +1071,21 @@ export const AdminDashboard: React.FC = () => {
                 className="h-full"
               />
             ) : (
-              <Editor
-                height="300px"
-                defaultLanguage="javascript"
-                theme="vs-dark"
-                value={newArticle.content || ''}
-                onChange={(val) => setNewArticle({ ...newArticle, content: val || '' })}
-                options={{ minimap: { enabled: false } }}
-              />
+              <div className="h-[300px] overflow-auto bg-[#2d2d2d]">
+                <SimpleEditor
+                  value={newArticle.content || ''}
+                  onValueChange={(code) => setNewArticle({ ...newArticle, content: code })}
+                  highlight={(code) => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
+                  padding={15}
+                  style={{
+                    fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                    fontSize: 14,
+                    minHeight: '100%',
+                    color: '#f8f8f2'
+                  }}
+                  className="code-editor-container"
+                />
+              </div>
             )}
           </div>
 
@@ -965,9 +1141,21 @@ export const AdminDashboard: React.FC = () => {
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <h4 className="font-bold text-sm text-gray-900 dark:text-white">{article.title}</h4>
-                  <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
-                    {article.type === 'richtext' ? 'Texte' : 'Code'}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
+                      {article.type === 'richtext' ? 'Texte' : 'Code'}
+                    </span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                      article.status === 'Published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                      article.status === 'Archived' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    }`}>
+                      {article.status === 'Published' ? 'Publié' : article.status === 'Archived' ? 'Archivé' : 'Brouillon'}
+                    </span>
+                  </div>
+                  {article.publishDate && (
+                    <p className="text-xs text-gray-500 mt-1">Plannifié: {new Date(article.publishDate).toLocaleDateString()}</p>
+                  )}
                 </div>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => editArticle(article)} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
@@ -1229,6 +1417,18 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'content' && renderContent()}
         {activeTab === 'settings' && renderSettings()}
       </motion.div>
+      
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-in fade-in slide-in-from-bottom-5">
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg border ${
+            toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-300' :
+            toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300' :
+            'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
+          }`}>
+            <span className="font-semibold">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

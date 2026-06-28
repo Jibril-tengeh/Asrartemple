@@ -410,6 +410,12 @@ export const Ruqyah: React.FC = () => {
     setCount(0);
   };
 
+  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 border-none min-h-screen">
       {!isSessionActive ? (
@@ -488,55 +494,69 @@ export const Ruqyah: React.FC = () => {
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
               <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Protocole & Playlist</h2>
-                    <button onClick={() => setIsBuildingPlaylist(true)} className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full">
-                      <Plus size={16} /> Créer
-                    </button>
-                  </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                  <button onClick={() => toggleSection('playlists')} className="w-full flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <ListMusic className="text-blue-500" /> Protocole & Playlist
+                    </h2>
+                    <span className="text-gray-400">{openSections['playlists'] ? '−' : '+'}</span>
+                  </button>
                   
-                  <div className="space-y-3">
-                    {playlists.map(type => (
-                      <div
-                        key={type.id}
-                        onClick={() => setSelectedType(type)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
-                          selectedType?.id === type.id 
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                            : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'
-                        }`}
-                      >
-                        <h3 className={`font-bold pr-8 ${selectedType?.id === type.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
-                          {type.name}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">{type.verses.length} versets {type.isCustom ? "(Perso)" : ""}</p>
-                        
-                        {type.isCustom && (
-                          <button 
-                            onClick={(e) => deleteCustomPlaylist(type.id, e)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-2"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
+                  {openSections['playlists'] && (
+                    <div className="p-5 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex items-center justify-end mb-4">
+                        <button onClick={() => setIsBuildingPlaylist(true)} className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full transition-colors">
+                          <Plus size={16} /> Créer Custom
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                  
-                  {adminAudios.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                        <Volume2 size={16} className="text-emerald-500" />
-                        Audios Recommandés (Complets)
-                      </h3>
                       <div className="space-y-3">
+                        {playlists.map(type => (
+                          <div
+                            key={type.id}
+                            onClick={() => setSelectedType(type)}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer relative ${
+                              selectedType?.id === type.id 
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm' 
+                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300'
+                            }`}
+                          >
+                            <h3 className={`font-bold pr-8 ${selectedType?.id === type.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
+                              {type.name}
+                            </h3>
+                            <p className="text-sm text-gray-500 mt-1">{type.verses.length} versets {type.isCustom ? "(Perso)" : ""}</p>
+                            
+                            {type.isCustom && (
+                              <button 
+                                onClick={(e) => deleteCustomPlaylist(type.id, e)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-2 transition-colors"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {adminAudios.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <button onClick={() => toggleSection('audios')} className="w-full flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Volume2 className="text-emerald-500" /> Audios Recommandés
+                      </h2>
+                      <span className="text-gray-400">{openSections['audios'] ? '−' : '+'}</span>
+                    </button>
+                    {openSections['audios'] && (
+                      <div className="p-5 border-t border-gray-100 dark:border-gray-700 space-y-3">
                         {adminAudios.map(audio => {
                           const lang = language;
                           const title = audio[`title_${lang}`] || audio.title;
                           return (
-                          <div key={audio.id} className="w-full text-left p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                          <div key={audio.id} className="w-full text-left p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                             <h4 className="font-bold text-gray-900 dark:text-white">{title}</h4>
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-sm text-gray-500 flex items-center gap-1"><Clock size={14} /> {audio.duration}</span>
@@ -548,7 +568,7 @@ export const Ruqyah: React.FC = () => {
                                     playPlaylist([{ id: `admin-${audio.id}`, title: title, artist: "Recommandé", url: audio.url }], 0);
                                   }
                                 }}
-                                className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-200"
+                                className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-200 transition-colors"
                               >
                                 {currentTrack?.url === audio.url && globalIsPlaying ? <Pause size={14} /> : <Play fill="currentColor" size={14} />}
                               </button>
@@ -557,34 +577,46 @@ export const Ruqyah: React.FC = () => {
                           );
                         })}
                       </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                  <button onClick={() => toggleSection('repetition')} className="w-full flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Repeat className="text-blue-500" /> Cycle de Répétition
+                    </h2>
+                    <span className="text-gray-400">{openSections['repetition'] ? '−' : '+'}</span>
+                  </button>
+                  {openSections['repetition'] && (
+                    <div className="p-5 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex flex-wrap gap-2">
+                        {repetitions.map(rep => (
+                          <button
+                            key={rep}
+                            onClick={() => setSelectedRepetition(rep)}
+                            className={`px-4 py-2 rounded-xl border-2 font-bold transition-all ${
+                              selectedRepetition === rep 
+                                ? 'border-blue-500 bg-blue-500 text-white shadow-md' 
+                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-300'
+                            }`}
+                          >
+                            {rep}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">2. Cycle de Répétition</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {repetitions.map(rep => (
-                      <button
-                        key={rep}
-                        onClick={() => setSelectedRepetition(rep)}
-                        className={`px-4 py-2 rounded-xl border-2 font-bold transition-all ${
-                          selectedRepetition === rep 
-                            ? 'border-blue-500 bg-blue-500 text-white' 
-                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-300'
-                        }`}
-                      >
-                        {rep}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={handleStart}
                       disabled={!selectedType || selectedType.verses.length === 0}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       <Play fill="currentColor" size={20} />
                       Démarrer la Séance (Interactive)
@@ -593,21 +625,21 @@ export const Ruqyah: React.FC = () => {
                     <button
                       onClick={playGlobalRuqyah}
                       disabled={!selectedType || selectedType.verses.length === 0}
-                      className={`w-full py-4 rounded-2xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${currentTrack?.id?.startsWith(`ruqyah-${selectedType?.id}`) && globalIsPlaying ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
+                      className={`w-full py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.02] disabled:hover:scale-100 ${currentTrack?.id?.startsWith(`ruqyah-${selectedType?.id}`) && globalIsPlaying ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
                     >
                       {currentTrack?.id?.startsWith(`ruqyah-${selectedType?.id}`) && globalIsPlaying ? <Pause size={20} /> : <Headphones size={20} />}
                       Écouter en Arrière-plan
                     </button>
                     
                     {/* Reciter selection */}
-                    <div className="mt-2">
-                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2 uppercase tracking-wider">
-                        <Headphones size={12} /> Récitateur (Arrière-plan)
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2 uppercase tracking-wider">
+                        <Headphones size={14} /> Récitateur (Arrière-plan)
                       </label>
                       <select
                         value={selectedReciterId}
                         onChange={(e) => setSelectedReciterId(e.target.value)}
-                        className="w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                       >
                         {QURAN_RECITERS.map(r => (
                           <option key={r.id} value={r.id}>{r.name}</option>
@@ -615,27 +647,28 @@ export const Ruqyah: React.FC = () => {
                       </select>
                     </div>
                   </div>
-              </div>
-
-              {selectedType && (
-                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 h-fit">
-                  <h3 className="uppercase tracking-widest text-xs font-bold text-gray-400 mb-6 flex items-center gap-2">
-                    <ListMusic size={14} /> 
-                    Contenu de la playlist
-                  </h3>
-                  <div className="space-y-6">
-                    {selectedType.verses.map((verse, idx) => (
-                      <div key={idx} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-[-24px] before:w-px before:bg-blue-200 dark:before:bg-blue-900 last:before:hidden">
-                        <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-blue-500"></div>
-                        <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-2">{verse.title}</h4>
-                        <p className="font-arabic text-xl leading-loose text-gray-700 dark:text-gray-300 mb-2" dir="rtl">
-                          {verse.arabic}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              )}
+
+                {selectedType && (
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+                    <h3 className="uppercase tracking-widest text-xs font-bold text-gray-400 mb-6 flex items-center gap-2">
+                      <ListMusic size={14} /> 
+                      Aperçu de la playlist sélectionnée
+                    </h3>
+                    <div className="space-y-6">
+                      {selectedType.verses.map((verse, idx) => (
+                        <div key={idx} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-[-24px] before:w-px before:bg-blue-200 dark:before:bg-blue-900 last:before:hidden">
+                          <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-blue-500"></div>
+                          <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-2">{verse.title}</h4>
+                          <p className="font-arabic text-xl leading-loose text-gray-700 dark:text-gray-300 mb-2" dir="rtl">
+                            {verse.arabic}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </motion.div>
