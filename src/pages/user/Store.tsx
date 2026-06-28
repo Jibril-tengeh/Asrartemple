@@ -6,7 +6,6 @@ import { doc, updateDoc, increment } from 'firebase/firestore';
 import { ShoppingBag, Star, Shield, Zap, Sparkles, Book, LayoutGrid, Square, List, Heart, Search, ChevronDown, X, Share2, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumBadge } from '../../components/PremiumBadge';
-import { StripeService } from '../../services/StripeService';
 import { PaystackService } from '../../services/PaystackService';
 
 type LayoutMode = 'grid1' | 'grid2' | 'list';
@@ -85,33 +84,26 @@ export const Store: React.FC = () => {
         alert("Une erreur est survenue lors de l'échange.");
       }
     } else {
-      // For all products (subscriptions and one-time), we will default to paystack if not specified,
-      // or handle stripe/paystack directly.
-      const method = paymentMethod || 'paystack'; // Default to Paystack for regular purchases
+      // For all products (subscriptions and one-time), we will use paystack.
       
       try {
-        if (method === 'stripe') {
-          const url = await StripeService.createCheckoutSession(user.uid, user.email || '');
-          window.location.href = url;
-        } else if (method === 'paystack') {
-          const numericPrice = parseInt(product.price) || 15;
-          const ratio = numericPrice / 15;
-          const finalAmount = Math.round(paystackConfig.amount * ratio);
+        const numericPrice = parseInt(product.price) || 15;
+        const ratio = numericPrice / 15;
+        const finalAmount = Math.round(paystackConfig.amount * ratio);
 
-          await PaystackService.initializePaystackPayment(
-            user.email || 'user@example.com',
-            finalAmount,
-            paystackConfig.currency,
-            user.uid,
-            (reference) => {
-              alert(`Paiement réussi avec Paystack! Réf: ${reference}`);
-              setSelectedProduct(null);
-            },
-            () => {
-              console.log("Paystack modal closed");
-            }
-          );
-        }
+        await PaystackService.initializePaystackPayment(
+          user.email || 'user@example.com',
+          finalAmount,
+          paystackConfig.currency,
+          user.uid,
+          (reference) => {
+            alert(`Paiement réussi avec Paystack! Réf: ${reference}`);
+            setSelectedProduct(null);
+          },
+          () => {
+            console.log("Paystack modal closed");
+          }
+        );
       } catch (err) {
         console.error("Erreur lors du paiement", err);
         alert("Une erreur est survenue lors de l'initialisation du paiement.");
@@ -611,12 +603,6 @@ export const Store: React.FC = () => {
                   )}
                   {selectedProduct.category === 'Abonnements' ? (
                     <div className="flex flex-col flex-1 gap-2">
-                      <button 
-                        onClick={() => handlePurchase(selectedProduct, false, 'stripe')}
-                        className="py-3 bg-[#635BFF] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#4B45D6]"
-                      >
-                        Payer avec Stripe ({selectedProduct.price})
-                      </button>
                       <button 
                         onClick={() => handlePurchase(selectedProduct, false, 'paystack')}
                         className="py-3 bg-[#0BA4DB] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#0983AF]"
