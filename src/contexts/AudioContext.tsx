@@ -5,7 +5,11 @@ export type Track = {
   title: string;
   url: string;
   artist: string;
+  coverImage?: string;
+  backgroundImage?: string;
 };
+
+export type LoopMode = 'off' | 'track' | 'playlist';
 
 interface AudioContextType {
   currentTrack: Track | null;
@@ -14,6 +18,8 @@ interface AudioContextType {
   progress: number; // 0 to 1
   currentTime: number;
   duration: number;
+  loopMode: LoopMode;
+  setLoopMode: (mode: LoopMode) => void;
   playTrack: (track: Track) => void;
   playPlaylist: (tracks: Track[], startIndex?: number) => void;
   pause: () => void;
@@ -37,8 +43,15 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
+  const [loopMode, setLoopMode] = useState<LoopMode>('off');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Use refs for state accessed in event listeners
+  const stateRef = useRef({ playlist, currentIndex, loopMode });
+  useEffect(() => {
+    stateRef.current = { playlist, currentIndex, loopMode };
+  }, [playlist, currentIndex, loopMode]);
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -56,7 +69,27 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const handleEnded = () => {
-      next();
+      const { playlist: currentPlaylist, currentIndex: currentIdx, loopMode: currentLoopMode } = stateRef.current;
+      
+      if (currentLoopMode === 'track') {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(console.error);
+        }
+      } else if (currentIdx < currentPlaylist.length - 1) {
+        const newIndex = currentIdx + 1;
+        setCurrentIndex(newIndex);
+        setCurrentTrack(currentPlaylist[newIndex]);
+      } else if (currentLoopMode === 'playlist' && currentPlaylist.length > 0) {
+        setCurrentIndex(0);
+        setCurrentTrack(currentPlaylist[0]);
+      } else {
+        setIsPlaying(false);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }
     };
 
     const handlePlay = () => setIsPlaying(true);
@@ -166,6 +199,9 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
       setCurrentTrack(playlist[newIndex]);
+    } else if (loopMode === 'playlist' && playlist.length > 0) {
+      setCurrentIndex(0);
+      setCurrentTrack(playlist[0]);
     } else {
       setIsPlaying(false);
       if (audioRef.current) {
@@ -224,6 +260,8 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       progress,
       currentTime,
       duration,
+      loopMode,
+      setLoopMode,
       playTrack,
       playPlaylist,
       pause,

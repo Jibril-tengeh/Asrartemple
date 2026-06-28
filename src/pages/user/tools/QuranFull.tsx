@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, ArrowLeft, ArrowRight, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check, Bookmark, BookmarkCheck, Share2, RefreshCw, Moon, Sun, Activity, Clock, TrendingUp, Copy, Image as ImageIcon, Maximize, Minimize2, ListPlus, ListMusic, GripVertical, Database, CloudOff } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { toPng } from 'html-to-image';
 import { useAudio } from '../../../contexts/AudioContext';
 import { get, set } from 'idb-keyval';
 import { surahTranslations } from '../../../data/surahTranslations';
+import { db } from '../../../lib/firebase';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -184,26 +187,28 @@ export const QuranFull: React.FC = () => {
     }
   });
 
-  interface RoqyaPlaylist {
+  const { user } = useAuth();
+  
+  interface RuqyahPlaylist {
     id: string;
+    userId: string;
     name: string;
-    ayahs: { surahNumber: number, ayahNumberInSurah: number, text?: string }[];
+    tracks: any[];
   }
 
-  const [roqyaPlaylists, setRoqyaPlaylists] = useState<RoqyaPlaylist[]>(() => {
-    try {
-      const saved = localStorage.getItem('asrarhub_roqya_playlists');
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
+  const [roqyaPlaylists, setRoqyaPlaylists] = useState<RuqyahPlaylist[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('asrarhub_roqya_playlists', JSON.stringify(roqyaPlaylists));
-  }, [roqyaPlaylists]);
+    if (!user) {
+      setRoqyaPlaylists([]);
+      return;
+    }
+    const q = query(collection(db, 'ruqyah_playlists'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setRoqyaPlaylists(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RuqyahPlaylist)));
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   interface LastReadPosition {
     surahNumber: number;
@@ -409,7 +414,7 @@ export const QuranFull: React.FC = () => {
   const [playlistModalAyah, setPlaylistModalAyah] = useState<Ayah | null>(null);
   const [showPlaylistsModal, setShowPlaylistsModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [playingPlaylist, setPlayingPlaylist] = useState<RoqyaPlaylist | null>(null);
+  const [playingPlaylist, setPlayingPlaylist] = useState<RuqyahPlaylist | null>(null);
 
   useEffect(() => {
     localStorage.setItem('asrarhub_read_surahs', JSON.stringify(readSurahs));
@@ -1593,7 +1598,79 @@ export const QuranFull: React.FC = () => {
                        />
                      </motion.div>
                    )}
-                 {playlistModalAyah && (<div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"><motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-md w-full relative"><h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-4"><ListPlus className="text-emerald-500" /> Ajouter à la Playlist Roqya</h3><div className="space-y-4">{roqyaPlaylists.length > 0 ? (<div className="space-y-2">{roqyaPlaylists.map(p => (<button key={p.id} onClick={() => {if (!p.ayahs.some(a => a.ayahNumberInSurah === playlistModalAyah.numberInSurah && a.surahNumber === (playlistModalAyah.surah?.number || activeSurah))) {setRoqyaPlaylists(prev => prev.map(pl => pl.id === p.id ? { ...pl, ayahs: [...pl.ayahs, { surahNumber: playlistModalAyah.surah?.number || activeSurah, ayahNumberInSurah: playlistModalAyah.numberInSurah, number: playlistModalAyah.number, text: playlistModalAyah.text }] } : pl));} setPlaylistModalAyah(null);}} className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-emerald-50 dark:bg-gray-900 dark:hover:bg-emerald-900/30 transition-colors">{p.name} ({p.ayahs.length} versets)</button>))}</div>) : (<p className="text-gray-500 text-sm">Aucune playlist existante.</p>)}<div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"><input type="text" placeholder="Nouvelle playlist..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" /><button onClick={() => {if (newPlaylistName.trim()) {setRoqyaPlaylists([...roqyaPlaylists, { id: Date.now().toString(), name: newPlaylistName.trim(), ayahs: [{ surahNumber: playlistModalAyah.surah?.number || activeSurah, ayahNumberInSurah: playlistModalAyah.numberInSurah, number: playlistModalAyah.number, text: playlistModalAyah.text }] }]);setNewPlaylistName("");setPlaylistModalAyah(null);}}} className="w-full bg-emerald-500 text-white p-2 rounded-lg">Créer et ajouter</button></div></div><button onClick={() => setPlaylistModalAyah(null)} className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"><X size={20} /></button></motion.div></div>)}
+                 {playlistModalAyah && (
+                   <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                     <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-md w-full relative">
+                       <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                         <ListPlus className="text-emerald-500" /> Ajouter à la Playlist Roqya
+                       </h3>
+                       <div className="space-y-4">
+                         {!user ? (
+                           <p className="text-gray-500 text-sm">Veuillez vous connecter pour gérer vos playlists.</p>
+                         ) : roqyaPlaylists.length > 0 ? (
+                           <div className="space-y-2">
+                             {roqyaPlaylists.map(p => (
+                               <button 
+                                 key={p.id} 
+                                 onClick={async () => {
+                                   const surahId = playlistModalAyah.surah?.number || activeSurah;
+                                   const newTrack = {
+                                     id: `quran-${surahId}-${playlistModalAyah.numberInSurah}`,
+                                     surahNumber: surahId,
+                                     ayahNumber: playlistModalAyah.numberInSurah,
+                                     title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${playlistModalAyah.numberInSurah}`,
+                                     url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${playlistModalAyah.number}.mp3`,
+                                     artist: "Mishary Rashid Alafasy",
+                                     isQuranVerse: true
+                                   };
+                                   if (!p.tracks || !p.tracks.some(t => t.id === newTrack.id)) {
+                                     await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
+                                       tracks: [...(p.tracks || []), newTrack]
+                                     });
+                                   }
+                                   setPlaylistModalAyah(null);
+                                 }} 
+                                 className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-emerald-50 dark:bg-gray-900 dark:hover:bg-emerald-900/30 transition-colors"
+                               >
+                                 {p.name} ({p.tracks?.length || 0} versets)
+                               </button>
+                             ))}
+                           </div>
+                         ) : (
+                           <p className="text-gray-500 text-sm">Aucune playlist existante.</p>
+                         )}
+                         {user && (
+                           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                             <input type="text" placeholder="Nouvelle playlist..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />
+                             <button onClick={async () => {
+                               if (newPlaylistName.trim()) {
+                                 const surahId = playlistModalAyah.surah?.number || activeSurah;
+                                 const newTrack = {
+                                   id: `quran-${surahId}-${playlistModalAyah.numberInSurah}`,
+                                   surahNumber: surahId,
+                                   ayahNumber: playlistModalAyah.numberInSurah,
+                                   title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${playlistModalAyah.numberInSurah}`,
+                                   url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${playlistModalAyah.number}.mp3`,
+                                   artist: "Mishary Rashid Alafasy",
+                                   isQuranVerse: true
+                                 };
+                                 await addDoc(collection(db, 'ruqyah_playlists'), {
+                                   userId: user.uid,
+                                   name: newPlaylistName.trim(),
+                                   tracks: [newTrack],
+                                   createdAt: serverTimestamp()
+                                 });
+                                 setNewPlaylistName("");
+                                 setPlaylistModalAyah(null);
+                               }
+                             }} className="w-full bg-emerald-500 text-white p-2 rounded-lg">Créer et ajouter</button>
+                           </div>
+                         )}
+                       </div>
+                       <button onClick={() => setPlaylistModalAyah(null)} className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"><X size={20} /></button>
+                     </motion.div>
+                   </div>
+                 )}
 
             {showPlaylistsModal && (
              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check, Music } from 'lucide-react';
+import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check, Music } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { db } from '../../../lib/firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' }
@@ -13,12 +14,57 @@ const QURAN_RECITERS = [
 
 export const Ruqyah: React.FC = () => {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume } = useAudio();
+  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume, loopMode, setLoopMode, next, prev } = useAudio();
   
   const [activeTab, setActiveTab] = useState<'songs' | 'playlists' | 'folders' | 'artists'>('playlists');
   const [isFullPlayer, setIsFullPlayer] = useState(false);
   const [adminAudios, setAdminAudios] = useState<any[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [newPlaylistCover, setNewPlaylistCover] = useState('');
+  const [newPlaylistBg, setNewPlaylistBg] = useState('');
+  const [openedPlaylist, setOpenedPlaylist] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'ruqyah_playlists'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUserPlaylists(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.error("Playlists onSnapshot error:", error);
+    });
+    
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleCreatePlaylist = async () => {
+    if (!user || !newPlaylistName.trim()) return;
+    try {
+      await addDoc(collection(db, 'ruqyah_playlists'), {
+        userId: user.uid,
+        name: newPlaylistName,
+        coverImage: newPlaylistCover || null,
+        backgroundImage: newPlaylistBg || null,
+        tracks: [],
+        createdAt: serverTimestamp()
+      });
+      setNewPlaylistName('');
+      setNewPlaylistCover('');
+      setNewPlaylistBg('');
+      setShowCreatePlaylist(false);
+    } catch (error) {
+      console.error("Error creating playlist", error);
+    }
+  };
+
+  const toggleLoopMode = () => {
+    if (loopMode === 'off') setLoopMode('playlist');
+    else if (loopMode === 'playlist') setLoopMode('track');
+    else setLoopMode('off');
+  };
 
   // We use admin audios as our main songs
   useEffect(() => {
@@ -32,14 +78,21 @@ export const Ruqyah: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handlePlayToggle = (audio: any) => {
+  const handlePlayToggle = (audio: any, tracksContext: any[], index: number) => {
     if (currentTrack?.url === audio.url && globalIsPlaying) {
       globalPause();
     } else if (currentTrack?.url === audio.url && !globalIsPlaying) {
       globalResume();
     } else {
-      const title = audio[`title_${language}`] || audio.title || "coran_et_remede";
-      playPlaylist([{ id: `admin-${audio.id}`, title: title, artist: "<unknown>", url: audio.url }], 0);
+      const fullPlaylist = tracksContext.map((t, idx) => ({
+        id: t.id || `track-${idx}`,
+        title: t[`title_${language}`] || t.title || "coran_et_remede",
+        artist: t.artist || "<unknown>",
+        url: t.url,
+        coverImage: openedPlaylist?.coverImage,
+        backgroundImage: openedPlaylist?.backgroundImage
+      }));
+      playPlaylist(fullPlaylist, index);
     }
   };
 
@@ -50,8 +103,11 @@ export const Ruqyah: React.FC = () => {
 
   // UI colors mimicking the screenshot:
   // Background: dark green/glass with soccer field vibes (we use a deep dark theme here)
+  const bgImageUrl = currentTrack?.backgroundImage || "https://images.unsplash.com/photo-1518605368461-1ee7c532066d?q=80&w=1000&auto=format&fit=crop";
+  const coverImageUrl = currentTrack?.coverImage || "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=500";
+
   return (
-    <div className="fixed inset-0 z-50 bg-[#121c17] text-white flex flex-col font-sans overflow-hidden bg-[url('https://images.unsplash.com/photo-1518605368461-1ee7c532066d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center">
+    <div className="fixed inset-0 z-50 bg-[#121c17] text-white flex flex-col font-sans overflow-hidden bg-cover bg-center transition-all duration-700" style={{ backgroundImage: `url('${bgImageUrl}')` }}>
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
@@ -98,65 +154,73 @@ export const Ruqyah: React.FC = () => {
 
                     <div className="space-y-4">
                       {/* Create Playlist */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowCreatePlaylist(!showCreatePlaylist)}>
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#41c5c5] to-indigo-500 flex items-center justify-center">
                           <Plus size={28} className="text-white" />
                         </div>
                         <span className="text-lg font-medium">Create Playlist</span>
                       </div>
-
-                      {/* Favorite Songs */}
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center">
-                          <Heart size={28} fill="currentColor" className="text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-medium">Favorite Songs</h3>
-                          <p className="text-sm text-white/50">0 Song</p>
-                        </div>
-                      </div>
-
-                      {/* Dummy Playlists from screenshot */}
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-900 overflow-hidden relative">
-                           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200')] bg-cover"></div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium">ROUQYA</h3>
-                          <p className="text-sm text-white/50">2 Songs</p>
-                        </div>
-                        <button><MoreVertical size={20} className="text-white/50" /></button>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-indigo-600 overflow-hidden relative">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Music size={24} className="text-white/50" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium">Kai September</h3>
-                          <p className="text-sm text-white/50">17 Songs</p>
-                        </div>
-                        <button><MoreVertical size={20} className="text-white/50" /></button>
-                      </div>
                       
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-purple-600 overflow-hidden flex items-center justify-center">
-                           <Music size={24} className="text-white/50" />
+                      {showCreatePlaylist && (
+                        <div className="flex flex-col gap-3 mt-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                           <input 
+                              type="text" 
+                              value={newPlaylistName}
+                              onChange={(e) => setNewPlaylistName(e.target.value)}
+                              placeholder="Nom de la playlist..."
+                              className="w-full bg-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#41c5c5]"
+                           />
+                           <input 
+                              type="text" 
+                              value={newPlaylistCover}
+                              onChange={(e) => setNewPlaylistCover(e.target.value)}
+                              placeholder="URL de l'image d'accroche (optionnel)..."
+                              className="w-full bg-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#41c5c5]"
+                           />
+                           <input 
+                              type="text" 
+                              value={newPlaylistBg}
+                              onChange={(e) => setNewPlaylistBg(e.target.value)}
+                              placeholder="URL de l'image de fond (optionnel)..."
+                              className="w-full bg-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#41c5c5]"
+                           />
+                           <button onClick={handleCreatePlaylist} className="bg-[#41c5c5] text-black w-full px-4 py-3 rounded-xl font-medium mt-1 hover:bg-[#34a3a3] transition-colors">Créer la playlist</button>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium">les compagnons</h3>
-                          <p className="text-sm text-white/50">12 Songs</p>
+                      )}
+
+                      {/* User Playlists */}
+                      {userPlaylists.map((playlist, idx) => (
+                        <div key={playlist.id || idx} className="flex items-center gap-4 cursor-pointer" onClick={() => {
+                          setOpenedPlaylist(playlist);
+                          setActiveTab('songs');
+                        }}>
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-600 overflow-hidden relative flex items-center justify-center">
+                             {playlist.coverImage ? (
+                               <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage: `url(${playlist.coverImage})`}}></div>
+                             ) : (
+                               <Music size={24} className="text-white/50" />
+                             )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-medium">{playlist.name}</h3>
+                            <p className="text-sm text-white/50">{playlist.tracks?.length || 0} Songs</p>
+                          </div>
+                          <button><MoreVertical size={20} className="text-white/50" /></button>
                         </div>
-                        <button><MoreVertical size={20} className="text-white/50" /></button>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'songs' && (
                   <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                    {openedPlaylist && (
+                       <div className="flex items-center gap-2 mb-4 mt-2">
+                          <button onClick={() => { setOpenedPlaylist(null); setActiveTab('playlists'); }} className="text-white/70 p-2"><ChevronDown size={24} className="rotate-90" /></button>
+                          <h2 className="text-xl font-semibold">{openedPlaylist.name}</h2>
+                       </div>
+                    )}
+                    
                     <div className="flex items-center gap-3 mb-6 mt-2">
                       <button className="flex items-center gap-2 bg-[#2c4035]/80 hover:bg-[#344b3f] backdrop-blur-md px-5 py-2.5 rounded-full text-[#41c5c5] font-semibold transition-colors">
                         <Play size={18} fill="currentColor" /> Play
@@ -170,14 +234,16 @@ export const Ruqyah: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                      {adminAudios.length === 0 ? (
-                        <div className="text-center text-white/50 py-10">Aucun audio disponible</div>
-                      ) : (
-                        adminAudios.map((audio, idx) => {
+                      {(() => {
+                        const tracksToShow = openedPlaylist ? (openedPlaylist.tracks || []) : adminAudios;
+                        if (tracksToShow.length === 0) {
+                          return <div className="text-center text-white/50 py-10">Aucun audio disponible</div>;
+                        }
+                        return tracksToShow.map((audio: any, idx: number) => {
                           const title = audio[`title_${language}`] || audio.title;
                           const isPlayingThis = currentTrack?.url === audio.url;
                           return (
-                            <div key={idx} className="flex items-center gap-4 group cursor-pointer" onClick={() => handlePlayToggle(audio)}>
+                            <div key={idx} className="flex items-center gap-4 group cursor-pointer" onClick={() => handlePlayToggle(audio, tracksToShow, idx)}>
                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isPlayingThis ? 'bg-[#41c5c5]/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
                                 {isPlayingThis && globalIsPlaying ? (
                                   <div className="flex gap-1">
@@ -196,8 +262,8 @@ export const Ruqyah: React.FC = () => {
                               <button className="text-white/40 p-2"><MoreVertical size={18} /></button>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   </div>
                 )}
@@ -238,7 +304,7 @@ export const Ruqyah: React.FC = () => {
                 {/* Artwork */}
                 <div className="w-full aspect-square max-w-[320px] rounded-[32px] overflow-hidden relative shadow-2xl bg-black mb-8">
                   <div className="absolute inset-0 flex">
-                    <div className="w-1/2 bg-[url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=500')] bg-cover bg-center"></div>
+                    <div className="w-1/2 bg-cover bg-center transition-all duration-700" style={{ backgroundImage: `url('${coverImageUrl}')` }}></div>
                     <div className="w-1/2 bg-[#2a2a2a] relative overflow-hidden flex items-center justify-start">
                        {/* Vinyl record half */}
                        <div className="absolute -left-1/2 w-full h-[100%] rounded-full border-[20px] border-black/90 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]">
@@ -287,15 +353,17 @@ export const Ruqyah: React.FC = () => {
                 {/* Main controls */}
                 <div className="w-full flex justify-between items-center px-2">
                   <button className="text-white/70"><Shuffle size={22} /></button>
-                  <button className="text-[#41c5c5]"><SkipBack size={28} fill="currentColor" /></button>
+                  <button onClick={prev} className="text-[#41c5c5]"><SkipBack size={28} fill="currentColor" /></button>
                   <button 
                     onClick={handleGlobalPlayToggle}
                     className="w-20 h-20 bg-[#41c5c5] rounded-full flex items-center justify-center text-black shadow-lg shadow-[#41c5c5]/20 hover:scale-105 transition-transform"
                   >
                     {globalIsPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
                   </button>
-                  <button className="text-[#41c5c5]"><SkipForward size={28} fill="currentColor" /></button>
-                  <button className="text-white/70"><Repeat size={22} /></button>
+                  <button onClick={next} className="text-[#41c5c5]"><SkipForward size={28} fill="currentColor" /></button>
+                  <button onClick={toggleLoopMode} className={loopMode !== 'off' ? "text-[#41c5c5]" : "text-white/70"}>
+                    {loopMode === 'track' ? <Repeat1 size={22} /> : <Repeat size={22} />}
+                  </button>
                 </div>
               </div>
             </motion.div>
