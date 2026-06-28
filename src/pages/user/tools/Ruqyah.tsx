@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check } from 'lucide-react';
+import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check, Music } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
