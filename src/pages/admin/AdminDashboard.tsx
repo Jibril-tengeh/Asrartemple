@@ -788,7 +788,8 @@ export const AdminDashboard: React.FC = () => {
 
   const handleToggleFeature = async (featureId: string, currentValue: boolean | string) => {
     try {
-      const newValue = typeof currentValue === 'boolean' ? !currentValue : (currentValue === 'active' ? 'maintenance' : (currentValue === 'maintenance' ? 'inactive' : 'active'));
+      // If it's a boolean (from toggle switch), invert it. If it's a string (from select), use it directly.
+      const newValue = typeof currentValue === 'boolean' ? !currentValue : currentValue;
       await setDoc(doc(db, 'settings', 'features'), {
         [featureId]: newValue
       }, { merge: true });
