@@ -46,3 +46,19 @@ body {
   }
 }
 
+.article-content {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.article-content * {
+  max-width: 100%;
+}
+
+.article-content pre, .article-content code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+

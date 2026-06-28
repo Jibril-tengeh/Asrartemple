@@ -354,14 +354,8 @@ export const ExploreDashboard: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none">
-                  {selectedArticle.type === 'richtext' ? (
-                    <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
-                  ) : (
-                    <pre className="p-4 rounded-xl bg-gray-900 text-gray-100 overflow-x-auto text-sm font-mono">
-                      <code>{selectedArticle.content}</code>
-                    </pre>
-                  )}
+                <div className="p-6 md:p-10 prose prose-emerald dark:prose-invert max-w-none article-content">
+                  <div dangerouslySetInnerHTML={{ __html: selectedArticle.content || '' }} />
                 </div>
               </div>
             </div>

@@ -911,14 +911,13 @@ export const QuranFull: React.FC = () => {
       playOnlyOneRef.current = playOnlyOne;
     }
 
-    let playableUrl = ayah.audio;
     let loadedFromCache = false;
+    let blob: Blob | null = null;
     try {
       const cache = await caches.open('quran-audio-cache');
       const response = await cache.match(ayah.audio);
       if (response) {
-        const blob = await response.blob();
-        playableUrl = URL.createObjectURL(blob);
+        blob = await response.blob();
         loadedFromCache = true;
       }
     } catch (e) {
@@ -927,28 +926,29 @@ export const QuranFull: React.FC = () => {
     
     setIsPlayingFromCache(loadedFromCache);
 
-    const audio = new Audio(playableUrl);
-    audioRef.current = audio;
-    
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        setIsPlaying(true);
-        setPlayingAyah(ayah.number);
-        
-        // Auto-scroll to active ayah
-        if (ayahRefs.current[ayah.number] && !isRepeat) {
-          ayahRefs.current[ayah.number]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }).catch(err => {
-        if (err.name !== 'AbortError') {
-          console.error("Audio playback error:", err);
-        }
-      });
-    }
+    const playAudioWithUrl = (url: string) => {
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setIsPlaying(true);
+          setPlayingAyah(ayah.number);
+          
+          // Auto-scroll to active ayah
+          if (ayahRefs.current[ayah.number] && !isRepeat) {
+            ayahRefs.current[ayah.number]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error("Audio playback error:", err);
+          }
+        });
+      }
 
-    audio.onended = () => {
-      if (repeatLeftRef.current > 0) {
+      audio.onended = () => {
+        if (repeatLeftRef.current > 0) {
         repeatLeftRef.current -= 1;
         playAudio(ayah, true, playOnlyOneRef.current);
         return;
@@ -997,6 +997,17 @@ export const QuranFull: React.FC = () => {
         setPlayingAyah(null);
       }
     };
+  };
+
+    if (blob) {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        playAudioWithUrl(reader.result as string);
+      };
+    } else {
+      playAudioWithUrl(ayah.audio);
+    }
   };
 
   useEffect(() => {
