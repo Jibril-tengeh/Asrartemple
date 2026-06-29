@@ -10,6 +10,8 @@ import { get, set } from 'idb-keyval';
 import { surahTranslations } from '../../../data/surahTranslations';
 import { db } from '../../../lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -2399,16 +2401,38 @@ export const QuranFull: React.FC = () => {
                              };
                              
                              toPng(node, { cacheBust: true, backgroundColor: 'transparent' })
-                               .then((dataUrl) => {
+                               .then(async (dataUrl) => {
                                  console.error = originalConsoleError;
                                  if (actionButtons) actionButtons.style.display = 'flex';
                                  if (closeBtn) closeBtn.style.display = 'block';
                                  if (imageFooter) imageFooter.style.display = 'none';
                                  
-                                 const link = document.createElement('a');
-                                 link.download = `verset-${zoomedAyah.surahName || 'quran'}-${zoomedAyah.numberInSurah}.png`;
-                                 link.href = dataUrl;
-                                 link.click();
+                                 const fileName = `verset-${zoomedAyah.surahName || 'quran'}-${zoomedAyah.numberInSurah}.png`;
+                                 const isCapacitor = !!(window as any).Capacitor && !!(window as any).Capacitor.isNativePlatform;
+                                 
+                                 if (isCapacitor || (window as any).Capacitor?.getPlatform() === 'android' || (window as any).Capacitor?.getPlatform() === 'ios') {
+                                   try {
+                                     const base64Data = dataUrl.split(',')[1];
+                                     const savedFile = await Filesystem.writeFile({
+                                       path: fileName,
+                                       data: base64Data,
+                                       directory: Directory.Cache
+                                     });
+                                     await Share.share({
+                                       title: 'Partager le verset',
+                                       url: savedFile.uri,
+                                       dialogTitle: 'Partager ce verset'
+                                     });
+                                   } catch (e) {
+                                     console.error("Erreur de sauvegarde Capacitor:", e);
+                                     alert("Erreur lors de la sauvegarde de l'image.");
+                                   }
+                                 } else {
+                                   const link = document.createElement('a');
+                                   link.download = fileName;
+                                   link.href = dataUrl;
+                                   link.click();
+                                 }
                                })
                                .catch((err) => {
                                  console.warn('oops, something went wrong!', err);
