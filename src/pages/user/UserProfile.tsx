@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw, Sparkles } from 'lucide-react';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw, Sparkles, LogIn } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumBadge } from '../../components/PremiumBadge';
 import { ReferralCenter } from '../../components/ReferralCenter';
+import { AuthModal } from '../../components/AuthModal';
 import { signOut, db, auth } from '../../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -110,6 +111,8 @@ export const UserProfile: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newTime, setNewTime] = useState('06:00');
@@ -330,13 +333,21 @@ export const UserProfile: React.FC = () => {
             </div>
           </div>
 
-          {user && (
+          {user ? (
             <button 
               onClick={handleLogout}
               className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-colors text-sm font-medium"
             >
               <LogOut size={18} />
               <span>{t('profile.logout', 'Déconnexion')}</span>
+            </button>
+          ) : (
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors text-sm font-medium"
+            >
+              <LogIn size={18} />
+              <span>{t('profile.login', 'Se connecter')}</span>
             </button>
           )}
         </div>
@@ -572,7 +583,8 @@ export const UserProfile: React.FC = () => {
           Vider le cache
         </button>
       </div>
-
+      
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

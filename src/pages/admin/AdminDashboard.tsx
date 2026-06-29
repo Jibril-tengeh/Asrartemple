@@ -1385,7 +1385,7 @@ export const AdminDashboard: React.FC = () => {
   if (!adminBypass && (!user || user.role !== 'admin')) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <AuthModal isOpen={true} onClose={() => navigate('/')} />
+        <AuthModal isOpen={true} onClose={() => navigate('/')} adminOnly={true} />
       </div>
     );
   }

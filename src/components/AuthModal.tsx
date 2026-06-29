@@ -11,9 +11,10 @@ import { useNavigate } from 'react-router-dom';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  adminOnly?: boolean;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, adminOnly = false }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -30,16 +31,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      const result = await signInWithEmail(email, password);
+      let result;
+      if (isLogin) {
+        result = await signInWithEmail(email, password);
+      } else {
+        result = await signUpWithEmail(email, password);
+        if (result?.user) {
+          await setDoc(doc(db, 'users', result.user.uid), {
+            email: result.user.email,
+            name: name,
+            role: 'user',
+            createdAt: new Date()
+          });
+          await sendVerificationEmail(result.user);
+          setVerificationSent(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       if (result?.user) {
         const userRef = doc(db, 'users', result.user.uid);
         const docSnap = await getDoc(userRef);
         
         let isUserAdmin = false;
-        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'];
         if (docSnap.exists() && docSnap.data().role === 'admin') {
           isUserAdmin = true;
-        } else if (result.user.email && adminEmails.includes(result.user.email)) {
+        } else if (result.user.email && adminEmails.includes(result.user.email.toLowerCase())) {
           // Auto-promote the specified email to admin if not already
           if (docSnap.exists()) {
              await updateDoc(userRef, { role: 'admin' });
@@ -49,19 +68,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           isUserAdmin = true;
         }
         
-        if (isUserAdmin) {
-          onClose();
-          navigate('/admin');
+        if (adminOnly) {
+          if (isUserAdmin) {
+            onClose();
+            navigate('/admin');
+          } else {
+            await auth.signOut();
+            setError("Accès refusé. Vous n'êtes pas administrateur.");
+            setLoading(false);
+          }
         } else {
-          await auth.signOut();
-          setError("Accès refusé. Vous n'êtes pas administrateur.");
-          setLoading(false);
+          onClose();
         }
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Auth error:", err);
       if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         setError('Email ou mot de passe incorrect.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('Cet email est déjà utilisé.');
       } else {
         setError(err.message || 'Une erreur est survenue.');
       }
@@ -79,29 +104,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         const docSnap = await getDoc(userRef);
         
         let isUserAdmin = false;
-        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com'];
+        const adminEmails = ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'];
         if (docSnap.exists() && docSnap.data().role === 'admin') {
           isUserAdmin = true;
-        } else if (result.user.email && adminEmails.includes(result.user.email)) {
+        } else if (result.user.email && adminEmails.includes(result.user.email.toLowerCase())) {
           if (docSnap.exists()) {
              await updateDoc(userRef, { role: 'admin' });
           } else {
              await setDoc(userRef, { email: result.user.email, role: 'admin', createdAt: new Date() });
           }
           isUserAdmin = true;
+        } else if (!docSnap.exists()) {
+          await setDoc(userRef, { email: result.user.email, name: result.user.displayName, role: 'user', createdAt: new Date() });
         }
         
-        if (isUserAdmin) {
-          onClose();
-          navigate('/admin');
+        if (adminOnly) {
+          if (isUserAdmin) {
+            onClose();
+            navigate('/admin');
+          } else {
+            await auth.signOut();
+            setError("Accès refusé. Vous n'êtes pas administrateur.");
+            setLoading(false);
+          }
         } else {
-          await auth.signOut();
-          setError("Accès refusé. Vous n'êtes pas administrateur.");
-          setLoading(false);
+          onClose();
         }
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Google sign in error:", err);
       setError('Erreur lors de la connexion avec Google.');
       setLoading(false);
     }
@@ -127,10 +158,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="p-6 sm:p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Administration
+                  {adminOnly ? "Administration" : (isLogin ? "Connexion" : "Inscription")}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Connectez-vous pour accéder à l'interface d'administration.
+                  {adminOnly 
+                    ? "Connectez-vous pour accéder à l'interface d'administration."
+                    : (isLogin ? "Connectez-vous à votre compte" : "Créez votre compte")
+                  }
                 </p>
               </div>
 
@@ -160,6 +194,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-start gap-2">
                         <AlertCircle size={16} className="mt-0.5 shrink-0" />
                         <p>{error}</p>
+                      </div>
+                    )}
+
+                    {!isLogin && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Nom complet
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <UserIcon size={18} />
+                          </div>
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                            placeholder="Votre nom"
+                          />
+                        </div>
                       </div>
                     )}
 
@@ -207,8 +262,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       disabled={loading}
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl font-medium transition-colors mt-2"
                     >
-                      {loading ? t('auth.loading', 'Chargement...') : t('auth.login', 'Se connecter')}
+                      {loading ? t('auth.loading', 'Chargement...') : (isLogin ? t('auth.login', 'Se connecter') : t('auth.register', 'S\'inscrire'))}
                     </button>
+
+                    {!adminOnly && (
+                      <div className="text-center mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {isLogin ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsLogin(!isLogin);
+                              setError('');
+                            }}
+                            className="ml-1 text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+                          >
+                            {isLogin ? "S'inscrire" : "Se connecter"}
+                          </button>
+                        </p>
+                      </div>
+                    )}
                   </form>
                 </>
               )}
