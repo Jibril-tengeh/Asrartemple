@@ -35,7 +35,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, adminOnly
       if (isLogin) {
         result = await signInWithEmail(email, password);
       } else {
-        result = await signUpWithEmail(email, password);
+        result = await signUpWithEmail(email, password, name);
         if (result?.user) {
           await setDoc(doc(db, 'users', result.user.uid), {
             email: result.user.email,

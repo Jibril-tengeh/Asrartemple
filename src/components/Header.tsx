@@ -268,6 +268,19 @@ export const Header: React.FC = () => {
               </motion.div>
             </Link>
 
+            {(user?.role === 'admin' || ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'].includes(user?.email?.toLowerCase() || '')) && (
+              <Link to="/admin">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors flex items-center justify-center"
+                  aria-label="Admin Dashboard"
+                >
+                  <Shield size={18} />
+                </motion.div>
+              </Link>
+            )}
+
             <Link to="/profile">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
