@@ -128,11 +128,20 @@ const tools = [
   },
   {
     id: "dreams",
-    title: "Journal des Rêves",
-    description: "Analysez et documentez vos rêves avec interprétations.",
+    title: "Journal des Rêves (IA)",
+    description: "Analysez et documentez vos rêves avec l'IA d'Ibn Sirin.",
     icon: Moon,
     color: "from-blue-700 to-indigo-900",
     path: "/tools/dreams",
+    level: "simple",
+  },
+  {
+    id: "halaqat",
+    title: "Halaqat Virtuelles",
+    description: "Cercles de Dhikr en temps réel et objectifs communautaires.",
+    icon: Users,
+    color: "from-emerald-500 to-teal-600",
+    path: "/tools/halaqat",
     level: "simple",
   },
   // Advanced Tools
@@ -780,7 +789,7 @@ export const ToolsDashboard: React.FC = () => {
                 Annuler
               </button>
               <button
-                onClick={() => navigate("/store")}
+                onClick={() => navigate("/payment")}
                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:from-amber-500 hover:to-orange-600 transition-colors shadow-md flex items-center justify-center gap-2"
               >
                 Débloquer

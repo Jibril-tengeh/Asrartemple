@@ -23,6 +23,7 @@ export const Header: React.FC = () => {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [hasUnread, setHasUnread] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -37,7 +38,7 @@ export const Header: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -60,13 +61,30 @@ export const Header: React.FC = () => {
     if (user) {
       const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
+        const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+        setNotifications(notifs);
+        
+        // Check for unread
+        const lastSeen = localStorage.getItem('asrarhub_last_seen_notif');
+        if (notifs.length > 0) {
+          if (!lastSeen || new Date(notifs[0].date).getTime() > parseInt(lastSeen)) {
+            setHasUnread(true);
+          }
+        }
       }, (error) => {
         console.error("Header notifications onSnapshot error:", error);
       });
       return () => unsubscribe();
     }
   }, [user]);
+
+  const handleOpenNotifs = () => {
+    setNotifMenuOpen(!notifMenuOpen);
+    if (!notifMenuOpen) {
+      setHasUnread(false);
+      localStorage.setItem('asrarhub_last_seen_notif', Date.now().toString());
+    }
+  };
 
   const changeLanguage = (lang: 'fr' | 'en' | 'ha') => {
     setLanguage(lang);
@@ -144,12 +162,12 @@ export const Header: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+                  onClick={handleOpenNotifs}
                   className="relative p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
-                  {notifications.length > 0 && (
+                  {hasUnread && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-emerald-600 dark:border-emerald-800"></span>
                   )}
                 </motion.button>

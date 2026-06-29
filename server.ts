@@ -4,6 +4,8 @@ import cors from "cors";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
+import { GoogleGenAI } from "@google/genai";
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -33,6 +35,44 @@ async function startServer() {
   // General body parsing for other endpoints
   app.use(express.json());
   app.use(cors());
+
+  // Dream Interpretation via Gemini
+  app.post("/api/dreams/interpret", async (req, res) => {
+    try {
+      const { title, content, type, wirdDone } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `
+Vous êtes un expert en interprétation islamique des rêves, suivant la méthodologie d'Ibn Sirin et des savants spirituels.
+L'utilisateur partage le rêve suivant :
+Titre : ${title}
+Contenu du rêve : ${content}
+Type perçu : ${type}
+Wird/Zikr effectué avant de dormir : ${wirdDone || "Aucun"}
+
+Règles d'éthique spirituelle :
+- Ne jamais prédire l'avenir de façon absolue (seul Allah sait).
+- Toujours utiliser "Allahou A'lam" (Dieu sait mieux).
+- Si le rêve semble 'shaytani' (cauchemar), conseiller fermement de chercher refuge auprès d'Allah (A'oudhou billah) et de ne pas le raconter.
+- Fournir une interprétation concise, apaisante et ancrée dans le symbolisme classique islamique (Ibn Sirin).
+- Répondre en français avec douceur et sagesse spirituelle.
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-pro",
+        contents: prompt,
+      });
+
+      res.json({ interpretation: response.text });
+    } catch (error: any) {
+      console.error("Dream interpretation error:", error);
+      res.status(500).json({ error: "Failed to generate interpretation" });
+    }
+  });
 
   // Paystack verification
   app.post("/api/verify-paystack", async (req, res) => {

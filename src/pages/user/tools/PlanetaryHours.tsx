@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ArrowLeft, Sun, Moon, Info, Settings2, MapPin } from 'lucide-react';
+import { Clock, ArrowLeft, Sun, Moon, Info, Settings2, MapPin, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -93,6 +93,39 @@ export const PlanetaryHours: React.FC = () => {
   const allHours = calculateHours();
   const currentViewHours = allHours.filter(h => h.isDay === isDay);
 
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) {
+      alert("Ce navigateur ne supporte pas les notifications de bureau");
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission !== "granted") {
+      permission = await Notification.requestPermission();
+    }
+    
+    if (permission === "granted") {
+      alert("Notifications activées ! Vous recevrez des alertes pour les heures planétaires aujourd'hui.");
+      // In a real app, this would register a Service Worker for push or use cron.
+      // Here we simulate by scheduling timeouts for today's hours.
+      const now = new Date();
+      allHours.forEach(hour => {
+        const [h, m] = hour.timeStart.split(':').map(Number);
+        const hourTime = new Date();
+        hourTime.setHours(h, m, 0, 0);
+        
+        const delay = hourTime.getTime() - now.getTime();
+        if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
+          setTimeout(() => {
+            new Notification(`Heure de ${hour.planet.name}`, {
+              body: `C'est l'heure de ${hour.planet.name} chez vous, le moment idéal pour accomplir votre wird de ${hour.planet.domain}.`,
+              icon: '/icon.png'
+            });
+          }, delay);
+        }
+      });
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
       {/* Header */}
@@ -112,12 +145,21 @@ export const PlanetaryHours: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("tools.planetary.description")}</p>
           </div>
         </div>
-        <button 
-          onClick={() => setShowSettings(!showSettings)}
-          className={`p-2 rounded-xl transition-colors ${showSettings ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'}`}
-        >
-          <Settings2 size={24} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={enableNotifications}
+            className="p-2 rounded-xl transition-colors hover:bg-amber-100 text-amber-600 dark:hover:bg-amber-900/30"
+            title="Activer les notifications locales"
+          >
+            <Bell size={24} />
+          </button>
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 rounded-xl transition-colors ${showSettings ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'}`}
+          >
+            <Settings2 size={24} />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

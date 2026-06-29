@@ -10,36 +10,103 @@ import {
   Bookmark,
   BookType,
   Share2,
+  AlignLeft,
+  ListTree,
+  ChevronDown
 } from "lucide-react";
 import { getAsrarItems } from "../../data/store";
 import { AsrarItem } from "../../types";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+
+const AccordionSection: React.FC<{ title: string, htmlContent: string, readingMode: boolean }> = ({ title, htmlContent, readingMode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className={`rounded-2xl border transition-colors overflow-hidden ${readingMode ? "border-[#e8dcb5] dark:border-[#524830]/50" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"}`}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between p-4 sm:p-5 text-left font-bold transition-colors ${
+          readingMode 
+            ? "bg-[#f4ebd0]/30 hover:bg-[#f4ebd0]/50 dark:bg-[#383120]/20 dark:hover:bg-[#383120]/40 text-[#4a3f35] dark:text-[#d4c39c]"
+            : "hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-900 dark:text-white"
+        }`}
+      >
+        <span className="text-lg">{title}</span>
+        <ChevronDown size={20} className={`transform transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      {isOpen && (
+        <div className={`p-4 sm:p-5 border-t ${readingMode ? "border-[#e8dcb5] dark:border-[#524830]/50 text-[#363028] dark:text-[#c4b79d]" : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"}`}>
+          <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="prose dark:prose-invert max-w-none" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const SecretDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [item, setItem] = useState<AsrarItem | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   const [readingMode, setReadingMode] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [viewMode, setViewMode] = useState<'full' | 'accordion'>('full');
 
   useEffect(() => {
     // Scroll to top when loading
     window.scrollTo(0, 0);
     const items = getAsrarItems();
     const foundItem = items.find((i) => i.id === id);
-    if (foundItem) {
-      setItem(foundItem);
+    
+    const checkBookmark = (itemId: string) => {
       try {
         const parsed = JSON.parse(
           localStorage.getItem("asrar_bookmarks") || "[]",
         );
         setIsBookmarked(
-          Array.isArray(parsed) ? parsed.includes(foundItem.id) : false,
+          Array.isArray(parsed) ? parsed.includes(itemId) : false,
         );
       } catch (e) {
         setIsBookmarked(false);
       }
+    };
+
+    if (foundItem) {
+      setItem(foundItem);
+      checkBookmark(foundItem.id);
+    } else if (id) {
+      // Try to fetch from Firestore
+      const fetchFromFirestore = async () => {
+        try {
+          const docRef = doc(db, 'articles', id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const hookText = data.content ? data.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
+            setItem({
+              id: docSnap.id,
+              title: data.title,
+              hook: hookText,
+              category: data.category || 'recette',
+              content: data.content,
+              benefits: [],
+              imageUrl: data.thumbnail,
+              createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()
+            } as AsrarItem);
+            checkBookmark(docSnap.id);
+          } else {
+            setNotFound(true);
+          }
+        } catch (error) {
+          console.error("Error fetching article from Firestore", error);
+          setNotFound(true);
+        }
+      };
+      fetchFromFirestore();
+    } else {
+      setNotFound(true);
     }
   }, [id]);
 
@@ -84,6 +151,23 @@ export const SecretDetail: React.FC = () => {
     }
   };
 
+  if (notFound) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
+        <BookOpen size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Article introuvable</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">Cet article a peut-être été supprimé ou l'URL est incorrecte.</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center space-x-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-colors"
+        >
+          <ArrowLeft size={20} />
+          <span>Retourner</span>
+        </button>
+      </div>
+    );
+  }
+
   if (!item) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -124,6 +208,22 @@ export const SecretDetail: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-full mr-2">
+            <button
+              onClick={() => setViewMode('full')}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'full' ? 'bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+              title="Vue complète"
+            >
+              <AlignLeft size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode('accordion')}
+              className={`p-1.5 rounded-full transition-colors ${viewMode === 'accordion' ? 'bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+              title="Vue par sections"
+            >
+              <ListTree size={18} />
+            </button>
+          </div>
           <button
             onClick={() => setReadingMode(!readingMode)}
             className={`p-2 rounded-full transition-colors flex items-center gap-2 ${readingMode ? "bg-[#f4ebd0] text-[#8b6e3f] dark:bg-[#383120] dark:text-[#d4c39c]" : "hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"}`}
@@ -239,14 +339,65 @@ export const SecretDetail: React.FC = () => {
                 className={`max-w-none transition-all ${
                   readingMode
                     ? "text-[#363028] dark:text-[#c4b79d] font-arabic text-xl sm:text-2xl leading-[2.5]"
-                    : "prose dark:prose-invert text-gray-700 dark:text-gray-300 leading-relaxed text-lg"
+                    : "text-gray-700 dark:text-gray-300 leading-relaxed text-lg"
                 }`}
               >
-                {item.content.split("\n").map((paragraph, idx) => (
-                  <p key={idx} className="mb-6">
-                    {paragraph}
-                  </p>
-                ))}
+                {(() => {
+                  const isHtml = /<[a-z][\s\S]*>/i.test(item.content);
+
+                  if (viewMode === 'full') {
+                    if (isHtml) {
+                      return <div dangerouslySetInnerHTML={{ __html: item.content }} className="prose dark:prose-invert max-w-none" />;
+                    } else {
+                      return item.content.split("\n").map((paragraph, idx) => (
+                        <p key={idx} className="mb-6">{paragraph}</p>
+                      ));
+                    }
+                  }
+
+                  if (viewMode === 'accordion') {
+                    if (!isHtml) {
+                      return item.content.split("\n").map((paragraph, idx) => (
+                        <p key={idx} className="mb-6">{paragraph}</p>
+                      ));
+                    }
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(item.content, 'text/html');
+                    const sections: { title: string, htmlContent: string }[] = [];
+                    let currentTitle = 'Introduction';
+                    let currentHtml = '';
+                    
+                    doc.body.childNodes.forEach(node => {
+                      const isHeader = /^H[1-6]$/i.test(node.nodeName);
+                      if (isHeader) {
+                        if (currentHtml.trim()) {
+                          sections.push({ title: currentTitle, htmlContent: currentHtml });
+                        }
+                        currentTitle = node.textContent || 'Section';
+                        currentHtml = '';
+                      } else {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                          currentHtml += (node as Element).outerHTML;
+                        } else if (node.nodeType === Node.TEXT_NODE) {
+                          currentHtml += node.textContent;
+                        }
+                      }
+                    });
+                    
+                    if (currentHtml.trim()) {
+                      sections.push({ title: currentTitle, htmlContent: currentHtml });
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {sections.map((section, idx) => (
+                          <AccordionSection key={idx} title={section.title} htmlContent={section.htmlContent} readingMode={readingMode} />
+                        ))}
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             </section>
 

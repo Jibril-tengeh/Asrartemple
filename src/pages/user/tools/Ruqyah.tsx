@@ -6,7 +6,9 @@ import { useAudio } from '../../../contexts/AudioContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { db } from '../../../lib/firebase';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { downloadAudioForOffline } from '../../../lib/offlineAudio';
+import { DownloadCloud } from 'lucide-react';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' }
@@ -16,12 +18,24 @@ export const Ruqyah: React.FC = () => {
   const { language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume, loopMode, setLoopMode, next, prev } = useAudio();
+  const { playPlaylist, currentTrack, isPlaying: globalIsPlaying, pause: globalPause, resume: globalResume, loopMode, setLoopMode, next, prev, progress, currentTime, duration, seek, audioEffect, setAudioEffect } = useAudio();
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const formatTime = (time: number) => {
+    if (!time || isNaN(time)) return '00:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   
   const [activeTab, setActiveTab] = useState<'songs' | 'playlists' | 'folders' | 'artists'>('playlists');
   const [isFullPlayer, setIsFullPlayer] = useState(false);
   const [adminAudios, setAdminAudios] = useState<any[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [userCollections, setUserCollections] = useState<any[]>([]);
+  const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState<any | null>(null);
+  const [downloadingPlaylists, setDownloadingPlaylists] = useState<{[key: string]: number}>({});
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistCover, setNewPlaylistCover] = useState('');
@@ -36,8 +50,13 @@ export const Ruqyah: React.FC = () => {
     }, (error) => {
       console.error("Playlists onSnapshot error:", error);
     });
+
+    const qCol = query(collection(db, 'ruqyah_collections'), where('userId', '==', user.uid));
+    const unsubscribeCol = onSnapshot(qCol, (snapshot) => {
+      setUserCollections(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
     
-    return () => unsubscribe();
+    return () => { unsubscribe(); unsubscribeCol(); };
   }, [user]);
 
   const handleCreatePlaylist = async () => {
@@ -77,6 +96,36 @@ export const Ruqyah: React.FC = () => {
     
     return () => unsubscribe();
   }, []);
+
+  const handleDownloadOffline = async (playlistItem: any) => {
+    if (!playlistItem.tracks || playlistItem.tracks.length === 0) return;
+    
+    let urlsToDownload: string[] = [];
+    playlistItem.tracks.forEach((t: any) => {
+      if (t.isCollection && t.subTracks) {
+        urlsToDownload = [...urlsToDownload, ...t.subTracks.map((st: any) => st.url).filter(Boolean)];
+      } else if (t.url) {
+        urlsToDownload.push(t.url);
+      }
+    });
+    
+    if (urlsToDownload.length === 0) return;
+    
+    setDownloadingPlaylists(prev => ({ ...prev, [playlistItem.id]: 0 }));
+    
+    await downloadAudioForOffline(urlsToDownload, (progress, total) => {
+      setDownloadingPlaylists(prev => ({ ...prev, [playlistItem.id]: progress / total }));
+    });
+    
+    setTimeout(() => {
+      setDownloadingPlaylists(prev => {
+        const next = { ...prev };
+        delete next[playlistItem.id];
+        return next;
+      });
+      alert("Téléchargement terminé pour accès hors-ligne !");
+    }, 1000);
+  };
 
   const handlePlayToggle = (audio: any, tracksContext: any[], index: number) => {
     if (currentTrack?.url === audio.url && globalIsPlaying) {
@@ -212,6 +261,69 @@ export const Ruqyah: React.FC = () => {
                   </div>
                 )}
 
+                
+                {activeTab === 'folders' && (
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="flex justify-between items-center mb-4 mt-2">
+                      <h2 className="text-xl font-semibold">Mes Collections</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      {userCollections.length === 0 ? (
+                        <p className="text-white/50 text-center py-10">Aucune collection existante.</p>
+                      ) : (
+                        userCollections.map((collection, idx) => (
+                          <div key={collection.id || idx} className="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="flex justify-between items-center cursor-pointer" onClick={() => {
+                              setOpenedPlaylist(collection);
+                              setActiveTab('songs');
+                            }}>
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-blue-600/50 flex items-center justify-center">
+                                  <ListMusic size={24} className="text-blue-300" />
+                                </div>
+                                <div>
+                                  <h3 className="text-lg font-medium">{collection.name}</h3>
+                                  <p className="text-sm text-white/50">{collection.tracks?.length || 0} tracks</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-white/10 mt-2 flex justify-between items-center">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownloadOffline(collection);
+                                }}
+                                className="text-sm flex items-center gap-2 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                {downloadingPlaylists[collection.id] !== undefined ? (
+                                  <span className="flex items-center gap-2">
+                                    <span className="animate-spin text-lg">⏳</span> {Math.round(downloadingPlaylists[collection.id] * 100)}%
+                                  </span>
+                                ) : (
+                                  <><DownloadCloud size={16} /> Hors-ligne</>
+                                )}
+                              </button>
+                              
+                              <button 
+
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowAddToPlaylistModal(collection);
+                                }}
+                                className="text-sm flex items-center gap-2 bg-[#41c5c5]/20 hover:bg-[#41c5c5]/40 text-[#41c5c5] px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                <Plus size={16} /> Ajouter à une Playlist
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {activeTab === 'songs' && (
                   <div className="animate-in fade-in slide-in-from-left-4 duration-300">
                     {openedPlaylist && (
@@ -330,23 +442,43 @@ export const Ruqyah: React.FC = () => {
                 </div>
 
                 {/* Secondary controls */}
-                <div className="w-full flex justify-between items-center px-2 mb-8 text-white/50">
-                  <button><Settings2 size={20} /></button>
-                  <button><Volume2 size={20} /></button>
-                  <button><AlarmClock size={20} /></button>
-                  <button className="flex flex-col items-center"><Gauge size={20} /><span className="text-[10px] mt-1">1.0x</span></button>
-                  <button><ListMusic size={20} /></button>
+                <div className="w-full flex justify-between items-center px-2 mb-8 text-white/50 relative">
+                  <button onClick={() => {
+                    if (audioEffect === 'echo') setAudioEffect('normal');
+                    else if (audioEffect === 'normal') setAudioEffect('clarity');
+                    else setAudioEffect('echo');
+                    alert(`Effet sonore : ${audioEffect === 'echo' ? 'Normal' : audioEffect === 'normal' ? 'Clarté' : 'Écho'}`);
+                  }} className={audioEffect !== 'normal' ? 'text-[#41c5c5]' : ''}><Settings2 size={20} /></button>
+                  <button onClick={() => alert('Le volume est géré par votre appareil')}><Volume2 size={20} /></button>
+                  <button onClick={() => alert('Minuteur de sommeil bientôt disponible')}><AlarmClock size={20} /></button>
+                  <button onClick={() => {
+                    const nextSpeed = playbackSpeed === 1 ? 1.5 : playbackSpeed === 1.5 ? 2 : playbackSpeed === 2 ? 0.5 : 1;
+                    setPlaybackSpeed(nextSpeed);
+                    const audioEl = document.querySelector('audio');
+                    if (audioEl) audioEl.playbackRate = nextSpeed;
+                  }} className="flex flex-col items-center">
+                    <Gauge size={20} className={playbackSpeed !== 1 ? 'text-[#41c5c5]' : ''} />
+                    <span className={`text-[10px] mt-1 ${playbackSpeed !== 1 ? 'text-[#41c5c5]' : ''}`}>{playbackSpeed}x</span>
+                  </button>
+                  <button onClick={() => setIsFullPlayer(false)}><ListMusic size={20} /></button>
                 </div>
 
-                {/* Progress (Dummy since we don't have real progress exposed easily, we just simulate the UI) */}
-                <div className="w-full mb-8">
-                  <div className="h-1 bg-white/20 rounded-full mb-3 relative">
-                    <div className="absolute left-0 top-0 h-full w-1/3 bg-white rounded-full"></div>
-                    <div className="absolute left-1/3 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full"></div>
+                {/* Progress */}
+                <div className="w-full mb-8 relative group">
+                  <div 
+                    className="h-2 bg-white/20 rounded-full mb-3 relative cursor-pointer"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const percent = (e.clientX - rect.left) / rect.width;
+                      seek(percent * duration);
+                    }}
+                  >
+                    <div className="absolute left-0 top-0 h-full bg-white rounded-full pointer-events-none" style={{ width: `${progress * 100}%` }}></div>
+                    <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow cursor-grab active:cursor-grabbing" style={{ left: `calc(${progress * 100}% - 8px)` }}></div>
                   </div>
                   <div className="flex justify-between text-xs text-white/50 font-medium">
-                    <span>00:07</span>
-                    <span>10:00</span>
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
                   </div>
                 </div>
 
@@ -395,7 +527,57 @@ export const Ruqyah: React.FC = () => {
             </div>
           </div>
         )}
+
+        {showAddToPlaylistModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="bg-[#1e2a22] border border-white/10 rounded-3xl p-6 shadow-2xl max-w-sm w-full relative">
+              <h3 className="font-bold text-xl text-white mb-4">Ajouter à la Playlist</h3>
+              <p className="text-white/70 mb-4 text-sm">Choisissez une playlist pour y ajouter la collection "{showAddToPlaylistModal.name}" comme un seul track.</p>
+              
+              <div className="space-y-2 mb-6">
+                {userPlaylists.length > 0 ? userPlaylists.map(p => (
+                  <button 
+                    key={p.id}
+                    onClick={async () => {
+                      const newTrack = {
+                        id: `collection-${showAddToPlaylistModal.id}-${Date.now()}`,
+                        title: showAddToPlaylistModal.name,
+                        url: "",
+                        artist: "Collection",
+                        isCollection: true,
+                        subTracks: showAddToPlaylistModal.tracks || []
+                      };
+                      
+                      try {
+                        await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
+                          tracks: [...(p.tracks || []), newTrack]
+                        });
+                        alert('Collection ajoutée avec succès !');
+                        setShowAddToPlaylistModal(null);
+                      } catch (e) {
+                        console.error(e);
+                        alert("Erreur lors de l'ajout.");
+                      }
+                    }}
+                    className="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-[#41c5c5]/20 text-white transition-colors"
+                  >
+                    {p.name}
+                  </button>
+                )) : (
+                  <p className="text-white/50 text-sm">Aucune playlist existante.</p>
+                )}
+              </div>
+              <button 
+                onClick={() => setShowAddToPlaylistModal(null)}
+                className="w-full p-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+

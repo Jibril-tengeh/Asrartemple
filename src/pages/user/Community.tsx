@@ -126,23 +126,36 @@ export const Community: React.FC = () => {
       });
       return;
     }
-    if (!newPostContent.trim()) return;
+    const content = newPostContent.trim();
+    if (!content || content === "<p><br></p>") return;
 
     setIsSubmitting(true);
     setFeedback(null);
+
+    const isRiskyContent = (text: string) => {
+      if (/<a\s+href/i.test(text) || /http[s]?:\/\//i.test(text)) return true;
+      if (/<img/i.test(text)) return true;
+      if (/(\+?\d[\d\-\s]{7,}\d)/.test(text)) return true;
+      const sexualKeywords = ['sexe', 'porn', 'nude', 'nu', 'sexuel', 'baise'];
+      const lowerText = text.toLowerCase();
+      if (sexualKeywords.some(keyword => lowerText.includes(keyword))) return true;
+      return false;
+    };
+
+    const finalStatus = user.role === 'admin' ? 'approved' : (isRiskyContent(content) ? 'pending' : 'approved');
 
     try {
       await addDoc(collection(db, "community_posts"), {
         authorId: user.uid,
         authorName: user.name || "Utilisateur",
-        content: newPostContent.trim(),
-        status: user.isTrusted ? "approved" : "pending",
+        content: content,
+        status: finalStatus,
         createdAt: new Date(),
       });
       setNewPostContent("");
       setFeedback({
         type: "success",
-        message: user.isTrusted
+        message: finalStatus === 'approved'
           ? t("community.publishedSuccess", "Publié avec succès !")
           : t(
               "community.pendingModeration",

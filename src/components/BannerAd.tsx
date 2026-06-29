@@ -29,7 +29,7 @@ export const BannerAd: React.FC = () => {
 
       <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
         <Link 
-          to="/store" 
+          to="/payment" 
           className="flex-1 sm:flex-none text-center bg-white text-indigo-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
         >
           Voir les Offres <ExternalLink size={16} />

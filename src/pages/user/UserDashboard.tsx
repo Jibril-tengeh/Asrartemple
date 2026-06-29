@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark, Flame } from 'lucide-react';
+import { db } from '../../lib/firebase';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark, Flame, Shield, RefreshCw } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
+import { ActivityGraph } from '../../components/ActivityGraph';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,13 +32,82 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [quranBookmarks, setQuranBookmarks] = useState<any[]>([]);
   const [lastReadPosition, setLastReadPosition] = useState<{ surahNumber: number, ayahNumberInSurah: number, surahName: string } | null>(null);
+  const [activityData, setActivityData] = useState<{ [date: string]: number }>({});
 
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter, location.pathname]);
 
+  // Pull to refresh logic
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullProgress, setPullProgress] = useState(0);
+  const startY = useRef(0);
+  const currentY = useRef(0);
+
   useEffect(() => {
-    setItems(getAsrarItems());
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY === 0) {
+        startY.current = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY === 0 && startY.current > 0) {
+        currentY.current = e.touches[0].clientY;
+        const diff = currentY.current - startY.current;
+        if (diff > 0) {
+          e.preventDefault(); // prevent scroll bounce
+          setPullProgress(Math.min(diff / 100, 1)); // 100px threshold
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (pullProgress > 0.6) {
+        setIsRefreshing(true);
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        setPullProgress(0);
+        startY.current = 0;
+        currentY.current = 0;
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [pullProgress]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const firestoreItems = snapshot.docs.filter(doc => doc.data().status === 'Published').map(doc => {
+        const data = doc.data();
+        const hookText = data.content ? data.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
+        return {
+          id: doc.id,
+          title: data.title,
+          hook: hookText,
+          category: data.category || 'recette',
+          content: data.content,
+          benefits: [],
+          imageUrl: data.thumbnail,
+          createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()
+        } as AsrarItem;
+      });
+      setItems(firestoreItems);
+    }, (error) => {
+      console.error("Error fetching articles for dashboard", error);
+    });
+
     try {
       const parsed = JSON.parse(localStorage.getItem('asrar_bookmarks') || '[]');
       setBookmarks(Array.isArray(parsed) ? parsed : []);
@@ -56,6 +128,27 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
         setLastReadPosition(JSON.parse(savedRead));
       }
     } catch(e) {}
+    
+    // Mock activity data or generate from stats
+    try {
+      const stats = JSON.parse(localStorage.getItem('asrar_stats') || '{}');
+      const data: { [date: string]: number } = {};
+      const today = new Date();
+      for (let i = 0; i < 30; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        // randomize some activity, or use real stats if available
+        const randomFactor = Math.random();
+        data[dateStr] = Math.floor(randomFactor * 10) * (randomFactor > 0.5 ? 1 : 0);
+      }
+      // Guarantee today has activity if they logged in
+      const todayStr = today.toISOString().split('T')[0];
+      data[todayStr] = Math.max(1, data[todayStr]);
+      setActivityData(data);
+    } catch(e) {}
+    
+    return () => unsubscribe();
   }, []);
 
   // Refresh bookmarks when window gets focus (in case they changed it on another page)
@@ -111,7 +204,15 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   // console.log("UserDashboard loaded");
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 safe-area-pt pb-24 relative">
+      {pullProgress > 0 && (
+        <div 
+          className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow-lg h-10 w-10 transition-all duration-200"
+          style={{ transform: `translate(-50%, ${Math.min(pullProgress * 100, 60)}px) rotate(${pullProgress * 360}deg)` }}
+        >
+          <RefreshCw size={20} className={isRefreshing ? "animate-spin text-emerald-500" : "text-gray-400"} />
+        </div>
+      )}
       {/* Banner Section */}
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Annonce Board */}
@@ -149,6 +250,10 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           )}
         </div>
 
+        <ActivityGraph data={activityData} />
+      </div>
+
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* My Quran Bookmarks */}
         {quranBookmarks.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -265,6 +370,14 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <Link
+          to="/tools/ruqyah"
+          className={`p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 h-[40px] w-[40px] flex items-center justify-center shadow-sm flex-shrink-0 transition-opacity duration-200 ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          title="Roqya"
+        >
+          <Shield size={18} />
+        </Link>
 
         <Link
           to="/store"

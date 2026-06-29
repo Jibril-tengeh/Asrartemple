@@ -24,6 +24,7 @@ export const DreamJournal: React.FC = () => {
   const [interpretation, setInterpretation] = useState('');
   const [wirdDone, setWirdDone] = useState('');
   const [type, setType] = useState<DreamEntry['type']>('unknown');
+  const [isInterpreting, setIsInterpreting] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('asrar_dreams');
@@ -34,6 +35,31 @@ export const DreamJournal: React.FC = () => {
       } catch (e) {}
     }
   }, []);
+
+  const handleInterpret = async () => {
+    if (!title || !content) {
+      alert("Veuillez remplir le titre et le récit du rêve d'abord.");
+      return;
+    }
+    setIsInterpreting(true);
+    try {
+      const res = await fetch('/api/dreams/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, type, wirdDone })
+      });
+      const data = await res.json();
+      if (data.interpretation) {
+        setInterpretation(data.interpretation);
+      } else {
+        alert(data.error || "Erreur d'interprétation");
+      }
+    } catch (e) {
+      alert("Erreur réseau");
+    } finally {
+      setIsInterpreting(false);
+    }
+  };
 
   const saveDream = () => {
     if (!title || !content) return;
@@ -159,7 +185,16 @@ export const DreamJournal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t("common.interpretation")} (Optionnel)</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">{t("common.interpretation")} (Optionnel)</label>
+                  <button
+                    onClick={handleInterpret}
+                    disabled={isInterpreting || !title || !content}
+                    className="text-xs font-bold px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50"
+                  >
+                    {isInterpreting ? "Analyse IA en cours..." : "Interpréter avec l'IA (Ibn Sirin)"}
+                  </button>
+                </div>
                 <textarea
                   value={interpretation}
                   onChange={(e) => setInterpretation(e.target.value)}

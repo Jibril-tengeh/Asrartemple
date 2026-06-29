@@ -40,7 +40,7 @@ export const PremiumWrapper: React.FC<PremiumWrapperProps> = ({
               <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">{fallbackTitle}</h2>
               <p className="text-gray-900 dark:text-gray-100 mb-6 font-medium max-w-sm drop-shadow-md">Abonnez-vous pour voir l'intégralité du contenu.</p>
               <Link 
-                to="/store" 
+                to="/payment" 
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:from-amber-500 hover:to-orange-600 transition-colors shadow-xl flex items-center gap-2"
               >
                 <Sparkles size={18} /> Débloquer {requiredTier === 'pro' ? 'Pro' : 'Premium'}
@@ -81,7 +81,7 @@ export const PremiumWrapper: React.FC<PremiumWrapperProps> = ({
             </button>
           )}
           <Link 
-            to="/store" 
+            to="/payment" 
             className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:from-amber-500 hover:to-orange-600 transition-colors shadow-md flex items-center gap-2"
           >
             <Sparkles size={18} /> Débloquer {requiredTier === 'pro' ? 'Pro' : 'Premium'}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, ArrowLeft, ArrowRight, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check, Bookmark, BookmarkCheck, Share2, RefreshCw, Moon, Sun, Activity, Clock, TrendingUp, Copy, Image as ImageIcon, Maximize, Minimize2, ListPlus, ListMusic, GripVertical, Database, CloudOff } from 'lucide-react';
+import { BookOpen, Shield, ArrowLeft, ArrowRight, Search, Play, Pause, ChevronDown, AlignJustify, Settings, Type, Volume2, FastForward, Headphones, X, Download, Check, Bookmark, BookmarkCheck, Share2, RefreshCw, Moon, Sun, Activity, Clock, TrendingUp, Copy, Image as ImageIcon, Maximize, Minimize2, ListPlus, ListMusic, GripVertical, Database, CloudOff } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -11,6 +11,8 @@ import { surahTranslations } from '../../../data/surahTranslations';
 import { db } from '../../../lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { Share } from '@capacitor/share';
+import { downloadAudioForOffline } from '../../../lib/offlineAudio';
+import { DownloadCloud, CheckSquare } from 'lucide-react';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const QURAN_RECITERS = [
@@ -164,6 +166,10 @@ export const QuranFull: React.FC = () => {
     return window.innerWidth < 768 ? 4 : 12;
   });
   const [fontFamily, setFontFamily] = useState<string>('Amiri');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedAyahs, setSelectedAyahs] = useState<any[]>([]);
+  const [downloadingSurah, setDownloadingSurah] = useState(false);
+  const [surahDownloadProgress, setSurahDownloadProgress] = useState(0);
   const [lineHeight, setLineHeight] = useState<number>(2.5);
   const [surahSearchQuery, setSurahSearchQuery] = useState('');
   const [showAyahSearch, setShowAyahSearch] = useState(false);
@@ -199,6 +205,7 @@ export const QuranFull: React.FC = () => {
   }
 
   const [roqyaPlaylists, setRoqyaPlaylists] = useState<RuqyahPlaylist[]>([]);
+  const [ruqyahCollections, setRuqyahCollections] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -209,7 +216,12 @@ export const QuranFull: React.FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setRoqyaPlaylists(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RuqyahPlaylist)));
     });
-    return () => unsubscribe();
+    
+    const qCol = query(collection(db, 'ruqyah_collections'), where('userId', '==', user.uid));
+    const unsubscribeCol = onSnapshot(qCol, (snapshot) => {
+      setRuqyahCollections(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => { unsubscribe(); unsubscribeCol(); };
   }, [user]);
 
   interface LastReadPosition {
@@ -483,6 +495,118 @@ export const QuranFull: React.FC = () => {
   const [zoomedAyah, setZoomedAyah] = useState<{ text: string, numberInSurah: number, isTajweed: boolean, ayahNumber?: number, surahNumber?: number, surahName?: string } | null>(null);
   const [zoomedAyahBg, setZoomedAyahBg] = useState(0);
   const [zoomedAyahColor, setZoomedAyahColor] = useState(0);
+
+  const generateZoomedVideo = async () => {
+    if (!zoomedAyah || !zoomedAyah.ayahNumber) return;
+    setIsGeneratingVideo(true);
+    
+    try {
+      const node = document.getElementById('zoomed-ayah-capture');
+      if (!node) throw new Error("Node not found");
+      
+      const actionButtons = document.getElementById('zoomed-ayah-actions');
+      const closeBtn = document.getElementById('zoomed-ayah-close');
+      const imageFooter = document.getElementById('image-footer');
+      
+      if (actionButtons) actionButtons.style.display = 'none';
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (imageFooter) imageFooter.style.display = 'flex';
+      
+      const dataUrl = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
+      
+      if (actionButtons) actionButtons.style.display = 'flex';
+      if (closeBtn) closeBtn.style.display = 'block';
+      if (imageFooter) imageFooter.style.display = 'none';
+      
+      const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${zoomedAyah.ayahNumber}.mp3`;
+      const fileName = `verset-${zoomedAyah.surahName || 'quran'}-${zoomedAyah.numberInSurah}`;
+      
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+      
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.src = audioUrl;
+      
+      await new Promise(r => audio.addEventListener('canplaythrough', r, { once: true }));
+      
+      // @ts-ignore
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const dest = audioCtx.createMediaStreamDestination();
+      const source = audioCtx.createMediaElementSource(audio);
+      source.connect(dest);
+      source.connect(audioCtx.destination);
+      
+      const canvasStream = canvas.captureStream(30);
+      const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...dest.stream.getAudioTracks()
+      ]);
+      
+      const mimeType = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+      const recorder = new MediaRecorder(combinedStream, { mimeType });
+      const chunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = e => chunks.push(e.data);
+      
+      const recordingEnded = new Promise<void>((resolve) => {
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName + (mimeType === 'video/mp4' ? '.mp4' : '.webm');
+          a.click();
+          URL.revokeObjectURL(url);
+          audioCtx.close();
+          resolve();
+        };
+      });
+      
+      recorder.start();
+      audio.play();
+      
+      const drawFrame = () => {
+        if (!audio.paused && !audio.ended) {
+          ctx.drawImage(img, 0, 0);
+          requestAnimationFrame(drawFrame);
+        }
+      };
+      drawFrame();
+      
+      audio.onended = () => {
+        recorder.stop();
+      };
+      
+      await recordingEnded;
+      
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la génération de la vidéo.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
+
+  const [zoomedAyahTranslationLang, setZoomedAyahTranslationLang] = useState<'none' | 'fr' | 'en' | 'ha'>('none');
+  const [zoomedAyahAspectRatio, setZoomedAyahAspectRatio] = useState<'auto' | '1:1' | '9:16' | '16:9'>('auto');
+  const [zoomedArabicSize, setZoomedArabicSize] = useState<number>(36);
+  const [zoomedTranslationSize, setZoomedTranslationSize] = useState<number>(18);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+
 
   const ZOOM_BACKGROUNDS = [
     { id: 'default', class: 'bg-white dark:bg-gray-900', iconClass: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700' },
@@ -1560,7 +1684,7 @@ export const QuranFull: React.FC = () => {
                          whileTap={{ scale: 0.9 }}
                          className={`p-3 rounded-full transition-all shadow-sm border-2 ${repeatCount > 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 border-emerald-500/30' : 'bg-white text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700 dark:hover:bg-gray-700 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:shadow-md'}`}
                        >
-                         <RefreshCw size={22} className={repeatCount > 0 ? "animate-spin-slow" : ""} style={{ animationDuration: '3s' }} />
+                         <Shield size={22} className={repeatCount > 0 ? "animate-pulse" : ""} style={{ animationDuration: '3s' }} />
                          {repeatCount > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full animate-bounce shadow-sm border-2 border-white dark:border-gray-900">{repeatCount}</span>}
                        </motion.button>
                        <select
@@ -1600,193 +1724,6 @@ export const QuranFull: React.FC = () => {
                        />
                      </motion.div>
                    )}
-                 {playlistModalAyah && (
-                   <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                     <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-md w-full relative">
-                       <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                         <ListPlus className="text-emerald-500" /> Ajouter à la Playlist Roqya
-                       </h3>
-                       <div className="space-y-4">
-                         {!user ? (
-                           <p className="text-gray-500 text-sm">Veuillez vous connecter pour gérer vos playlists.</p>
-                         ) : roqyaPlaylists.length > 0 ? (
-                           <div className="space-y-2">
-                             {roqyaPlaylists.map(p => (
-                               <button 
-                                 key={p.id} 
-                                 onClick={async () => {
-                                   const surahId = playlistModalAyah.surah?.number || activeSurah;
-                                   const newTrack = {
-                                     id: `quran-${surahId}-${playlistModalAyah.numberInSurah}`,
-                                     surahNumber: surahId,
-                                     ayahNumber: playlistModalAyah.numberInSurah,
-                                     title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${playlistModalAyah.numberInSurah}`,
-                                     url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${playlistModalAyah.number}.mp3`,
-                                     artist: "Mishary Rashid Alafasy",
-                                     isQuranVerse: true
-                                   };
-                                   if (!p.tracks || !p.tracks.some(t => t.id === newTrack.id)) {
-                                     await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
-                                       tracks: [...(p.tracks || []), newTrack]
-                                     });
-                                   }
-                                   setPlaylistModalAyah(null);
-                                 }} 
-                                 className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-emerald-50 dark:bg-gray-900 dark:hover:bg-emerald-900/30 transition-colors"
-                               >
-                                 {p.name} ({p.tracks?.length || 0} versets)
-                               </button>
-                             ))}
-                           </div>
-                         ) : (
-                           <p className="text-gray-500 text-sm">Aucune playlist existante.</p>
-                         )}
-                         {user && (
-                           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                             <input type="text" placeholder="Nouvelle playlist..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />
-                             <button onClick={async () => {
-                               if (newPlaylistName.trim()) {
-                                 const surahId = playlistModalAyah.surah?.number || activeSurah;
-                                 const newTrack = {
-                                   id: `quran-${surahId}-${playlistModalAyah.numberInSurah}`,
-                                   surahNumber: surahId,
-                                   ayahNumber: playlistModalAyah.numberInSurah,
-                                   title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${playlistModalAyah.numberInSurah}`,
-                                   url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${playlistModalAyah.number}.mp3`,
-                                   artist: "Mishary Rashid Alafasy",
-                                   isQuranVerse: true
-                                 };
-                                 await addDoc(collection(db, 'ruqyah_playlists'), {
-                                   userId: user.uid,
-                                   name: newPlaylistName.trim(),
-                                   tracks: [newTrack],
-                                   createdAt: serverTimestamp()
-                                 });
-                                 setNewPlaylistName("");
-                                 setPlaylistModalAyah(null);
-                               }
-                             }} className="w-full bg-emerald-500 text-white p-2 rounded-lg">Créer et ajouter</button>
-                           </div>
-                         )}
-                       </div>
-                       <button onClick={() => setPlaylistModalAyah(null)} className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"><X size={20} /></button>
-                     </motion.div>
-                   </div>
-                 )}
-
-            {showPlaylistsModal && (
-             <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-               <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                 <div className="flex justify-between items-center mb-6">
-                   <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2">
-                     <ListMusic className="text-emerald-500" /> Playlists Roqya
-                   </h3>
-                   <button onClick={() => setShowPlaylistsModal(false)} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white">
-                     <X size={20} />
-                   </button>
-                 </div>
-                 {roqyaPlaylists.length === 0 ? (
-                   <p className="text-gray-500">Aucune playlist créée. Ajoutez des versets pour commencer.</p>
-                 ) : (
-                   <div className="space-y-4">
-                     {roqyaPlaylists.map(p => (
-                       <div key={p.id} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
-                         <div className="flex justify-between items-center mb-2">
-                           <h4 className="font-bold text-gray-900 dark:text-white">{p.name}</h4>
-                           <div className="flex gap-2">
-                             <button onClick={() => {
-                               const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
-                               const tracks = p.ayahs.map(a => ({
-                                 id: `roqya-${a.number}`,
-                                 title: `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}`,
-                                 artist: "Roqya",
-                                 url: `https://cdn.islamic.network/quran/audio/128/${reciterApiId}/${a.number}.mp3`
-                               }));
-                               playPlaylist(tracks, 0);
-                             }} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg shadow-sm border border-emerald-100 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/50" title="Jouer la playlist">
-                               <Play size={16} />
-                             </button>
-                             <button onClick={() => {
-                               const text = p.name + '\n\n' + p.ayahs.map(a => `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}: \n${a.text}`).join('\n\n');
-                               const blob = new Blob([text], { type: 'text/plain' });
-                               const url = URL.createObjectURL(blob);
-                               const a = document.createElement('a');
-                               a.href = url;
-                               a.download = `Roqya_${p.name}.txt`;
-                               a.click();
-                             }} className="p-2 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:text-emerald-500" title="Télécharger le texte de la playlist">
-                               <Download size={16} />
-                             </button>
-                             <button onClick={() => setRoqyaPlaylists(roqyaPlaylists.filter(pl => pl.id !== p.id))} className="p-2 bg-white dark:bg-gray-800 text-red-500 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" title="Supprimer la playlist">
-                               <X size={16} />
-                             </button>
-                           </div>
-                         </div>
-                         <p className="text-sm text-gray-500 mb-3">{p.ayahs.length} verset(s)</p>
-                         
-                         {p.ayahs.length > 0 && (
-                           <div className="space-y-2 mb-4">
-                             {p.ayahs.map((a, idx) => (
-                               <div 
-                                 key={`${a.surahNumber}-${a.ayahNumberInSurah}`}
-                                 draggable
-                                 onDragStart={(e) => {
-                                   e.dataTransfer.setData('text/plain', JSON.stringify({ playlistId: p.id, index: idx }));
-                                 }}
-                                 onDragOver={(e) => {
-                                   e.preventDefault();
-                                 }}
-                                 onDrop={(e) => {
-                                   e.preventDefault();
-                                   try {
-                                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                                     if (data.playlistId === p.id && data.index !== idx) {
-                                       setRoqyaPlaylists(prev => prev.map(pl => {
-                                         if (pl.id === p.id) {
-                                           const newAyahs = [...pl.ayahs];
-                                           const [movedItem] = newAyahs.splice(data.index, 1);
-                                           newAyahs.splice(idx, 0, movedItem);
-                                           return { ...pl, ayahs: newAyahs };
-                                         }
-                                         return pl;
-                                       }));
-                                     }
-                                   } catch(err) {
-                                     // error handling for JSON parse
-                                   }
-                                 }}
-                                 className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-move group"
-                               >
-                                 <GripVertical size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
-                                 <div className="flex-1">
-                                   <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Sourate {a.surahNumber}, Verset {a.ayahNumberInSurah}</div>
-                                   <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1" dir="rtl font-arabic">{a.text}</div>
-                                 </div>
-                                 <button 
-                                   onClick={() => {
-                                     setRoqyaPlaylists(prev => prev.map(pl => pl.id === p.id ? { ...pl, ayahs: pl.ayahs.filter((_, i) => i !== idx) } : pl));
-                                   }}
-                                   className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                                 >
-                                   <X size={16} />
-                                 </button>
-                               </div>
-                             ))}
-                           </div>
-                         )}
-
-                         {p.ayahs.length > 0 && (
-                           <button onClick={() => { setPlayingPlaylist(p); setShowPlaylistsModal(false); }} className="w-full bg-emerald-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-emerald-600 transition-colors">
-                             <Play size={18} /> Lire la playlist
-                           </button>
-                         )}
-                       </div>
-                     ))}
-                   </div>
-                 )}
-               </motion.div>
-             </div>
-           )}
 
             </AnimatePresence>
                </div>
@@ -2307,7 +2244,8 @@ export const QuranFull: React.FC = () => {
                    initial={{ opacity: 0, scale: 0.8 }}
                    animate={{ opacity: 1, scale: 1 }}
                    exit={{ opacity: 0, scale: 0.8 }}
-                   className={`w-full max-w-5xl ${ZOOM_BACKGROUNDS[zoomedAyahBg].class} ${ZOOM_TEXT_COLORS[zoomedAyahColor].class} rounded-3xl p-6 sm:p-12 shadow-2xl overflow-hidden relative transition-colors duration-300`}
+                   id="zoomed-ayah-capture"
+                   className={`w-full max-w-5xl ${ZOOM_BACKGROUNDS[zoomedAyahBg].class} ${ZOOM_TEXT_COLORS[zoomedAyahColor].class} rounded-3xl p-6 sm:p-12 shadow-2xl overflow-hidden relative transition-colors duration-300 ${zoomedAyahAspectRatio !== "auto" ? "aspect-[" + zoomedAyahAspectRatio.replace(":", "/") + "] flex flex-col justify-center items-center" : ""}`}
                    onClick={e => e.stopPropagation()}
                  >
                    <button 
@@ -2322,27 +2260,83 @@ export const QuranFull: React.FC = () => {
                        dir="rtl"
                        style={{ 
                          fontFamily: zoomedAyah.isTajweed ? 'MeQuran' : fontFamily, 
-                         fontSize: zoomedAyah.text.length < 50 ? 'clamp(2.5rem, 8vw, 6rem)' : zoomedAyah.text.length < 150 ? 'clamp(2rem, 6vw, 4rem)' : zoomedAyah.text.length < 300 ? 'clamp(1.5rem, 5vw, 3rem)' : zoomedAyah.text.length < 600 ? 'clamp(1.2rem, 4vw, 2.5rem)' : 'clamp(1rem, 3vw, 1.8rem)',
+                         fontSize: zoomedArabicSize + 'px',
                          lineHeight: '1.8'
                        }}
                      >
+                       
+                     {zoomedAyahTranslationLang !== 'none' && (
+                       <div className="mt-6 text-center w-full" style={{ fontSize: zoomedTranslationSize + 'px' }}>
+                         <p className="font-sans font-medium text-current opacity-80">
+                           {zoomedAyahTranslationLang === 'fr' && surahFrench?.ayahs.find(a => a.numberInSurah === zoomedAyah.numberInSurah)?.text}
+                           {zoomedAyahTranslationLang === 'en' && surahEnglish?.ayahs.find(a => a.numberInSurah === zoomedAyah.numberInSurah)?.text}
+                           {zoomedAyahTranslationLang === 'ha' && surahHausa?.ayahs.find(a => a.numberInSurah === zoomedAyah.numberInSurah)?.text}
+                         </p>
+                       </div>
+                     )}
+
                        {zoomedAyah.isTajweed ? (
                          <div className="font-arabic" dangerouslySetInnerHTML={{ __html: zoomedAyah.text.replace(/\[h:(\d+)\[([^\]]+)\]/g, '<span class="tajweed-h$1">$2</span>').replace(/\[(\w+)\[([^\]]+)\]/g, '<span class="tajweed-$1">$2</span>') }} />
                        ) : (
                          <p className="font-arabic">{zoomedAyah.text}</p>
                        )}
                      </div>
-                     <div id="image-footer" style={{ display: 'none' }} className="absolute bottom-6 left-6 right-6 justify-between items-end opacity-80 z-0">
-                       <div className="flex flex-col gap-1 items-start text-emerald-800 dark:text-emerald-200">
-                         <span className="font-bold text-xl tracking-tight">AsrarHub</span>
+                     <div id="image-footer" style={{ display: 'none' }} className="mt-8 pt-4 w-full flex justify-between items-center opacity-90 z-0 border-t border-emerald-800/20 dark:border-emerald-200/20">
+                       <div className="flex items-center gap-4">
+                         <span className="font-bold text-xl tracking-tight text-emerald-800 dark:text-emerald-200">AsrarHub</span>
                        </div>
-                       <div className="flex flex-col gap-1 items-end text-emerald-800 dark:text-emerald-200">
-                         <span className="font-bold text-lg font-arabic">{zoomedAyah.surahName?.replace('سُورَةُ ', '') || ''}</span>
-                         <span className="text-xs font-semibold uppercase tracking-widest">Verset {zoomedAyah.numberInSurah}</span>
+                       <div className="flex flex-col items-end text-emerald-800 dark:text-emerald-200">
+                         <span className="font-bold text-lg font-arabic leading-none">{zoomedAyah.surahName?.replace('سُورَةُ ', '') || ''}</span>
+                         <span className="text-xs font-semibold uppercase tracking-widest mt-1">Verset {zoomedAyah.numberInSurah}</span>
                        </div>
                      </div>
-                     <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex items-center justify-center gap-4 w-full flex-wrap relative z-10" id="zoomed-ayah-actions">
+                     <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-4 w-full relative z-10" id="zoomed-ayah-actions">
+                       <div className="w-full flex flex-col gap-4 mb-4">
+                         <div className="flex items-center gap-4 flex-wrap">
+                           <div className="flex items-center gap-2">
+                             <span className="text-sm font-medium">Traduction:</span>
+                             <select 
+                               className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
+                               value={zoomedAyahTranslationLang}
+                               onChange={e => setZoomedAyahTranslationLang(e.target.value as any)}
+                             >
+                               <option value="none">Aucune</option>
+                               <option value="fr">Français</option>
+                               <option value="en">English</option>
+                               <option value="ha">Hausa</option>
+                             </select>
+                           </div>
+                           
+                           <div className="flex items-center gap-2">
+                             <span className="text-sm font-medium">Format:</span>
+                             <select 
+                               className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
+                               value={zoomedAyahAspectRatio}
+                               onChange={e => setZoomedAyahAspectRatio(e.target.value as any)}
+                             >
+                               <option value="auto">Auto</option>
+                               <option value="1:1">Carré (1:1)</option>
+                               <option value="9:16">Story (9:16)</option>
+                               <option value="16:9">Paysage (16:9)</option>
+                             </select>
+                           </div>
+                         </div>
+                         
+                         <div className="flex items-center gap-4 flex-wrap">
+                           <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
+                             <span className="text-sm font-medium whitespace-nowrap">Taille Arabe:</span>
+                             <input type="range" min="16" max="72" value={zoomedArabicSize} onChange={e => setZoomedArabicSize(Number(e.target.value))} className="w-full" />
+                           </div>
+                           <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
+                             <span className="text-sm font-medium whitespace-nowrap">Taille Trad:</span>
+                             <input type="range" min="12" max="48" value={zoomedTranslationSize} onChange={e => setZoomedTranslationSize(Number(e.target.value))} className="w-full" />
+                           </div>
+                         </div>
+                       </div>
+
+<div className="flex items-center justify-center gap-4 w-full flex-wrap">
                        <div className="flex flex-col gap-3 mr-auto">
+
                          <div className="flex items-center gap-2" id="zoomed-bg-selector">
                            {ZOOM_BACKGROUNDS.map((bg, idx) => (
                              <button
@@ -2384,7 +2378,18 @@ export const QuranFull: React.FC = () => {
                        <button
                          onClick={(e) => {
                            e.stopPropagation();
-                           const node = document.querySelector('.max-w-5xl') as HTMLElement;
+                           generateZoomedVideo();
+                         }}
+                         className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-200 dark:border-gray-700 text-emerald-500 hover:text-emerald-600 transition-colors flex items-center gap-2"
+                         title="Enregistrer comme vidéo"
+                       >
+                         {isGeneratingVideo ? <span className="animate-spin text-xl">⏳</span> : <span className="text-xl">🎥</span>}
+                       </button>
+
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           const node = document.getElementById('zoomed-ayah-capture');
                            if (node) {
                              const actionButtons = document.getElementById('zoomed-ayah-actions');
                              if (actionButtons) actionButtons.style.display = 'none';
@@ -2423,10 +2428,12 @@ export const QuranFull: React.FC = () => {
                                        url: savedFile.uri,
                                        dialogTitle: 'Partager ce verset'
                                      });
-                                   } catch (e) {
-                                     console.error("Erreur de sauvegarde Capacitor:", e);
-                                     alert("Erreur lors de la sauvegarde de l'image.");
-                                   }
+                                   } catch (e: any) {
+                                      if (e && e.message !== 'Share canceled') {
+                                        console.error("Erreur de sauvegarde Capacitor:", e);
+                                        alert("Erreur lors de la sauvegarde de l'image.");
+                                      }
+                                    }
                                  } else {
                                    const link = document.createElement('a');
                                    link.download = fileName;
@@ -2479,7 +2486,27 @@ export const QuranFull: React.FC = () => {
                            >
                              {bookmarks.some(b => b.ayahNumber === zoomedAyah.ayahNumber) ? <BookmarkCheck size={20} className="text-emerald-500" /> : <Bookmark size={20} />}
                            </button>
-                           <button
+                                                      <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setZoomedAyah(null);
+                               setSelectionMode(true);
+                               setSelectedAyahs([{
+                                 number: zoomedAyah.ayahNumber!,
+                                 text: zoomedAyah.text,
+                                 numberInSurah: zoomedAyah.numberInSurah,
+                                 surah: {
+                                   number: zoomedAyah.surahNumber!,
+                                   name: zoomedAyah.surahName!
+                                 }
+                               }]);
+                             }}
+                             className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-blue-600 transition-colors"
+                             title="Sélectionner plusieurs versets"
+                           >
+                             <CheckSquare size={20} />
+                           </button>
+<button
                              onClick={(e) => {
                                e.stopPropagation();
                                setZoomedAyah(null);
@@ -2510,6 +2537,7 @@ export const QuranFull: React.FC = () => {
                            </button>
                          </>
                        )}
+                       </div>
                      </div>
                    </div>
                  </motion.div>
@@ -3019,8 +3047,19 @@ export const QuranFull: React.FC = () => {
                                 )}
                                 <span 
                                   ref={(el) => ayahRefs.current[ayah.number] = el}
+                                  onClick={(e) => {
+                                    if (selectionMode) {
+                                      e.preventDefault();
+                                      const isSelected = selectedAyahs.some(a => a.number === ayah.number);
+                                      if (isSelected) {
+                                        setSelectedAyahs(prev => prev.filter(a => a.number !== ayah.number));
+                                      } else {
+                                        setSelectedAyahs(prev => [...prev, { ...ayah, surah: surahInfo }]);
+                                      }
+                                    }
+                                  }}
                                   data-ayah-number={ayah.number}
-                                  className={`inline transition-colors ${playingAyah === ayah.number ? 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 rounded-lg px-1' : ''}`}
+                                  className={`inline transition-colors ${playingAyah === ayah.number ? 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 rounded-lg px-1' : ''} ${selectionMode && selectedAyahs.some(a => a.number === ayah.number) ? 'bg-blue-100 dark:bg-blue-900/40 outline outline-2 outline-blue-500 rounded px-1 cursor-pointer' : ''} ${selectionMode ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-1' : ''}`}
                                   onContextMenu={(e) => {
                                     e.preventDefault();
                                     setZoomedAyah({ text: ayahText, numberInSurah: ayah.numberInSurah, isTajweed: !!isTajweed, surahName: surahInfo.name, surahNumber: surahInfo.number, ayahNumber: ayah.number });
@@ -3267,6 +3306,237 @@ export const QuranFull: React.FC = () => {
            )}
         </div>
       )}
+
+                       {playlistModalAyah && (
+                   <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                     <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-md w-full relative">
+                       <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                         <ListPlus className="text-emerald-500" /> Ajouter à la Playlist Roqya
+                       </h3>
+                       <div className="space-y-4">
+                         {!user ? (
+                            <p className="text-gray-500 text-sm">Veuillez vous connecter pour gérer vos playlists et collections.</p>
+                          ) : (
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Playlists existantes</h4>
+                                {roqyaPlaylists.length > 0 ? (
+                                  <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                                    {roqyaPlaylists.map(p => (
+                                      <button 
+                                        key={p.id} 
+                                        onClick={async () => {
+                                          const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];
+                                          const newTracks = ayahsToAdd.map(ayah => {
+                                            const surahId = ayah.surah?.number || activeSurah;
+                                            return {
+                                              id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,
+                                              surahNumber: surahId,
+                                              ayahNumber: ayah.numberInSurah,
+                                              title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,
+                                              url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
+                                              artist: "Mishary Rashid Alafasy",
+                                              isQuranVerse: true
+                                            };
+                                          });
+                                          
+                                          const existingTrackIds = p.tracks?.map(t => t.id) || [];
+                                          const tracksToAdd = newTracks.filter(t => !existingTrackIds.some(existing => existing.includes(`quran-${t.surahNumber}-${t.ayahNumber}`)));
+
+                                          if (tracksToAdd.length > 0) {
+                                            await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
+                                              tracks: [...(p.tracks || []), ...tracksToAdd]
+                                            });
+                                          }
+                                          setPlaylistModalAyah(null);
+                                          if (selectionMode) {
+                                            setSelectionMode(false);
+                                            setSelectedAyahs([]);
+                                          }
+                                        }} 
+                                        className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-emerald-50 dark:bg-gray-900 dark:hover:bg-emerald-900/30 transition-colors"
+                                      >
+                                        {p.name} ({p.tracks?.length || 0} versets)
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-gray-500 text-sm">Aucune playlist existante.</p>
+                                )}
+                              </div>
+                              
+                              <div>
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Collections existantes</h4>
+                                {ruqyahCollections.length > 0 ? (
+                                  <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                                    {ruqyahCollections.map(c => (
+                                      <button 
+                                        key={c.id} 
+                                        onClick={async () => {
+                                          const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];
+                                          const newTracks = ayahsToAdd.map(ayah => {
+                                            const surahId = ayah.surah?.number || activeSurah;
+                                            return {
+                                              id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,
+                                              surahNumber: surahId,
+                                              ayahNumber: ayah.numberInSurah,
+                                              title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,
+                                              url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
+                                              artist: "Mishary Rashid Alafasy",
+                                              isQuranVerse: true
+                                            };
+                                          });
+                                          
+                                          const existingTrackIds = c.tracks?.map(t => t.id) || [];
+                                          const tracksToAdd = newTracks.filter(t => !existingTrackIds.some(existing => existing.includes(`quran-${t.surahNumber}-${t.ayahNumber}`)));
+
+                                          if (tracksToAdd.length > 0) {
+                                            await updateDoc(doc(db, 'ruqyah_collections', c.id), {
+                                              tracks: [...(c.tracks || []), ...tracksToAdd]
+                                            });
+                                          }
+                                          setPlaylistModalAyah(null);
+                                          if (selectionMode) {
+                                            setSelectionMode(false);
+                                            setSelectedAyahs([]);
+                                          }
+                                        }} 
+                                        className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-blue-50 dark:bg-gray-900 dark:hover:bg-blue-900/30 transition-colors"
+                                      >
+                                        {c.name} ({c.tracks?.length || 0} versets)
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-gray-500 text-sm">Aucune collection existante.</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {user && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                             <input type="text" placeholder="Nouvelle playlist/collection..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />                          <div className="flex gap-2">                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true                                  };                                });                                await addDoc(collection(db, "ruqyah_playlists"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-emerald-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">Créer Playlist</button>                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true                                  };                                });                                await addDoc(collection(db, "ruqyah_collections"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-blue-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">Créer Collection</button>                          </div>
+                           </div>
+                         )}
+                       </div>
+                       <button onClick={() => setPlaylistModalAyah(null)} className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"><X size={20} /></button>
+                     </motion.div>
+                   </div>
+                 )}
+
+            {showPlaylistsModal && (
+             <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+               <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                 <div className="flex justify-between items-center mb-6">
+                   <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2">
+                     <ListMusic className="text-emerald-500" /> Playlists Roqya
+                   </h3>
+                   <button onClick={() => setShowPlaylistsModal(false)} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                     <X size={20} />
+                   </button>
+                 </div>
+                 {roqyaPlaylists.length === 0 ? (
+                   <p className="text-gray-500">Aucune playlist créée. Ajoutez des versets pour commencer.</p>
+                 ) : (
+                   <div className="space-y-4">
+                     {roqyaPlaylists.map(p => (
+                       <div key={p.id} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
+                         <div className="flex justify-between items-center mb-2">
+                           <h4 className="font-bold text-gray-900 dark:text-white">{p.name}</h4>
+                           <div className="flex gap-2">
+                             <button onClick={() => {
+                               const reciterApiId = QURAN_RECITERS.find(r => r.id === selectedReciterId)?.apiId || 'ar.alafasy';
+                               const tracks = p.ayahs.map(a => ({
+                                 id: `roqya-${a.number}`,
+                                 title: `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}`,
+                                 artist: "Roqya",
+                                 url: `https://cdn.islamic.network/quran/audio/128/${reciterApiId}/${a.number}.mp3`
+                               }));
+                               playPlaylist(tracks, 0);
+                             }} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg shadow-sm border border-emerald-100 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/50" title="Jouer la playlist">
+                               <Play size={16} />
+                             </button>
+                             <button onClick={() => {
+                               const text = p.name + '\n\n' + p.ayahs.map(a => `Sourate ${a.surahNumber}, Verset ${a.ayahNumberInSurah}: \n${a.text}`).join('\n\n');
+                               const blob = new Blob([text], { type: 'text/plain' });
+                               const url = URL.createObjectURL(blob);
+                               const a = document.createElement('a');
+                               a.href = url;
+                               a.download = `Roqya_${p.name}.txt`;
+                               a.click();
+                             }} className="p-2 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:text-emerald-500" title="Télécharger le texte de la playlist">
+                               <Download size={16} />
+                             </button>
+                             <button onClick={() => setRoqyaPlaylists(roqyaPlaylists.filter(pl => pl.id !== p.id))} className="p-2 bg-white dark:bg-gray-800 text-red-500 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" title="Supprimer la playlist">
+                               <X size={16} />
+                             </button>
+                           </div>
+                         </div>
+                         <p className="text-sm text-gray-500 mb-3">{p.ayahs.length} verset(s)</p>
+                         
+                         {p.ayahs.length > 0 && (
+                           <div className="space-y-2 mb-4">
+                             {p.ayahs.map((a, idx) => (
+                               <div 
+                                 key={`${a.surahNumber}-${a.ayahNumberInSurah}`}
+                                 draggable
+                                 onDragStart={(e) => {
+                                   e.dataTransfer.setData('text/plain', JSON.stringify({ playlistId: p.id, index: idx }));
+                                 }}
+                                 onDragOver={(e) => {
+                                   e.preventDefault();
+                                 }}
+                                 onDrop={(e) => {
+                                   e.preventDefault();
+                                   try {
+                                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                                     if (data.playlistId === p.id && data.index !== idx) {
+                                       setRoqyaPlaylists(prev => prev.map(pl => {
+                                         if (pl.id === p.id) {
+                                           const newAyahs = [...pl.ayahs];
+                                           const [movedItem] = newAyahs.splice(data.index, 1);
+                                           newAyahs.splice(idx, 0, movedItem);
+                                           return { ...pl, ayahs: newAyahs };
+                                         }
+                                         return pl;
+                                       }));
+                                     }
+                                   } catch(err) {
+                                     // error handling for JSON parse
+                                   }
+                                 }}
+                                 className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-move group"
+                               >
+                                 <GripVertical size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                                 <div className="flex-1">
+                                   <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Sourate {a.surahNumber}, Verset {a.ayahNumberInSurah}</div>
+                                   <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1" dir="rtl font-arabic">{a.text}</div>
+                                 </div>
+                                 <button 
+                                   onClick={() => {
+                                     setRoqyaPlaylists(prev => prev.map(pl => pl.id === p.id ? { ...pl, ayahs: pl.ayahs.filter((_, i) => i !== idx) } : pl));
+                                   }}
+                                   className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                                 >
+                                   <X size={16} />
+                                 </button>
+                               </div>
+                             ))}
+                           </div>
+                         )}
+
+                         {p.ayahs.length > 0 && (
+                           <button onClick={() => { setPlayingPlaylist(p); setShowPlaylistsModal(false); }} className="w-full bg-emerald-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 font-semibold hover:bg-emerald-600 transition-colors">
+                             <Play size={18} /> Lire la playlist
+                           </button>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </motion.div>
+             </div>
+           )}
 
       {/* Global Download Progress Toast */}
       <AnimatePresence>

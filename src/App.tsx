@@ -18,6 +18,7 @@ const Zairja = React.lazy(() => import('./pages/user/tools/Zairja').then(m => ({
 const ZakatCalculator = React.lazy(() => import('./pages/user/tools/ZakatCalculator').then(m => ({ default: m.ZakatCalculator })));
 const FaraidCalculator = React.lazy(() => import('./pages/user/tools/FaraidCalculator').then(m => ({ default: m.FaraidCalculator })));
 const DreamJournal = React.lazy(() => import('./pages/user/tools/DreamJournal').then(m => ({ default: m.DreamJournal })));
+const Halaqat = React.lazy(() => import('./pages/user/tools/Halaqat').then(m => ({ default: m.Halaqat })));
 const NamesOfAllah = React.lazy(() => import('./pages/user/tools/NamesOfAllah').then(m => ({ default: m.NamesOfAllah })));
 const RouhaniyyaExtractor = React.lazy(() => import('./pages/user/tools/RouhaniyyaExtractor').then(m => ({ default: m.RouhaniyyaExtractor })));
 const Taksir = React.lazy(() => import('./pages/user/tools/Taksir').then(m => ({ default: m.Taksir })));
@@ -34,6 +35,7 @@ const KhouddamExtractor = React.lazy(() => import('./pages/user/tools/KhouddamEx
 const AwfaqAdvanced = React.lazy(() => import('./pages/user/tools/AwfaqAdvanced').then(m => ({ default: m.AwfaqAdvanced })));
 const QuranicFaal = React.lazy(() => import('./pages/user/tools/QuranicFaal').then(m => ({ default: m.QuranicFaal })));
 const UserProfile = React.lazy(() => import('./pages/user/UserProfile').then(m => ({ default: m.UserProfile })));
+const PaymentPage = React.lazy(() => import('./pages/user/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const Journal = React.lazy(() => import('./pages/user/Journal').then(m => ({ default: m.Journal })));
 const ExploreDashboard = React.lazy(() => import('./pages/user/ExploreDashboard').then(m => ({ default: m.ExploreDashboard })));
 const Quizz = React.lazy(() => import('./pages/user/explore/Quizz').then(m => ({ default: m.Quizz })));
@@ -143,6 +145,7 @@ export default function App() {
             <Route path="/tools/zakat" element={<ZakatCalculator />} />
             <Route path="/tools/faraid" element={<FaraidCalculator />} />
             <Route path="/tools/dreams" element={<DreamJournal />} />
+            <Route path="/tools/halaqat" element={<Halaqat />} />
             <Route path="/tools/elemental" element={<ElementalAnalyzer />} />
             <Route path="/tools/geomancy" element={<Geomancy />} />
             <Route path="/tools/letters" element={<ScienceOfLetters />} />
@@ -160,6 +163,7 @@ export default function App() {
             <Route path="/tools/awfaq" element={<AwfaqAdvanced />} />
             <Route path="/tools/quranic-faal" element={<QuranicFaal />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/payment" element={<PaymentPage />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
             <Route path="/community" element={<Community />} />

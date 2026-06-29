@@ -20,7 +20,8 @@ export class PaystackService {
     currency: string,
     userId: string,
     onSuccess: (reference: string) => void,
-    onClose: () => void
+    onClose: () => void,
+    planCode?: string
   ) {
     await this.loadScript();
     
@@ -29,6 +30,7 @@ export class PaystackService {
       email: email,
       amount: Math.round(amount * 100), // amount in lowest denomination (e.g., pesewas, kobo)
       currency: currency,
+      plan: planCode,
       ref: 'PS_' + Math.floor((Math.random() * 1000000000) + 1),
       metadata: {
         custom_fields: [
