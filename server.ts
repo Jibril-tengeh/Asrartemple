@@ -74,6 +74,61 @@ Règles d'éthique spirituelle :
     }
   });
 
+  // AI Search Assistant
+  app.post("/api/assistant/search", async (req, res) => {
+    try {
+      const { query, availableItems } = req.body; // availableItems could be a summarized list [{id, title, category}]
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `
+Vous êtes un assistant spirituel islamique.
+L'utilisateur pose la question suivante : "${query}"
+
+Voici la liste des éléments disponibles dans notre base de données :
+${JSON.stringify(availableItems)}
+
+Tâche :
+1. Analysez la question de l'utilisateur.
+2. Suggérez les meilleurs éléments de la liste fournie qui répondent à son besoin (ex: recettes d'ouverture, versets contre le mauvais œil, etc.).
+3. Répondez avec un court message d'encouragement/conseil (max 2-3 phrases) suivi UNIQUEMENT d'un tableau JSON contenant les IDs recommandés, sous ce format EXACT :
+---MESSAGE---
+Votre message ici...
+---IDS---
+["id1", "id2"]
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      const text = response.text || "";
+      const messagePart = text.split("---IDS---")[0]?.replace("---MESSAGE---", "")?.trim() || "Voici quelques recommandations :";
+      let idsPart = text.split("---IDS---")[1]?.trim() || "[]";
+      
+      // try to parse JSON
+      let recommendedIds = [];
+      try {
+        // find array in text if any
+        const match = idsPart.match(/\[.*\]/s);
+        if (match) {
+          recommendedIds = JSON.parse(match[0]);
+        }
+      } catch (e) {
+        console.error("Failed to parse JSON ids from AI");
+      }
+
+      res.json({ message: messagePart, recommendedIds });
+    } catch (error: any) {
+      console.error("AI Search error:", error);
+      res.status(500).json({ error: "Failed to generate search results" });
+    }
+  });
+
   // Paystack verification
   app.post("/api/verify-paystack", async (req, res) => {
     try {

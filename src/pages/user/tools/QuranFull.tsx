@@ -507,12 +507,25 @@ export const QuranFull: React.FC = () => {
       const actionButtons = document.getElementById('zoomed-ayah-actions');
       const closeBtn = document.getElementById('zoomed-ayah-close');
       const imageFooter = document.getElementById('image-footer');
+      const arabicTextNode = document.getElementById('zoomed-ayah-text');
       
       if (actionButtons) actionButtons.style.display = 'none';
       if (closeBtn) closeBtn.style.display = 'none';
       if (imageFooter) imageFooter.style.display = 'flex';
       
-      const dataUrl = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
+      // 1. Capture background without text
+      let originalOpacity = '1';
+      if (arabicTextNode) {
+        originalOpacity = arabicTextNode.style.opacity || '1';
+        arabicTextNode.style.opacity = '0';
+      }
+      const dataUrlBg = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
+      
+      // 2. Capture full image with text
+      if (arabicTextNode) {
+        arabicTextNode.style.opacity = originalOpacity;
+      }
+      const dataUrlFull = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
       
       if (actionButtons) actionButtons.style.display = 'flex';
       if (closeBtn) closeBtn.style.display = 'block';
@@ -521,24 +534,27 @@ export const QuranFull: React.FC = () => {
       const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${zoomedAyah.ayahNumber}.mp3`;
       const fileName = `verset-${zoomedAyah.surahName || 'quran'}-${zoomedAyah.numberInSurah}`;
       
+      const audioBlob = await fetch(audioUrl).then(r => r.blob());
+      const audioObjectUrl = URL.createObjectURL(audioBlob);
+      
       const canvas = document.createElement('canvas');
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
       
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = dataUrl;
-      });
+      const imgBg = new Image(); imgBg.crossOrigin = 'anonymous';
+      const imgFull = new Image(); imgFull.crossOrigin = 'anonymous';
       
-      canvas.width = img.width;
-      canvas.height = img.height;
+      await Promise.all([
+        new Promise((r, j) => { imgBg.onload = r; imgBg.onerror = j; imgBg.src = dataUrlBg; }),
+        new Promise((r, j) => { imgFull.onload = r; imgFull.onerror = j; imgFull.src = dataUrlFull; })
+      ]);
+      
+      canvas.width = imgFull.width;
+      canvas.height = imgFull.height;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
+      if (!ctx) throw new Error("Canvas context 2D not supported");
       
       const audio = new Audio();
       audio.crossOrigin = 'anonymous';
-      audio.src = audioUrl;
+      audio.src = audioObjectUrl;
       
       await new Promise(r => audio.addEventListener('canplaythrough', r, { once: true }));
       
@@ -561,27 +577,37 @@ export const QuranFull: React.FC = () => {
       
       recorder.ondataavailable = e => chunks.push(e.data);
       
-      const recordingEnded = new Promise<void>((resolve) => {
+      const recordingEnded = new Promise<{blob: Blob, mimeType: string}>((resolve) => {
         recorder.onstop = () => {
           const blob = new Blob(chunks, { type: mimeType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName + (mimeType === 'video/mp4' ? '.mp4' : '.webm');
-          a.click();
-          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(audioObjectUrl);
           audioCtx.close();
-          resolve();
+          resolve({blob, mimeType});
         };
       });
       
       recorder.start();
       audio.play();
       
+      const maxRadius = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
+      
       const drawFrame = () => {
         if (!audio.paused && !audio.ended) {
-          ctx.drawImage(img, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(imgBg, 0, 0);
+          
+          const p = audio.currentTime / audio.duration;
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(canvas.width, 0, maxRadius * p, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(imgFull, 0, 0);
+          ctx.restore();
+          
           requestAnimationFrame(drawFrame);
+        } else if (audio.ended) {
+          ctx.drawImage(imgFull, 0, 0);
         }
       };
       drawFrame();
@@ -590,11 +616,53 @@ export const QuranFull: React.FC = () => {
         recorder.stop();
       };
       
-      await recordingEnded;
+      const {blob, mimeType: finalMimeType} = await recordingEnded;
+      const fullFileName = fileName + (finalMimeType === 'video/mp4' ? '.mp4' : '.webm');
+
+      const isCapacitor = !!(window as any).Capacitor && !!(window as any).Capacitor.isNativePlatform;
+      if (isCapacitor || (window as any).Capacitor?.getPlatform() === 'android' || (window as any).Capacitor?.getPlatform() === 'ios') {
+        try {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          await new Promise<void>((res, rej) => {
+            reader.onloadend = async () => {
+               try {
+                 const base64data = (reader.result as string).split(',')[1];
+                 const savedFile = await Filesystem.writeFile({
+                   path: fullFileName,
+                   data: base64data,
+                   directory: Directory.Cache
+                 });
+                 await Share.share({
+                   title: 'Partager la vidéo',
+                   url: savedFile.uri,
+                   dialogTitle: 'Partager cette vidéo'
+                 });
+                 res();
+               } catch(e) {
+                 rej(e);
+               }
+            };
+            reader.onerror = rej;
+          });
+        } catch (e: any) {
+           if (e && e.message !== 'Share canceled') {
+             console.error("Erreur de sauvegarde vidéo Capacitor:", e);
+             alert("Erreur lors de la sauvegarde de la vidéo.");
+           }
+        }
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fullFileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
       
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la génération de la vidéo.");
+      alert("Erreur lors de la création de la vidéo. Essayez sur un autre navigateur ou appareil.");
     } finally {
       setIsGeneratingVideo(false);
     }
@@ -2255,7 +2323,7 @@ export const QuranFull: React.FC = () => {
                      <X size={24} />
                    </button>
                    <div className="flex flex-col items-center justify-center min-h-[40vh] sm:min-h-[50vh]">
-                     <div 
+                     <div id="zoomed-ayah-text"
                        className={`text-center w-full ${ZOOM_TEXT_COLORS[zoomedAyahColor].class}`} 
                        dir="rtl"
                        style={{ 
@@ -2281,13 +2349,13 @@ export const QuranFull: React.FC = () => {
                          <p className="font-arabic">{zoomedAyah.text}</p>
                        )}
                      </div>
-                     <div id="image-footer" style={{ display: 'none' }} className="mt-8 pt-4 w-full flex justify-between items-center opacity-90 z-0 border-t border-emerald-800/20 dark:border-emerald-200/20">
+                     <div id="image-footer" style={{ display: 'none' }} className="mt-4 pt-2 w-full flex justify-between items-center opacity-90 z-0 border-t border-emerald-800/20 dark:border-emerald-200/20">
                        <div className="flex items-center gap-4">
-                         <span className="font-bold text-xl tracking-tight text-emerald-800 dark:text-emerald-200">AsrarHub</span>
+                         <span className="font-bold text-sm tracking-tight text-emerald-800 dark:text-emerald-200">AsrarHub</span>
                        </div>
                        <div className="flex flex-col items-end text-emerald-800 dark:text-emerald-200">
-                         <span className="font-bold text-lg font-arabic leading-none">{zoomedAyah.surahName?.replace('سُورَةُ ', '') || ''}</span>
-                         <span className="text-xs font-semibold uppercase tracking-widest mt-1">Verset {zoomedAyah.numberInSurah}</span>
+                         <span className="font-bold text-base font-arabic leading-none">{zoomedAyah.surahName?.replace('سُورَةُ ', '') || ''}</span>
+                         <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Verset {zoomedAyah.numberInSurah}</span>
                        </div>
                      </div>
                      <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-4 w-full relative z-10" id="zoomed-ayah-actions">
@@ -3329,6 +3397,7 @@ export const QuranFull: React.FC = () => {
                                           const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];
                                           const newTracks = ayahsToAdd.map(ayah => {
                                             const surahId = ayah.surah?.number || activeSurah;
+                                            const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";
                                             return {
                                               id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,
                                               surahNumber: surahId,
@@ -3336,7 +3405,9 @@ export const QuranFull: React.FC = () => {
                                               title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,
                                               url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
                                               artist: "Mishary Rashid Alafasy",
-                                              isQuranVerse: true
+                                              isQuranVerse: true,
+                                              content: ayah.text,
+                                              content_fr: frText
                                             };
                                           });
                                           
@@ -3376,6 +3447,7 @@ export const QuranFull: React.FC = () => {
                                           const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];
                                           const newTracks = ayahsToAdd.map(ayah => {
                                             const surahId = ayah.surah?.number || activeSurah;
+                                            const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";
                                             return {
                                               id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,
                                               surahNumber: surahId,
@@ -3383,7 +3455,9 @@ export const QuranFull: React.FC = () => {
                                               title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,
                                               url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
                                               artist: "Mishary Rashid Alafasy",
-                                              isQuranVerse: true
+                                              isQuranVerse: true,
+                                              content: ayah.text,
+                                              content_fr: frText
                                             };
                                           });
                                           
@@ -3415,7 +3489,7 @@ export const QuranFull: React.FC = () => {
                           )}
                           {user && (
                             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                             <input type="text" placeholder="Nouvelle playlist/collection..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />                          <div className="flex gap-2">                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true                                  };                                });                                await addDoc(collection(db, "ruqyah_playlists"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-emerald-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">Créer Playlist</button>                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true                                  };                                });                                await addDoc(collection(db, "ruqyah_collections"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-blue-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">Créer Collection</button>                          </div>
+                             <input type="text" placeholder="Nouvelle playlist/collection..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />                          <div className="flex gap-2">                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                await addDoc(collection(db, "ruqyah_playlists"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-emerald-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">Créer Playlist</button>                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                await addDoc(collection(db, "ruqyah_collections"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-blue-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">Créer Collection</button>                          </div>
                            </div>
                          )}
                        </div>

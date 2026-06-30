@@ -2,9 +2,11 @@ import React from 'react';
 import { useAudio } from '../contexts/AudioContext';
 import { Play, Pause, SkipForward, SkipBack, X, Volume2, Settings2 } from 'lucide-react';
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export const AudioPlayer: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
+  const location = useLocation();
   const { 
     currentTrack, 
     isPlaying, 
@@ -22,7 +24,7 @@ export const AudioPlayer: React.FC = () => {
     setAudioEffect
   } = useAudio();
 
-  if (!currentTrack) return null;
+  if (!currentTrack || location.pathname === '/tools/ruqyah') return null;
 
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();

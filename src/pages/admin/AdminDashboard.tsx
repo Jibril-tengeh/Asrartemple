@@ -5,7 +5,7 @@ import { AuthModal } from '../../components/AuthModal';
 import { 
   Settings, Users, BarChart3, Database, Shield, LayoutDashboard, 
   Book, ToggleLeft, Volume2, Save, Search, Plus, Trash2, Edit2, FileText,
-  Eye, Image as ImageIcon, Crop as CropIcon, X, Upload
+  Eye, Image as ImageIcon, Crop as CropIcon, X, Upload, ShoppingBag
 } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy, setDoc } from 'firebase/firestore';
@@ -20,7 +20,9 @@ import 'prismjs/themes/prism-tomorrow.css';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-type AdminTab = 'overview' | 'users' | 'community' | 'features' | 'ruqyah' | 'content' | 'notifications' | 'settings' | 'articles';
+import { AdminStoreManager } from '../../components/AdminStoreManager';
+
+type AdminTab = 'overview' | 'users' | 'community' | 'features' | 'ruqyah' | 'content' | 'notifications' | 'settings' | 'articles' | 'store';
 
 interface Article {
   id: string;
@@ -463,8 +465,13 @@ export const AdminDashboard: React.FC = () => {
       if (editingArticle) {
         await updateDoc(doc(db, 'articles', editingArticle.id), {
           title: newArticle.title,
+          title_en: (newArticle as any).title_en || '',
+          title_ha: (newArticle as any).title_ha || '',
           thumbnail: newArticle.thumbnail || '',
           content: newArticle.content,
+          content_en: (newArticle as any).content_en || '',
+          content_ha: (newArticle as any).content_ha || '',
+          benefits: (newArticle as any).benefits || [],
           type: newArticle.type || 'richtext',
           status: newArticle.status || 'Draft',
           publishDate: newArticle.publishDate || '',
@@ -475,8 +482,13 @@ export const AdminDashboard: React.FC = () => {
       } else {
         await addDoc(collection(db, 'articles'), {
           title: newArticle.title,
+          title_en: (newArticle as any).title_en || '',
+          title_ha: (newArticle as any).title_ha || '',
           thumbnail: newArticle.thumbnail || '',
           content: newArticle.content,
+          content_en: (newArticle as any).content_en || '',
+          content_ha: (newArticle as any).content_ha || '',
+          benefits: (newArticle as any).benefits || [],
           type: newArticle.type || 'richtext',
           status: newArticle.status || 'Draft',
           publishDate: newArticle.publishDate || '',
@@ -485,7 +497,7 @@ export const AdminDashboard: React.FC = () => {
         });
         showToast("Article publié avec succès !");
       }
-      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '' });
+      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '', benefits: [] } as any);
       localStorage.removeItem('asrarhub_article_draft');
     } catch (error: any) {
       console.error("Error saving article:", error);
@@ -519,8 +531,13 @@ export const AdminDashboard: React.FC = () => {
     setEditingArticle(article);
     setNewArticle({ 
       title: article.title, 
+      title_en: (article as any).title_en,
+      title_ha: (article as any).title_ha,
       thumbnail: article.thumbnail, 
       content: article.content, 
+      content_en: (article as any).content_en,
+      content_ha: (article as any).content_ha,
+      benefits: (article as any).benefits || [],
       type: article.type,
       status: article.status || 'Draft',
       publishDate: article.publishDate || ''
@@ -534,6 +551,7 @@ export const AdminDashboard: React.FC = () => {
         { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard },
         { id: 'users', label: 'Utilisateurs', icon: Users },
         { id: 'articles', label: 'Articles', icon: FileText },
+        { id: 'store', label: 'Boutique', icon: ShoppingBag },
         { id: 'community', label: 'Communauté', icon: Users },
         { id: 'notifications', label: 'Notifications', icon: Volume2 },
         { id: 'features', label: 'Fonctionnalités', icon: ToggleLeft },
@@ -1018,14 +1036,36 @@ export const AdminDashboard: React.FC = () => {
             </label>
           </div>
 
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nouvel Article</h2>
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+              {['fr', 'en', 'ha'].map(lang => (
+                <button
+                  key={lang}
+                  onClick={() => setActiveLangTab(lang as any)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                    activeLangTab === lang 
+                      ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <input
             type="text"
-            placeholder="Titre de l'article"
-            value={newArticle.title || ''}
-            onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
-            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+            placeholder={`Titre de l'article (${activeLangTab.toUpperCase()})`}
+            value={(activeLangTab === 'fr' ? newArticle.title : (newArticle as any)[`title_${activeLangTab}`]) || ''}
+            onChange={(e) => {
+              if (activeLangTab === 'fr') setNewArticle({ ...newArticle, title: e.target.value });
+              else setNewArticle({ ...newArticle, [`title_${activeLangTab}`]: e.target.value });
+            }}
+            className="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
-          
+
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Image de couverture (Thumbnail)
@@ -1085,15 +1125,21 @@ export const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden min-h-[300px]">
             {newArticle.type === 'richtext' ? (
               <TipTapEditor 
-                value={newArticle.content || ''} 
-                onChange={(val: any) => setNewArticle({ ...newArticle, content: val })} 
+                value={(activeLangTab === 'fr' ? newArticle.content : (newArticle as any)[`content_${activeLangTab}`]) || ''} 
+                onChange={(val: any) => {
+                  if (activeLangTab === 'fr') setNewArticle({ ...newArticle, content: val });
+                  else setNewArticle({ ...newArticle, [`content_${activeLangTab}`]: val });
+                }} 
                 className="h-full"
               />
             ) : (
               <div className="h-[300px] overflow-auto bg-[#2d2d2d]">
                 <SimpleEditor
-                  value={newArticle.content || ''}
-                  onValueChange={(code) => setNewArticle({ ...newArticle, content: code })}
+                  value={(activeLangTab === 'fr' ? newArticle.content : (newArticle as any)[`content_${activeLangTab}`]) || ''}
+                  onValueChange={(code) => {
+                    if (activeLangTab === 'fr') setNewArticle({ ...newArticle, content: code });
+                    else setNewArticle({ ...newArticle, [`content_${activeLangTab}`]: code });
+                  }}
                   highlight={(code) => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
                   padding={15}
                   style={{
@@ -1106,6 +1152,63 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
             )}
+          </div>
+
+          <div className="mt-8 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Recettes et Bienfaits (Benefits)</h3>
+            <div className="space-y-3 mb-4">
+              {((newArticle as any).benefits || []).map((benefit: any, idx: number) => (
+                <div key={idx} className="flex items-center gap-3 bg-white dark:bg-gray-700 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
+                  <select 
+                    value={benefit.icon || 'Star'} 
+                    onChange={(e) => {
+                      const newBenefits = [...((newArticle as any).benefits || [])];
+                      newBenefits[idx].icon = e.target.value;
+                      setNewArticle({ ...newArticle, benefits: newBenefits } as any);
+                    }}
+                    className="bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-sm text-gray-700 dark:text-gray-300 p-2"
+                  >
+                    <option value="Star">Étoile</option>
+                    <option value="Sparkles">Étincelles</option>
+                    <option value="Heart">Coeur</option>
+                    <option value="Shield">Bouclier</option>
+                    <option value="BookOpen">Livre</option>
+                    <option value="Droplets">Gouttes</option>
+                    <option value="Users">Groupe</option>
+                  </select>
+                  <input 
+                    type="text" 
+                    value={benefit.text}
+                    onChange={(e) => {
+                      const newBenefits = [...((newArticle as any).benefits || [])];
+                      newBenefits[idx].text = e.target.value;
+                      setNewArticle({ ...newArticle, benefits: newBenefits } as any);
+                    }}
+                    placeholder="Texte du bienfait..."
+                    className="flex-1 bg-transparent border-none text-sm text-gray-900 dark:text-white focus:ring-0 p-0"
+                  />
+                  <button 
+                    onClick={() => {
+                      const newBenefits = [...((newArticle as any).benefits || [])];
+                      newBenefits.splice(idx, 1);
+                      setNewArticle({ ...newArticle, benefits: newBenefits } as any);
+                    }}
+                    className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const newBenefits = [...((newArticle as any).benefits || []), { text: '', icon: 'Star' }];
+                setNewArticle({ ...newArticle, benefits: newBenefits } as any);
+              }}
+              className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-4 py-2 rounded-xl transition-colors"
+            >
+              <Plus size={16} /> Ajouter un bienfait
+            </button>
           </div>
 
           <div className="flex gap-2">
@@ -1126,7 +1229,7 @@ export const AdminDashboard: React.FC = () => {
               <button
                 onClick={() => {
                   setEditingArticle(null);
-                  setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext' });
+                  setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', benefits: [] } as any);
                 }}
                 className="mt-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
               >
@@ -1454,6 +1557,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'users' && renderUsers()}
         {activeTab === 'articles' && renderArticles()}
+        {activeTab === 'store' && <AdminStoreManager />}
         {activeTab === 'community' && renderCommunity()}
         {activeTab === 'notifications' && renderNotifications()}
         {activeTab === 'features' && renderFeatures()}

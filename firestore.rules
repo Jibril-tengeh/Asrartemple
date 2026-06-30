@@ -57,6 +57,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /halaqat/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if isAdmin();
     }

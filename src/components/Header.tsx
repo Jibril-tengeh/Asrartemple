@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Moon, Sun, Languages, User, Users, Shield, LogOut, LogIn, Bell, Store, ChevronDown, ChevronUp } from 'lucide-react';
+import { Moon, Sun, Languages, User, Users, Shield, LogOut, LogIn, Bell, Store, ChevronDown, ChevronUp, Megaphone, X, ExternalLink } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut, db } from '../lib/firebase';
@@ -22,6 +22,7 @@ export const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [hasUnread, setHasUnread] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
@@ -168,7 +169,9 @@ export const Header: React.FC = () => {
                 >
                   <Bell size={18} />
                   {hasUnread && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-emerald-600 dark:border-emerald-800"></span>
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 text-yellow-900 text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm border border-emerald-600 dark:border-emerald-800">
+                      {notifications.length > 9 ? '9+' : notifications.length}
+                    </span>
                   )}
                 </motion.button>
                 <AnimatePresence>
@@ -315,6 +318,43 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </motion.header>
+
+      <AnimatePresence>
+        {announcementOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-24 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[100]"
+          >
+            <div className="w-full bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-5 rounded-3xl shadow-2xl relative overflow-hidden group">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+              
+              <div className="relative z-10 flex flex-col">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">Annonce Spéciale</div>
+                  <button 
+                    onClick={() => setAnnouncementOpen(false)}
+                    className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <h4 className="font-bold text-xl mb-2 mt-2 leading-tight">Débloquez votre plein potentiel spirituel</h4>
+                <p className="text-blue-100 text-sm mb-4 leading-relaxed">Passez à la version Premium pour accéder aux cours Sirr Al Asrar complets et supprimer ces publicités.</p>
+                <Link 
+                  to="/payment" 
+                  onClick={() => setAnnouncementOpen(false)}
+                  className="w-full text-center bg-white text-indigo-900 px-5 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  Voir les Offres <ExternalLink size={16} />
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

@@ -150,7 +150,6 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   useEffect(() => {
     audioRef.current = new Audio();
-    audioRef.current.crossOrigin = 'anonymous';
     audioRef.current.volume = volume;
 
     const audio = audioRef.current;
@@ -222,23 +221,13 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const loadAudio = async () => {
       if (audioRef.current && currentTrack) {
         const activeUrl = (currentTrack.isCollection && currentTrack.subTracks) 
-          ? (currentTrack.subTracks[currentSubIndex]?.url || currentTrack.url)
+          ? (currentTrack.subTracks[currentSubIndex]?.url || (currentTrack.subTracks[currentSubIndex] as any)?.audioUrl || (currentTrack.subTracks[currentSubIndex] as any)?.file || (currentTrack.subTracks[currentSubIndex] as any)?.src || currentTrack.url)
           : currentTrack.url;
           
         if (!activeUrl) return;
 
         try {
-          const cache = await caches.open('quran-audio-cache');
-          const response = await cache.match(activeUrl);
-          
-          if (response) {
-            const blob = await response.blob();
-            objectUrl = URL.createObjectURL(blob);
-            audioRef.current.src = objectUrl;
-          } else {
-            audioRef.current.src = activeUrl;
-          }
-
+          audioRef.current.src = activeUrl;
           const playPromise = audioRef.current.play();
           if (playPromise !== undefined) {
             playPromise.catch(e => {
@@ -248,15 +237,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             });
           }
         } catch (error) {
-          console.error("Cache error", error);
-          if (audioRef.current) {
-            audioRef.current.src = activeUrl;
-            audioRef.current.play().catch(e => {
-              if (e.name !== 'AbortError' && e.name !== 'NotSupportedError') {
-                console.error("Audio playback error fallback:", e);
-              }
-            });
-          }
+          console.error("Audio playback error:", error);
         }
       }
     };
@@ -373,6 +354,24 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioRef.current.volume = vol;
     }
   };
+
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentTrack) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist || 'Tariqa Tijaniyya',
+        artwork: [
+          { src: currentTrack.coverImage || '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: currentTrack.coverImage || '/icon-512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => resume());
+      navigator.mediaSession.setActionHandler('pause', () => pause());
+      navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
+      navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+    }
+  }, [currentTrack]);
 
   return (
     <AudioContext.Provider value={{

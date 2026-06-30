@@ -50,6 +50,7 @@ import { Onboarding } from './pages/Onboarding';
 import { DailyRewardHandler } from './components/DailyRewardHandler';
 
 import { MaintenanceOverlay } from './components/MaintenanceOverlay';
+import { FloatingBackButton } from './components/FloatingBackButton';
 
 const Store = React.lazy(() => import('./pages/user/Store').then(m => ({ default: m.Store })));
 
@@ -113,6 +114,7 @@ export default function App() {
   return (
     <MaintenanceOverlay>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
+        <FloatingBackButton />
         <Header />
         <DailyRewardHandler />
         <main className={`flex-1 text-gray-900 dark:text-gray-100 pb-20 ${isRuqyahPlayer ? '' : 'pt-20'}`}>

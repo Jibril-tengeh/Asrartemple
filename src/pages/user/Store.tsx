@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment, collection, onSnapshot } from 'firebase/firestore';
 import { ShoppingBag, Star, Shield, Zap, Sparkles, Book, LayoutGrid, Square, List, Heart, Search, ChevronDown, X, Share2, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumBadge } from '../../components/PremiumBadge';
@@ -26,6 +26,18 @@ export const Store: React.FC = () => {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [paystackConfig, setPaystackConfig] = useState({ currency: 'GHS', amount: 150 });
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'store_products'), (snap) => {
+      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setIsLoading(false);
+    }, (err) => {
+      console.error(err);
+      setIsLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     // Attempt to auto-detect country and currency for Paystack
@@ -64,6 +76,11 @@ export const Store: React.FC = () => {
   const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack') => {
     if (!user) {
       alert("Veuillez vous connecter pour effectuer un achat.");
+      return;
+    }
+
+    if (product.affiliateLink && !usePoints) {
+      window.open(product.affiliateLink, '_blank');
       return;
     }
 
@@ -166,13 +183,13 @@ export const Store: React.FC = () => {
 
   const categories = ['Tous', 'Bagues', 'Encens', 'Livres', 'Talismans', 'Numérique', 'Abonnements'];
 
-  const products = [
+  const defaultProducts = [
     {
-      id: 1,
-      name: t('store.items.bagueTitle', 'Bague de Souleymane'),
-      description: t('store.items.bagueDesc', 'Bague gravée avec le sceau de Souleymane pour la protection et l\'ouverture.'),
+      id: 'default1',
+      name: { fr: 'Bague de Souleymane', en: 'Ring of Solomon', ar: 'خاتم سليمان' },
+      description: { fr: 'Bague gravée avec le sceau de Souleymane.', en: 'Ring engraved with the seal of Solomon.', ar: 'خاتم منقوش بخاتم سليمان.' },
       image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop',
-      icon: Shield,
+      iconName: 'Shield',
       color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
       category: 'Bagues',
       date: '2023-01-01',
@@ -181,113 +198,52 @@ export const Store: React.FC = () => {
       pointsCost: 500
     },
     {
-      id: 2,
-      name: t('store.items.encensTitle', 'Encens Bakhour Royal'),
-      description: t('store.items.encensDesc', 'Encens préparé avec des herbes sacrées pour purifier l\'espace avant les rituels.'),
-      image: 'https://images.unsplash.com/photo-1608681290333-e994e432c74d?q=80&w=800&auto=format&fit=crop',
-      icon: Sparkles,
-      color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-      category: 'Encens',
-      date: '2023-05-15',
-      popularity: 92,
-      price: '25€',
-      pointsCost: 250
-    },
-    {
-      id: 3,
-      name: t('store.items.livreTitle', "Livre: Shams al-Ma'arif"),
-      description: t('store.items.livreDesc', "Livre de référence classique de l'ésotérisme (copie traduite et annotée)."),
+      id: 'default2',
+      name: { fr: 'Livre: Shams al-Ma\'arif', en: 'Book: Shams al-Ma\'arif', ar: 'كتاب شمس المعارف' },
+      description: { fr: 'Livre de référence classique.', en: 'Classic reference book.', ar: 'كتاب مرجعي كلاسيكي.' },
       image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop',
-      icon: Book,
+      iconName: 'Book',
       color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
       category: 'Livres',
       date: '2022-11-20',
       popularity: 98,
       price: '40€',
       pointsCost: 400
-    },
-    {
-      id: 4,
-      name: t('store.items.talismanTitle', "Talisman d'Ouverture"),
-      description: t('store.items.talismanDesc', 'Talisman personnalisé préparé selon votre poids mystique (Abjad).'),
-      image: 'https://images.unsplash.com/photo-1590033816738-900406607ea6?q=80&w=800&auto=format&fit=crop',
-      icon: Zap,
-      color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-      category: 'Talismans',
-      date: '2024-02-10',
-      popularity: 75,
-      price: '80€',
-      pointsCost: 800
-    },
-    {
-      id: 5,
-      name: 'E-book : Sirr Al Asrar Avancé',
-      description: 'Découvrez les secrets cachés de la science des lettres et des carrés magiques. Un manuel complet pour les initiés.',
-      image: 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?q=80&w=800&auto=format&fit=crop',
-      icon: Book,
-      color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-      category: 'Numérique',
-      date: '2024-03-01',
-      popularity: 90,
-      price: '15€',
-      pointsCost: 150
-    },
-    {
-      id: 6,
-      name: 'Webinaire Exclusif : Les 99 Noms',
-      description: 'Accès à un webinaire privé sur l\'utilisation des 99 noms d\'Allah dans le zikr et la guérison.',
-      image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop',
-      icon: Play,
-      color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
-      category: 'Numérique',
-      date: '2024-03-10',
-      popularity: 88,
-      price: '30€',
-      pointsCost: 300
-    },
-    {
-      id: 7,
-      name: 'Abonnement Premium (3 Mois)',
-      description: 'Débloquez les tutoriels Sirr Al Asrar avancés, outils illimités, et supprimez toutes les publicités pendant 3 mois. Renouvelable.',
-      image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800&auto=format&fit=crop',
-      icon: Star,
-      color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-      category: 'Abonnements',
-      date: '2024-01-01',
-      popularity: 99,
-      price: '10 USD / 3 mois',
-      pointsCost: null
-    },
-    {
-      id: 8,
-      name: 'Consultation Spirituelle (Pro)',
-      description: 'Consultation personnalisée et accès complet à toutes les fonctionnalités de l\'application (Tiers Pro).',
-      image: 'https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=800&auto=format&fit=crop',
-      icon: Shield,
-      color: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
-      category: 'Abonnements',
-      date: '2024-01-15',
-      popularity: 95,
-      price: '49.99€/mois',
-      pointsCost: null
     }
   ];
 
-  let filteredProducts = products.filter(p => 
-    (selectedCategory === 'Tous' || p.category === selectedCategory) &&
-    (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const currentProducts = products.length > 0 ? products : defaultProducts;
+
+  let filteredProducts = currentProducts.filter(p => {
+    const pName = typeof p.name === 'string' ? p.name : (p.name[document.documentElement.lang] || p.name.fr || '');
+    const pDesc = typeof p.description === 'string' ? p.description : (p.description[document.documentElement.lang] || p.description.fr || '');
+    return (selectedCategory === 'Tous' || p.category === selectedCategory) &&
+    (pName.toLowerCase().includes(searchQuery.toLowerCase()) || pDesc.toLowerCase().includes(searchQuery.toLowerCase()));
+  });
 
   filteredProducts.sort((a, b) => {
     if (sortOption === 'Date') {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     } else if (sortOption === 'Popularité') {
-      return b.popularity - a.popularity;
+      return (b.popularity || 0) - (a.popularity || 0);
     } else if (sortOption === 'Alphabétique') {
-      return a.name.localeCompare(b.name);
+      const aName = typeof a.name === 'string' ? a.name : (a.name[document.documentElement.lang] || a.name.fr || '');
+      const bName = typeof b.name === 'string' ? b.name : (b.name[document.documentElement.lang] || b.name.fr || '');
+      return aName.localeCompare(bName);
     }
     return 0;
   });
+
+  const getLocalizedText = (field: any) => {
+    if (typeof field === 'string') return field;
+    return field?.[document.documentElement.lang] || field?.fr || '';
+  };
+
+  const getProductIcon = (iconName: string) => {
+    const icons: any = { Shield, Sparkles, Book, Zap, Play, Star };
+    return icons[iconName] || Book;
+  };
+
 
   const sortOptions: SortOption[] = ['Date', 'Popularité', 'Alphabétique'];
 
@@ -432,9 +388,12 @@ export const Store: React.FC = () => {
               className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-shadow ${layoutMode === 'list' ? 'flex flex-row items-stretch h-40 sm:h-48' : 'flex flex-col h-full'}`}
             >
               <div className={`relative ${layoutMode === 'list' ? 'w-32 sm:w-48 flex-shrink-0' : 'h-48 w-full'}`}>
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                <div className={`absolute top-3 left-3 w-10 h-10 rounded-xl flex items-center justify-center shadow-md backdrop-blur-md bg-white/80 dark:bg-gray-900/80 ${product.color.split(' ')[1]} ${product.color.split(' ')[3]}`}>
-                  <product.icon size={20} />
+                <img src={product.image} alt={getLocalizedText(product.name)} className="w-full h-full object-cover" />
+                <div className={`absolute top-3 left-3 w-10 h-10 rounded-xl flex items-center justify-center shadow-md backdrop-blur-md bg-white/80 dark:bg-gray-900/80 ${product.color?.split(' ')?.[1] || ''} ${product.color?.split(' ')?.[3] || ''}`}>
+                  {(() => {
+                    const Icon = getProductIcon(product.iconName);
+                    return <Icon size={20} />;
+                  })()}
                 </div>
                 <button
                   onClick={(e) => toggleFavorite(product.id, e)}
@@ -449,9 +408,9 @@ export const Store: React.FC = () => {
               </div>
 
               <div className={`p-4 sm:p-5 flex-1 flex flex-col`}>
-                <h3 className={`font-bold text-gray-900 dark:text-white mb-2 ${layoutMode === 'list' ? 'text-base sm:text-xl' : 'text-lg'}`}>{product.name}</h3>
+                <h3 className={`font-bold text-gray-900 dark:text-white mb-2 ${layoutMode === 'list' ? 'text-base sm:text-xl' : 'text-lg'}`}>{getLocalizedText(product.name)}</h3>
                 <p className={`text-sm text-gray-500 dark:text-gray-400 flex-1 mb-2 ${layoutMode === 'list' ? 'line-clamp-2 sm:line-clamp-3' : 'line-clamp-2'}`}>
-                  {product.description}
+                  {getLocalizedText(product.description)}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{product.price}</span>
@@ -503,7 +462,7 @@ export const Store: React.FC = () => {
               className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="relative h-64 sm:h-80 w-full flex-shrink-0">
-                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                <img src={selectedProduct.image} alt={getLocalizedText(selectedProduct.name)} className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button 
                     onClick={() => handleShare(selectedProduct)}
@@ -519,8 +478,11 @@ export const Store: React.FC = () => {
                     <X size={20} />
                   </button>
                 </div>
-                <div className={`absolute top-4 left-4 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${selectedProduct.color.split(' ')[1]} ${selectedProduct.color.split(' ')[3]}`}>
-                  <selectedProduct.icon size={24} />
+                <div className={`absolute top-4 left-4 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${selectedProduct.color?.split(' ')?.[1] || ''} ${selectedProduct.color?.split(' ')?.[3] || ''}`}>
+                  {(() => {
+                    const Icon = getProductIcon(selectedProduct.iconName);
+                    return <Icon size={24} />;
+                  })()}
                 </div>
               </div>
               <div ref={scrollContainerRef} className="p-6 sm:p-8 overflow-y-auto">
@@ -533,7 +495,7 @@ export const Store: React.FC = () => {
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {selectedProduct.name}
+                  {getLocalizedText(selectedProduct.name)}
                 </h2>
 
                 <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -561,7 +523,7 @@ export const Store: React.FC = () => {
                 </div>
 
                 <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                  {selectedProduct.description} 
+                  {getLocalizedText(selectedProduct.description)} 
                   <br/><br/>
                   {t('store.quickPreview', "Ceci est un aperçu rapide. Pour plus de détails sur l'utilisation et les bienfaits de ce produit, veuillez contacter notre support ou vous référer à la documentation complète une fois acquis.")}
                   <br/><br/>

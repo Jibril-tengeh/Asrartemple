@@ -12,7 +12,11 @@ import {
   Share2,
   AlignLeft,
   ListTree,
-  ChevronDown
+  ChevronDown,
+  Heart,
+  Shield,
+  Droplets,
+  Users
 } from "lucide-react";
 import { getAsrarItems } from "../../data/store";
 import { AsrarItem } from "../../types";
@@ -46,7 +50,7 @@ const AccordionSection: React.FC<{ title: string, htmlContent: string, readingMo
 export const SecretDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [item, setItem] = useState<AsrarItem | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -84,14 +88,17 @@ export const SecretDetail: React.FC = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const hookText = data.content ? data.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
+            const activeTitle = language === 'fr' ? data.title : data[`title_${language}`] || data.title;
+            const activeContent = language === 'fr' ? data.content : data[`content_${language}`] || data.content;
+            
+            const hookText = activeContent ? activeContent.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
             setItem({
               id: docSnap.id,
-              title: data.title,
+              title: activeTitle,
               hook: hookText,
               category: data.category || 'recette',
-              content: data.content,
-              benefits: [],
+              content: activeContent,
+              benefits: data.benefits || [],
               imageUrl: data.thumbnail,
               createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()
             } as AsrarItem);
@@ -108,7 +115,7 @@ export const SecretDetail: React.FC = () => {
     } else {
       setNotFound(true);
     }
-  }, [id]);
+  }, [id, language]);
 
   const toggleBookmark = () => {
     if (!item) return;
@@ -134,19 +141,26 @@ export const SecretDetail: React.FC = () => {
 
   const handleShare = async () => {
     if (!item) return;
+    
+    // Assure that we use the real domain instead of localhost for sharing
+    let shareUrl = window.location.href;
+    if (shareUrl.includes('localhost')) {
+      shareUrl = shareUrl.replace(/^http:\/\/localhost(:\d+)?/, 'https://asrarhub.com');
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: item.title,
           text: `Découvrez "${item.title}" sur AsrarHub - L'outil des chercheurs spirituels.`,
-          url: window.location.href,
+          url: shareUrl,
         });
       } catch (err) {
         console.error("Share error:", err);
       }
     } else {
       // Fallback: Copy to clipboard if Web Share API is not supported
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(shareUrl);
       alert(t("linkCopied", "Lien copié dans le presse-papiers !"));
     }
   };
@@ -180,17 +194,6 @@ export const SecretDetail: React.FC = () => {
       </div>
     );
   }
-
-  const CategoryIcon = () => {
-    switch (item.category) {
-      case "wird":
-        return <ScrollText className="text-blue-500" />;
-      case "secret":
-        return <BookOpen className="text-emerald-500" />;
-      case "recette":
-        return <Sparkles className="text-amber-500" />;
-    }
-  };
 
   return (
     <div
@@ -264,23 +267,6 @@ export const SecretDetail: React.FC = () => {
         <div
           className={`${readingMode ? "p-0 sm:p-2 lg:p-4" : "p-6 md:p-8 lg:p-10"}`}
         >
-          {!readingMode && (
-            <div className="flex items-center space-x-2 mb-5">
-              <span className="inline-flex items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                <CategoryIcon />
-              </span>
-              <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                {t(
-                  item.category === "secret"
-                    ? "secrets"
-                    : item.category === "recette"
-                      ? "recettes"
-                      : "wirds",
-                )}
-              </span>
-            </div>
-          )}
-
           <h1
             className={`font-extrabold mb-6 leading-tight transition-colors ${
               readingMode
@@ -401,29 +387,7 @@ export const SecretDetail: React.FC = () => {
               </div>
             </section>
 
-            {!readingMode && (
-              <section>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5 flex items-center border-b border-gray-100 dark:border-gray-700 pb-3">
-                  <Star className="mr-3 text-yellow-500" size={24} />
-                  {t("benefits")}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {item.benefits.map((benefit, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start bg-gray-50 dark:bg-gray-700/40 p-4 rounded-xl border border-gray-100 dark:border-gray-700/60 shadow-sm"
-                    >
-                      <div className="mt-0.5 text-emerald-500 flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/50 p-1.5 rounded-md mr-3">
-                        <Sparkles size={16} />
-                      </div>
-                      <span className="text-gray-800 dark:text-gray-200 font-medium">
-                        {benefit}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+
           </div>
         </div>
       </div>

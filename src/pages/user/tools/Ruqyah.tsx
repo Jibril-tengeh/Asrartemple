@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check, Music } from 'lucide-react';
+import { Menu, Search, Crown, Heart, Plus, ListMusic, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ChevronDown, MoreVertical, AlignJustify, Volume2, AlarmClock, Settings2, Gauge, Check, Music, BookOpen } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudio } from '../../../contexts/AudioContext';
@@ -41,6 +41,8 @@ export const Ruqyah: React.FC = () => {
   const [newPlaylistCover, setNewPlaylistCover] = useState('');
   const [newPlaylistBg, setNewPlaylistBg] = useState('');
   const [openedPlaylist, setOpenedPlaylist] = useState<any | null>(null);
+  const [mediaMode, setMediaMode] = useState<'audio' | 'text'>('audio');
+  const [openedTextTrack, setOpenedTextTrack] = useState<any | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -128,16 +130,20 @@ export const Ruqyah: React.FC = () => {
   };
 
   const handlePlayToggle = (audio: any, tracksContext: any[], index: number) => {
-    if (currentTrack?.url === audio.url && globalIsPlaying) {
+    const audioUrl = audio.url || audio.audioUrl || audio.file || audio.src || "";
+    const isSameTrack = currentTrack?.id === audio.id || (currentTrack?.url === audioUrl && audioUrl !== "");
+    if (isSameTrack && globalIsPlaying) {
       globalPause();
-    } else if (currentTrack?.url === audio.url && !globalIsPlaying) {
+    } else if (isSameTrack && !globalIsPlaying) {
       globalResume();
     } else {
       const fullPlaylist = tracksContext.map((t, idx) => ({
         id: t.id || `track-${idx}`,
         title: t[`title_${language}`] || t.title || "coran_et_remede",
         artist: t.artist || "<unknown>",
-        url: t.url,
+        url: t.url || t.audioUrl || t.file || t.src || "",
+        isCollection: t.isCollection,
+        subTracks: t.subTracks,
         coverImage: openedPlaylist?.coverImage,
         backgroundImage: openedPlaylist?.backgroundImage
       }));
@@ -156,7 +162,7 @@ export const Ruqyah: React.FC = () => {
   const coverImageUrl = currentTrack?.coverImage || "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=500";
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#121c17] text-white flex flex-col font-sans overflow-hidden bg-cover bg-center transition-all duration-700" style={{ backgroundImage: `url('${bgImageUrl}')` }}>
+    <div className={`fixed inset-0 bg-[#121c17] text-white flex flex-col font-sans overflow-hidden bg-cover bg-center transition-all duration-700 ${isFullPlayer ? 'z-[60]' : 'z-40'}`} style={{ backgroundImage: `url('${bgImageUrl}')` }}>
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
@@ -179,21 +185,31 @@ export const Ruqyah: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="flex items-center px-2 mb-4 overflow-x-auto no-scrollbar">
-                {['Songs', 'Playlists', 'Folders', 'Artists'].map(tab => (
-                  <button 
-                    key={tab}
-                    onClick={() => setActiveTab(tab.toLowerCase() as any)}
-                    className={`px-4 py-2 text-lg whitespace-nowrap transition-all ${activeTab === tab.toLowerCase() ? 'text-white font-bold border-b-2 border-[#41c5c5]' : 'text-white/60 font-medium'}`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+              {/* Media Mode Toggle */}
+              <div className="px-5 mb-2">
+                <div className="flex bg-white/10 rounded-full p-1 w-full max-w-[250px] mx-auto">
+                  <button onClick={() => setMediaMode('audio')} className={`flex-1 py-1.5 rounded-full text-sm font-semibold transition-colors ${mediaMode === 'audio' ? 'bg-gradient-to-r from-[#19a5a5] to-[#0f6b6b] text-white shadow-md' : 'text-white/70 hover:text-white'}`}>Audio</button>
+                  <button onClick={() => setMediaMode('text')} className={`flex-1 py-1.5 rounded-full text-sm font-semibold transition-colors ${mediaMode === 'text' ? 'bg-gradient-to-r from-[#19a5a5] to-[#0f6b6b] text-white shadow-md' : 'text-white/70 hover:text-white'}`}>Lecture</button>
+                </div>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-5 pb-32">
+              {mediaMode === 'audio' ? (
+                <>
+                  {/* Tabs */}
+                  <div className="flex items-center px-2 mb-4 overflow-x-auto no-scrollbar">
+                    {['Songs', 'Playlists', 'Folders', 'Artists'].map(tab => (
+                      <button 
+                        key={tab}
+                        onClick={() => setActiveTab(tab.toLowerCase() as any)}
+                        className={`px-4 py-2 text-lg whitespace-nowrap transition-all ${activeTab === tab.toLowerCase() ? 'text-white font-bold border-b-2 border-[#41c5c5]' : 'text-white/60 font-medium'}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto px-5 pb-32">
                 {activeTab === 'playlists' && (
                   <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="flex justify-between items-center mb-4 mt-2">
@@ -353,7 +369,8 @@ export const Ruqyah: React.FC = () => {
                         }
                         return tracksToShow.map((audio: any, idx: number) => {
                           const title = audio[`title_${language}`] || audio.title;
-                          const isPlayingThis = currentTrack?.url === audio.url;
+                          const audioUrl = audio.url || audio.audioUrl || audio.file || audio.src || "";
+                          const isPlayingThis = currentTrack?.id === audio.id || (currentTrack?.url === audioUrl && audioUrl !== "");
                           return (
                             <div key={idx} className="flex items-center gap-4 group cursor-pointer" onClick={() => handlePlayToggle(audio, tracksToShow, idx)}>
                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isPlayingThis ? 'bg-[#41c5c5]/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
@@ -380,6 +397,29 @@ export const Ruqyah: React.FC = () => {
                   </div>
                 )}
               </div>
+              </>
+              ) : (
+                <div className="flex-1 overflow-y-auto px-5 pb-32 pt-4">
+                  <div className="space-y-4">
+                    {userCollections.length === 0 ? (
+                      <p className="text-white/50 text-center py-10">Aucune collection existante pour la lecture.</p>
+                    ) : (
+                      userCollections.map((collection: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setOpenedTextTrack(collection)}>
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#41c5c5]/20">
+                            <BookOpen className="text-[#41c5c5]" size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white">{collection.name || collection.title || "Collection"}</h3>
+                            <p className="text-sm text-white/50">{collection.tracks?.length || 0} versets</p>
+                          </div>
+                          <ChevronDown size={20} className="text-white/30 -rotate-90" />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Bottom Nav (App mockup inside the UI) */}
               <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#16221c] border-t border-white/5 flex justify-around items-center px-2 pb-safe">
@@ -573,6 +613,33 @@ export const Ruqyah: React.FC = () => {
               >
                 Annuler
               </button>
+            </div>
+          </div>
+        )}
+
+        {openedTextTrack && (
+          <div className="fixed inset-0 z-[110] bg-[#121c17] text-white flex flex-col font-sans overflow-hidden">
+            <div className="px-5 py-4 pt-safe flex items-center justify-between border-b border-white/10 bg-[#16221c]">
+              <button onClick={() => setOpenedTextTrack(null)} className="text-white/90 p-2 -ml-2">
+                <ChevronDown className="rotate-90" size={24} />
+              </button>
+              <h2 className="text-lg font-bold truncate flex-1 text-center pr-8">{openedTextTrack.name || openedTextTrack[`title_${language}`] || openedTextTrack.title || "Collection"}</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 pb-10 space-y-6 bg-[#121c17]">
+              {openedTextTrack.tracks && openedTextTrack.tracks.length > 0 ? (
+                openedTextTrack.tracks.map((track: any, idx: number) => (
+                  <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <h3 className="font-bold text-[#41c5c5] mb-2">{track.title || "Verset"}</h3>
+                    <p className="leading-relaxed text-lg font-medium text-white/90 whitespace-pre-wrap">
+                      {track[`content_${language}`] || track.content || "Veuillez vous référer au Coran pour le texte complet de ce verset."}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="leading-relaxed text-lg font-medium text-white/90 whitespace-pre-wrap">
+                  {openedTextTrack[`content_${language}`] || openedTextTrack.content || "Aucun texte disponible pour cette récitation."}
+                </div>
+              )}
             </div>
           </div>
         )}

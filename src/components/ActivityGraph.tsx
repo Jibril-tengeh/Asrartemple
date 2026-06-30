@@ -12,7 +12,7 @@ export const ActivityGraph: React.FC<ActivityGraphProps> = ({ data }) => {
     return d.toISOString().split('T')[0];
   });
 
-  const maxCount = Math.max(1, ...Object.values(data));
+  const maxCount = Math.max(1, ...(Object.values(data) as number[]));
 
   const getColor = (count: number) => {
     if (count === 0) return 'bg-gray-100 dark:bg-gray-800';

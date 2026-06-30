@@ -3,9 +3,9 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Megaphone, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark, Flame, Shield, RefreshCw } from 'lucide-react';
+import { Search, LayoutGrid, Square, List, Filter, X, BookOpen, Store, Award, MapPin, Trophy, ShieldCheck, ChevronDown, Bookmark, Flame, Shield, RefreshCw } from 'lucide-react';
 import { SecretCard, LayoutMode } from '../../components/SecretCard';
-import { ActivityGraph } from '../../components/ActivityGraph';
+import { HabitTracker } from '../../components/HabitTracker';
 import { getAsrarItems } from '../../data/store';
 import { AsrarItem, Category } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -33,6 +33,41 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   const [quranBookmarks, setQuranBookmarks] = useState<any[]>([]);
   const [lastReadPosition, setLastReadPosition] = useState<{ surahNumber: number, ayahNumberInSurah: number, surahName: string } | null>(null);
   const [activityData, setActivityData] = useState<{ [date: string]: number }>({});
+
+  const [aiSearchResults, setAiSearchResults] = useState<string[] | null>(null);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [isAiSearching, setIsAiSearching] = useState(false);
+
+  const handleAiSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsAiSearching(true);
+    setAiMessage(null);
+    setAiSearchResults(null);
+    try {
+      const payload = {
+        query: searchQuery,
+        availableItems: items.map(i => ({ id: i.id, title: i.title, category: i.category, hook: i.hook }))
+      };
+      
+      const res = await fetch("/api/assistant/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.recommendedIds) {
+        setAiSearchResults(data.recommendedIds);
+      }
+      if (data.message) {
+        setAiMessage(data.message);
+      }
+    } catch (e) {
+      console.error(e);
+      setAiMessage("Une erreur s'est produite lors de la recherche IA.");
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
 
   useEffect(() => {
     setFilter(initialFilter);
@@ -182,15 +217,21 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
   }, [isSearchOpen]);
 
   const filteredItems = items.filter(item => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = !q || [
-      item.title,
-      item.content,
-      item.hook,
-      item.verse,
-      item.reference,
-      ...(item.benefits || [])
-    ].some(field => field?.toLowerCase().includes(q));
+    let matchesSearch = true;
+    
+    if (aiSearchResults) {
+      matchesSearch = aiSearchResults.includes(item.id);
+    } else {
+      const q = searchQuery.toLowerCase();
+      matchesSearch = !q || [
+        item.title,
+        item.content,
+        item.hook,
+        item.verse,
+        item.reference,
+        ...(item.benefits || [])
+      ].some(field => field?.toLowerCase().includes(q));
+    }
     
     let matchesFilter = false;
     if (filter === 'all') matchesFilter = true;
@@ -217,9 +258,6 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Annonce Board */}
         <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-900 dark:to-teal-900 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden text-white flex flex-col justify-between">
-          <div className="absolute top-0 right-0 p-4 opacity-20">
-            <Megaphone size={100} />
-          </div>
           <div className="relative z-10 flex flex-col justify-center mb-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider backdrop-blur-sm">{t('dashboardContent.announcement', 'Annonce')}</span>
@@ -249,11 +287,14 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
             </div>
           )}
         </div>
-
-        <ActivityGraph data={activityData} />
       </div>
 
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Habit Tracker */}
+        <div className="md:col-span-1">
+          <HabitTracker />
+        </div>
+
         {/* My Quran Bookmarks */}
         {quranBookmarks.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -355,18 +396,40 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
                 placeholder={t('dashboardContent.searchPlaceholder', "Mots-clés, sourates, versets...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-full pl-10 pr-10 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm shadow-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAiSearch();
+                }}
+                className="w-full h-full pl-10 pr-20 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none text-sm shadow-sm"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <button
-                onClick={() => {
-                  setIsSearchOpen(false);
-                  setSearchQuery('');
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X size={16} />
-              </button>
+              
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    onClick={handleAiSearch}
+                    disabled={isAiSearching}
+                    className="p-1.5 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors flex items-center justify-center"
+                    title="Recherche Sémantique IA"
+                  >
+                    {isAiSearching ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Flame size={16} />
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery('');
+                    setAiSearchResults(null);
+                    setAiMessage(null);
+                  }}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -492,6 +555,18 @@ export const UserDashboard: React.FC<Props> = ({ initialFilter = 'all' }) => {
           >
             <BookOpen size={16} /> {t('searchButton', 'Rechercher')}
           </Link>
+        </div>
+      )}
+
+      {aiMessage && (
+        <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl flex gap-4">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex flex-shrink-0 items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <Flame size={20} />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-300 mb-1">Assistant Spirituel IA</h3>
+            <p className="text-sm text-emerald-800 dark:text-emerald-400/90 leading-relaxed whitespace-pre-wrap">{aiMessage}</p>
+          </div>
         </div>
       )}
 

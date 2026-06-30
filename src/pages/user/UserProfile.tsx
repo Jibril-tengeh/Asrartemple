@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumBadge } from '../../components/PremiumBadge';
-import { ReferralCenter } from '../../components/ReferralCenter';
 import { AuthModal } from '../../components/AuthModal';
 import { signOut, db, auth } from '../../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -369,7 +368,6 @@ export const UserProfile: React.FC = () => {
       />
 
       <GamificationBadges />
-      <ReferralCenter />
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
 
