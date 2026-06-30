@@ -6,12 +6,14 @@ import { PaystackService } from '../../services/PaystackService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthModal } from '../../components/AuthModal';
 
 export const PaymentPage: React.FC = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const plans = [
     {
@@ -52,7 +54,7 @@ export const PaymentPage: React.FC = () => {
 
   const handleSubscribe = async (plan: any) => {
     if (!user) {
-      alert("Veuillez vous connecter pour vous abonner.");
+      setShowAuthModal(true);
       return;
     }
     
@@ -141,6 +143,8 @@ export const PaymentPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

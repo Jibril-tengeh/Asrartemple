@@ -25,7 +25,7 @@ export const FloatingBackButton: React.FC = () => {
               navigate('/'); // fallback to home
             }
           }}
-          className="fixed left-4 top-1/2 -translate-y-1/2 z-[100] w-14 h-14 flex items-center justify-center bg-black/20 dark:bg-black/40 backdrop-blur-md border border-white/30 dark:border-white/20 rounded-full shadow-lg text-white transition-all hover:bg-black/30 dark:hover:bg-black/60 hover:scale-110 active:scale-95"
+          className="fixed left-4 bottom-24 z-[100] w-14 h-14 flex items-center justify-center bg-black/20 dark:bg-black/40 backdrop-blur-md border border-white/30 dark:border-white/20 rounded-full shadow-lg text-white transition-all hover:bg-black/30 dark:hover:bg-black/60 hover:scale-110 active:scale-95"
           aria-label="Retour"
         >
           <ArrowLeft size={28} className="text-yellow-400 drop-shadow-md animate-pulse" />

@@ -244,12 +244,70 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     loadAudio();
 
+    // Media Session API Setup
+    if ('mediaSession' in navigator && currentTrack) {
+      const activeTitle = (currentTrack.isCollection && currentTrack.subTracks)
+        ? (currentTrack.subTracks[currentSubIndex]?.title || currentTrack.title)
+        : currentTrack.title;
+        
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: activeTitle || 'Unknown Title',
+        artist: currentTrack.artist || 'AsrarHub',
+        artwork: [
+          { src: currentTrack.coverImage || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=500', sizes: '512x512', type: 'image/jpeg' }
+        ]
+      });
+    }
+
     return () => {
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
       }
     };
   }, [currentTrack, currentSubIndex]);
+
+  // Setup Media Session action handlers whenever next/prev/pause/resume are stable or updated
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioRef.current && currentTrack) {
+          audioRef.current.play().catch(e => console.error("Audio playback error:", e));
+        }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      });
+      
+      const handleNext = () => {
+        const { playlist: currentPlaylist, currentIndex: currentIdx, currentSubIndex: currSubIdx, currentTrack: currTrack } = stateRef.current;
+        if (currTrack?.isCollection && currTrack.subTracks && currSubIdx < currTrack.subTracks.length - 1) {
+          setCurrentSubIndex(currSubIdx + 1);
+        } else if (currentIdx < currentPlaylist.length - 1) {
+          const newIndex = currentIdx + 1;
+          setCurrentIndex(newIndex);
+          setCurrentSubIndex(currentPlaylist[newIndex]?.isCollection ? 0 : -1);
+          setCurrentTrack(currentPlaylist[newIndex]);
+        }
+      };
+      
+      const handlePrev = () => {
+        const { playlist: currentPlaylist, currentIndex: currentIdx, currentSubIndex: currSubIdx, currentTrack: currTrack } = stateRef.current;
+        if (currTrack?.isCollection && currTrack.subTracks && currSubIdx > 0) {
+          setCurrentSubIndex(currSubIdx - 1);
+        } else if (currentIdx > 0) {
+          const newIndex = currentIdx - 1;
+          setCurrentIndex(newIndex);
+          setCurrentSubIndex(currentPlaylist[newIndex]?.isCollection ? 0 : -1);
+          setCurrentTrack(currentPlaylist[newIndex]);
+        }
+      };
+
+      navigator.mediaSession.setActionHandler('previoustrack', handlePrev);
+      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+    }
+  }, []);
 
   const playTrack = (track: Track) => {
     setPlaylist([track]);

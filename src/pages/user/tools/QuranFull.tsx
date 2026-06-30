@@ -14,6 +14,7 @@ import { Share } from '@capacitor/share';
 import { downloadAudioForOffline } from '../../../lib/offlineAudio';
 import { DownloadCloud, CheckSquare } from 'lucide-react';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { AuthModal } from '../../../components/AuthModal';
 
 const QURAN_RECITERS = [
   { id: 'alafasy', name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/', apiId: 'ar.alafasy' },
@@ -196,6 +197,7 @@ export const QuranFull: React.FC = () => {
   });
 
   const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   interface RuqyahPlaylist {
     id: string;
@@ -204,22 +206,45 @@ export const QuranFull: React.FC = () => {
     tracks: any[];
   }
 
-  const [roqyaPlaylists, setRoqyaPlaylists] = useState<RuqyahPlaylist[]>([]);
-  const [ruqyahCollections, setRuqyahCollections] = useState<any[]>([]);
+  const [roqyaPlaylists, setRoqyaPlaylists] = useState<RuqyahPlaylist[]>(() => {
+    try {
+      const saved = localStorage.getItem('asrarhub_quran_playlists');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [ruqyahCollections, setRuqyahCollections] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('asrarhub_quran_collections');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('asrarhub_quran_playlists', JSON.stringify(roqyaPlaylists));
+  }, [roqyaPlaylists]);
+
+  useEffect(() => {
+    localStorage.setItem('asrarhub_quran_collections', JSON.stringify(ruqyahCollections));
+  }, [ruqyahCollections]);
 
   useEffect(() => {
     if (!user) {
-      setRoqyaPlaylists([]);
       return;
     }
     const q = query(collection(db, 'ruqyah_playlists'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRoqyaPlaylists(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RuqyahPlaylist)));
+      const firebasePlaylists = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RuqyahPlaylist));
+      if (firebasePlaylists.length > 0) setRoqyaPlaylists(firebasePlaylists);
     });
     
     const qCol = query(collection(db, 'ruqyah_collections'), where('userId', '==', user.uid));
     const unsubscribeCol = onSnapshot(qCol, (snapshot) => {
-      setRuqyahCollections(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const firebaseCollections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (firebaseCollections.length > 0) setRuqyahCollections(firebaseCollections);
     });
     return () => { unsubscribe(); unsubscribeCol(); };
   }, [user]);
@@ -484,6 +509,7 @@ export const QuranFull: React.FC = () => {
   const [showEnglish, setShowEnglish] = useState(false);
   const [showHausa, setShowHausa] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showZoomSettings, setShowZoomSettings] = useState(false);
   const [showMushafSelector, setShowMushafSelector] = useState(false);
   const [showMarkers, setShowMarkers] = useState(false);
   const [readingMode, setReadingMode] = useState<'card' | 'mushaf'>('mushaf');
@@ -565,24 +591,32 @@ export const QuranFull: React.FC = () => {
       source.connect(dest);
       source.connect(audioCtx.destination);
       
-      const canvasStream = canvas.captureStream(30);
+      const canvasStream = canvas.captureStream ? canvas.captureStream(30) : (canvas as any).mozCaptureStream ? (canvas as any).mozCaptureStream(30) : null;
+      if (!canvasStream) throw new Error("L'enregistrement vidéo n'est pas supporté sur ce navigateur.");
+
       const combinedStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
         ...dest.stream.getAudioTracks()
       ]);
       
-      const mimeType = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
-      const recorder = new MediaRecorder(combinedStream, { mimeType });
+      let mimeType = '';
+      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
+      else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
+      else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
+
+      const recorderOptions = mimeType ? { mimeType } : undefined;
+      const recorder = new MediaRecorder(combinedStream, recorderOptions);
       const chunks: BlobPart[] = [];
       
       recorder.ondataavailable = e => chunks.push(e.data);
       
       const recordingEnded = new Promise<{blob: Blob, mimeType: string}>((resolve) => {
         recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: mimeType });
+          const actualMimeType = mimeType || recorder.mimeType || 'video/mp4';
+          const blob = new Blob(chunks, { type: actualMimeType });
           URL.revokeObjectURL(audioObjectUrl);
           audioCtx.close();
-          resolve({blob, mimeType});
+          resolve({blob, mimeType: actualMimeType});
         };
       });
       
@@ -660,9 +694,9 @@ export const QuranFull: React.FC = () => {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erreur lors de la création de la vidéo. Essayez sur un autre navigateur ou appareil.");
+      alert(`Erreur lors de la création de la vidéo: ${err?.message || 'Erreur inconnue'}. Essayez sur un autre navigateur.`);
     } finally {
       setIsGeneratingVideo(false);
     }
@@ -672,9 +706,24 @@ export const QuranFull: React.FC = () => {
   const [zoomedAyahTranslationLang, setZoomedAyahTranslationLang] = useState<'none' | 'fr' | 'en' | 'ha'>('none');
   const [zoomedAyahAspectRatio, setZoomedAyahAspectRatio] = useState<'auto' | '1:1' | '9:16' | '16:9'>('auto');
   const [zoomedArabicSize, setZoomedArabicSize] = useState<number>(36);
+  const [zoomedArabicBold, setZoomedArabicBold] = useState<boolean>(false);
   const [zoomedTranslationSize, setZoomedTranslationSize] = useState<number>(18);
+  const [zoomedAyahTextAlign, setZoomedAyahTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('center');
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
 
+  useEffect(() => {
+    if (zoomedAyah) {
+      if (zoomedAyah.text.length > 300) {
+        setZoomedArabicSize(22);
+      } else if (zoomedAyah.text.length > 200) {
+        setZoomedArabicSize(26);
+      } else if (zoomedAyah.text.length > 100) {
+        setZoomedArabicSize(32);
+      } else {
+        setZoomedArabicSize(36);
+      }
+    }
+  }, [zoomedAyah]);
 
   const ZOOM_BACKGROUNDS = [
     { id: 'default', class: 'bg-white dark:bg-gray-900', iconClass: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700' },
@@ -1546,7 +1595,7 @@ export const QuranFull: React.FC = () => {
               setActiveSurah(null);
             }
           }}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-[110] p-3 sm:p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl rounded-r-3xl border border-l-0 border-white/60 dark:border-gray-700/60 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.15)] text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 group overflow-hidden"
+          className="fixed left-0 top-24 z-[110] p-3 sm:p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl rounded-r-3xl border border-l-0 border-white/60 dark:border-gray-700/60 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.15)] text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 group overflow-hidden"
           title={fullScreenMode ? "Quitter le plein écran" : "Retour"}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-r-3xl pointer-events-none"></div>
@@ -2324,17 +2373,26 @@ export const QuranFull: React.FC = () => {
                    </button>
                    <div className="flex flex-col items-center justify-center min-h-[40vh] sm:min-h-[50vh]">
                      <div id="zoomed-ayah-text"
-                       className={`text-center w-full ${ZOOM_TEXT_COLORS[zoomedAyahColor].class}`} 
-                       dir="rtl"
-                       style={{ 
-                         fontFamily: zoomedAyah.isTajweed ? 'MeQuran' : fontFamily, 
-                         fontSize: zoomedArabicSize + 'px',
-                         lineHeight: '1.8'
-                       }}
+                       className={`w-full flex flex-col gap-6 ${ZOOM_TEXT_COLORS[zoomedAyahColor].class}`} 
                      >
+                       <div
+                         dir="rtl"
+                         className="text-center w-full"
+                         style={{ 
+                           fontFamily: zoomedAyah.isTajweed ? 'MeQuran' : fontFamily, 
+                           fontSize: zoomedArabicSize + 'px',
+                           lineHeight: '1.8'
+                         }}
+                       >
+                         {zoomedAyah.isTajweed ? (
+                           <div className="font-arabic" dangerouslySetInnerHTML={{ __html: zoomedAyah.text.replace(/\[h:(\d+)\[([^\]]+)\]/g, '<span class="tajweed-h$1">$2</span>').replace(/\[(\w+)\[([^\]]+)\]/g, '<span class="tajweed-$1">$2</span>') }} />
+                         ) : (
+                           <p className="font-arabic">{zoomedAyah.text}</p>
+                         )}
+                       </div>
                        
                      {zoomedAyahTranslationLang !== 'none' && (
-                       <div className="mt-6 text-center w-full" style={{ fontSize: zoomedTranslationSize + 'px' }}>
+                       <div className="w-full" dir="ltr" style={{ fontSize: zoomedTranslationSize + 'px', textAlign: zoomedAyahTextAlign }}>
                          <p className="font-sans font-medium text-current opacity-80">
                            {zoomedAyahTranslationLang === 'fr' && surahFrench?.ayahs.find(a => a.numberInSurah === zoomedAyah.numberInSurah)?.text}
                            {zoomedAyahTranslationLang === 'en' && surahEnglish?.ayahs.find(a => a.numberInSurah === zoomedAyah.numberInSurah)?.text}
@@ -2342,12 +2400,6 @@ export const QuranFull: React.FC = () => {
                          </p>
                        </div>
                      )}
-
-                       {zoomedAyah.isTajweed ? (
-                         <div className="font-arabic" dangerouslySetInnerHTML={{ __html: zoomedAyah.text.replace(/\[h:(\d+)\[([^\]]+)\]/g, '<span class="tajweed-h$1">$2</span>').replace(/\[(\w+)\[([^\]]+)\]/g, '<span class="tajweed-$1">$2</span>') }} />
-                       ) : (
-                         <p className="font-arabic">{zoomedAyah.text}</p>
-                       )}
                      </div>
                      <div id="image-footer" style={{ display: 'none' }} className="mt-4 pt-2 w-full flex justify-between items-center opacity-90 z-0 border-t border-emerald-800/20 dark:border-emerald-200/20">
                        <div className="flex items-center gap-4">
@@ -2358,77 +2410,119 @@ export const QuranFull: React.FC = () => {
                          <span className="text-[10px] font-semibold uppercase tracking-widest mt-1">Verset {zoomedAyah.numberInSurah}</span>
                        </div>
                      </div>
-                     <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-4 w-full relative z-10" id="zoomed-ayah-actions">
-                       <div className="w-full flex flex-col gap-4 mb-4">
-                         <div className="flex items-center gap-4 flex-wrap">
-                           <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">Traduction:</span>
-                             <select 
-                               className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
-                               value={zoomedAyahTranslationLang}
-                               onChange={e => setZoomedAyahTranslationLang(e.target.value as any)}
-                             >
-                               <option value="none">Aucune</option>
-                               <option value="fr">Français</option>
-                               <option value="en">English</option>
-                               <option value="ha">Hausa</option>
-                             </select>
-                           </div>
-                           
-                           <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">Format:</span>
-                             <select 
-                               className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
-                               value={zoomedAyahAspectRatio}
-                               onChange={e => setZoomedAyahAspectRatio(e.target.value as any)}
-                             >
-                               <option value="auto">Auto</option>
-                               <option value="1:1">Carré (1:1)</option>
-                               <option value="9:16">Story (9:16)</option>
-                               <option value="16:9">Paysage (16:9)</option>
-                             </select>
-                           </div>
-                         </div>
-                         
-                         <div className="flex items-center gap-4 flex-wrap">
-                           <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
-                             <span className="text-sm font-medium whitespace-nowrap">Taille Arabe:</span>
-                             <input type="range" min="16" max="72" value={zoomedArabicSize} onChange={e => setZoomedArabicSize(Number(e.target.value))} className="w-full" />
-                           </div>
-                           <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
-                             <span className="text-sm font-medium whitespace-nowrap">Taille Trad:</span>
-                             <input type="range" min="12" max="48" value={zoomedTranslationSize} onChange={e => setZoomedTranslationSize(Number(e.target.value))} className="w-full" />
-                           </div>
-                         </div>
-                       </div>
+                      <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-4 w-full relative z-10" id="zoomed-ayah-actions">
+                        <div className="flex items-center justify-between w-full mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Traduction:</span>
+                            <select 
+                              className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
+                              value={zoomedAyahTranslationLang}
+                              onChange={e => setZoomedAyahTranslationLang(e.target.value as any)}
+                            >
+                              <option value="none">Aucune</option>
+                              <option value="fr">Français</option>
+                              <option value="en">English</option>
+                              <option value="ha">Hausa</option>
+                            </select>
+                          </div>
+                          
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setShowZoomSettings(!showZoomSettings); }}
+                            className={`p-2 rounded-full transition-colors ${showZoomSettings ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                            title="Paramètres d'affichage"
+                          >
+                            <Settings size={20} />
+                          </button>
+                        </div>
 
-<div className="flex items-center justify-center gap-4 w-full flex-wrap">
-                       <div className="flex flex-col gap-3 mr-auto">
+                        <AnimatePresence>
+                          {showZoomSettings && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden flex flex-col gap-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">Format:</span>
+                                <select 
+                                  className="bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
+                                  value={zoomedAyahAspectRatio}
+                                  onChange={e => setZoomedAyahAspectRatio(e.target.value as any)}
+                                >
+                                  <option value="auto">Auto</option>
+                                  <option value="1:1">Carré (1:1)</option>
+                                  <option value="9:16">Story (9:16)</option>
+                                  <option value="16:9">Paysage (16:9)</option>
+                                </select>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 flex-wrap">
+                                <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
+                                  <span className="text-sm font-medium whitespace-nowrap">Taille Arabe:</span>
+                                  <input type="range" min="16" max="72" value={zoomedArabicSize} onChange={e => setZoomedArabicSize(Number(e.target.value))} className="w-full" />
+                                </div>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                  <input type="checkbox" id="bold-arabic" checked={zoomedArabicBold} onChange={(e) => setZoomedArabicBold(e.target.checked)} className="rounded border-gray-300 text-emerald-500 focus:ring-emerald-500 bg-transparent" />
+                                  <label htmlFor="bold-arabic" className="text-sm font-medium whitespace-nowrap cursor-pointer ml-2">Gras</label>
+                                </div>
+                                <div className="flex items-center gap-2 w-full sm:w-auto flex-1 min-w-[200px]">
+                                  <span className="text-sm font-medium whitespace-nowrap">Taille Trad:</span>
+                                  <input type="range" min="12" max="48" value={zoomedTranslationSize} onChange={e => setZoomedTranslationSize(Number(e.target.value))} className="w-full" />
+                                </div>
+                              </div>
+                              
+                              {zoomedAyahTranslationLang !== 'none' && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Alignement Trad:</span>
+                                  <div className="flex gap-2 bg-white dark:bg-gray-900 rounded-lg p-1">
+                                    {['left', 'center', 'right', 'justify'].map(align => (
+                                      <button
+                                        key={align}
+                                        onClick={() => setZoomedAyahTextAlign(align as any)}
+                                        className={`px-3 py-1 text-sm rounded ${zoomedAyahTextAlign === align ? 'bg-emerald-500 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                                      >
+                                        {align === 'left' ? 'Gauche' : align === 'center' ? 'Centre' : align === 'right' ? 'Droite' : 'Justifié'}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
-                         <div className="flex items-center gap-2" id="zoomed-bg-selector">
-                           {ZOOM_BACKGROUNDS.map((bg, idx) => (
-                             <button
-                               key={bg.id}
-                               onClick={(e) => { e.stopPropagation(); setZoomedAyahBg(idx); }}
-                               className={`w-8 h-8 rounded-full shadow-sm transition-transform ${zoomedAyahBg === idx ? 'scale-110 ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900' : 'hover:scale-105'} ${bg.iconClass}`}
-                               title={`Arrière-plan ${bg.id}`}
-                             />
-                           ))}
-                         </div>
-                         <div className="flex items-center gap-2" id="zoomed-color-selector">
-                           {ZOOM_TEXT_COLORS.map((color, idx) => (
-                             <button
-                               key={color.id}
-                               onClick={(e) => { e.stopPropagation(); setZoomedAyahColor(idx); }}
-                               className={`w-6 h-6 rounded-full shadow-sm transition-transform ${zoomedAyahColor === idx ? 'scale-125 ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-gray-900' : 'hover:scale-110'} ${color.iconClass}`}
-                               title={`Couleur ${color.id}`}
-                             />
-                           ))}
-                         </div>
-                       </div>
-                       <span className="px-4 py-2 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 rounded-full text-lg font-bold font-arabic">
-                         Verset {zoomedAyah.numberInSurah}
-                       </span>
+                              <div className="flex flex-col gap-3 mt-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Arrière-plan et Couleurs:</span>
+                                <div className="flex flex-wrap gap-4">
+                                  <div className="flex items-center gap-2" id="zoomed-bg-selector">
+                                    {ZOOM_BACKGROUNDS.map((bg, idx) => (
+                                      <button
+                                        key={bg.id}
+                                        onClick={(e) => { e.stopPropagation(); setZoomedAyahBg(idx); }}
+                                        className={`w-8 h-8 rounded-full shadow-sm transition-transform ${zoomedAyahBg === idx ? 'scale-110 ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900' : 'hover:scale-105'} ${bg.iconClass}`}
+                                        title={`Arrière-plan ${bg.id}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <div className="flex items-center gap-2" id="zoomed-color-selector">
+                                    {ZOOM_TEXT_COLORS.map((color, idx) => (
+                                      <button
+                                        key={color.id}
+                                        onClick={(e) => { e.stopPropagation(); setZoomedAyahColor(idx); }}
+                                        className={`w-6 h-6 rounded-full shadow-sm transition-transform ${zoomedAyahColor === idx ? 'scale-125 ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-gray-900' : 'hover:scale-110'} ${color.iconClass}`}
+                                        title={`Couleur ${color.id}`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        <div className="flex items-center justify-center gap-4 w-full flex-wrap mt-2">
+                          <span className="px-4 py-2 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 rounded-full text-lg font-bold font-arabic mr-auto">
+                            Verset {zoomedAyah.numberInSurah}
+                          </span>
                        
                        <button
                          onClick={(e) => {
@@ -2528,6 +2622,10 @@ export const QuranFull: React.FC = () => {
                            <button
                              onClick={(e) => {
                                e.stopPropagation();
+                               if (!user) {
+                                 setShowAuthModal(true);
+                                 return;
+                               }
                                setZoomedAyah(null);
                                setBookmarkModalAyah({
                                  number: zoomedAyah.ayahNumber!,
@@ -2577,6 +2675,10 @@ export const QuranFull: React.FC = () => {
 <button
                              onClick={(e) => {
                                e.stopPropagation();
+                               if (!user) {
+                                 setShowAuthModal(true);
+                                 return;
+                               }
                                setZoomedAyah(null);
                                setPlaylistModalAyah({
                                  number: zoomedAyah.ayahNumber!,
@@ -3309,6 +3411,10 @@ export const QuranFull: React.FC = () => {
                            )}
                            <button
                              onClick={() => {
+                               if (!user) {
+                                 setShowAuthModal(true);
+                                 return;
+                               }
                                const existing = bookmarks.find(b => b.ayahNumber === ayah.number);
                                setBookmarkNote(existing ? existing.note : '');
                                setBookmarkModalAyah(ayah);
@@ -3319,7 +3425,13 @@ export const QuranFull: React.FC = () => {
                              {bookmarks.some(b => b.ayahNumber === ayah.number) ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
                            </button>
                            <button
-                             onClick={() => setPlaylistModalAyah(ayah)}
+                             onClick={() => {
+                               if (!user) {
+                                 setShowAuthModal(true);
+                                 return;
+                               }
+                               setPlaylistModalAyah(ayah);
+                             }}
                              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-emerald-400"
                              title="Ajouter à la playlist Roqya"
                            >
@@ -3378,13 +3490,13 @@ export const QuranFull: React.FC = () => {
                        {playlistModalAyah && (
                    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                      <motion.div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl max-w-md w-full relative">
+                       <button onClick={() => { setPlaylistModalAyah(null); if (selectionMode) { setSelectionMode(false); setSelectedAyahs([]); } }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                         <X size={20} />
+                       </button>
                        <h3 className="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                          <ListPlus className="text-emerald-500" /> Ajouter à la Playlist Roqya
                        </h3>
                        <div className="space-y-4">
-                         {!user ? (
-                            <p className="text-gray-500 text-sm">Veuillez vous connecter pour gérer vos playlists et collections.</p>
-                          ) : (
                             <div className="space-y-4">
                               <div>
                                 <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Playlists existantes</h4>
@@ -3415,9 +3527,13 @@ export const QuranFull: React.FC = () => {
                                           const tracksToAdd = newTracks.filter(t => !existingTrackIds.some(existing => existing.includes(`quran-${t.surahNumber}-${t.ayahNumber}`)));
 
                                           if (tracksToAdd.length > 0) {
-                                            await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
-                                              tracks: [...(p.tracks || []), ...tracksToAdd]
-                                            });
+                                            const updatedTracks = [...(p.tracks || []), ...tracksToAdd];
+                                            setRoqyaPlaylists(prev => prev.map(pl => pl.id === p.id ? { ...pl, tracks: updatedTracks } : pl));
+                                            if (user) {
+                                              await updateDoc(doc(db, 'ruqyah_playlists', p.id), {
+                                                tracks: updatedTracks
+                                              });
+                                            }
                                           }
                                           setPlaylistModalAyah(null);
                                           if (selectionMode) {
@@ -3465,9 +3581,13 @@ export const QuranFull: React.FC = () => {
                                           const tracksToAdd = newTracks.filter(t => !existingTrackIds.some(existing => existing.includes(`quran-${t.surahNumber}-${t.ayahNumber}`)));
 
                                           if (tracksToAdd.length > 0) {
-                                            await updateDoc(doc(db, 'ruqyah_collections', c.id), {
-                                              tracks: [...(c.tracks || []), ...tracksToAdd]
-                                            });
+                                            const updatedTracks = [...(c.tracks || []), ...tracksToAdd];
+                                            setRuqyahCollections(prev => prev.map(cl => cl.id === c.id ? { ...cl, tracks: updatedTracks } : cl));
+                                            if (user) {
+                                              await updateDoc(doc(db, 'ruqyah_collections', c.id), {
+                                                tracks: updatedTracks
+                                              });
+                                            }
                                           }
                                           setPlaylistModalAyah(null);
                                           if (selectionMode) {
@@ -3486,12 +3606,9 @@ export const QuranFull: React.FC = () => {
                                 )}
                               </div>
                             </div>
-                          )}
-                          {user && (
-                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                             <input type="text" placeholder="Nouvelle playlist/collection..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />                          <div className="flex gap-2">                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                await addDoc(collection(db, "ruqyah_playlists"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-emerald-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">Créer Playlist</button>                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                await addDoc(collection(db, "ruqyah_collections"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                });                                setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-blue-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">Créer Collection</button>                          </div>
+                          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                             <input type="text" placeholder="Nouvelle playlist/collection..." value={newPlaylistName} onChange={(e) => setNewPlaylistName(e.target.value)} className="w-full p-2 mb-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-emerald-500 text-gray-900 dark:text-white" />                          <div className="flex gap-2">                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                const newPlaylist = { id: `local_playlist_${Date.now()}`, name: newPlaylistName.trim(), tracks: newTracks, isCollection: false }; setRoqyaPlaylists(prev => [...prev, newPlaylist as any]); if (user) { await addDoc(collection(db, "ruqyah_playlists"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                }); }                               setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-emerald-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">Créer Playlist</button>                            <button onClick={async () => {                              if (newPlaylistName.trim()) {                                const ayahsToAdd = selectionMode && selectedAyahs.length > 0 ? selectedAyahs : [playlistModalAyah];                                const newTracks = ayahsToAdd.map(ayah => {                                  const surahId = ayah.surah?.number || activeSurah;                                  const frText = surahFrench?.ayahs.find((a: any) => a.numberInSurah === ayah.numberInSurah)?.text || "";                                  return {                                    id: `quran-${surahId}-${ayah.numberInSurah}-${Date.now()}`,                                    surahNumber: surahId,                                    ayahNumber: ayah.numberInSurah,                                    title: `Surah ${surahTranslations[surahId]?.fr || surahId} - Ayah ${ayah.numberInSurah}`,                                    url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,                                    artist: "Mishary Rashid Alafasy",                                    isQuranVerse: true, content: ayah.text, content_fr: frText                                  };                                });                                const newCollection = { id: `local_collection_${Date.now()}`, name: newPlaylistName.trim(), tracks: newTracks, isCollection: true }; setRuqyahCollections(prev => [...prev, newCollection]); if (user) { await addDoc(collection(db, "ruqyah_collections"), {                                  userId: user.uid,                                  name: newPlaylistName.trim(),                                  tracks: newTracks,                                  createdAt: serverTimestamp()                                }); }                               setNewPlaylistName("");                                setPlaylistModalAyah(null);                                if (selectionMode) {                                  setSelectionMode(false);                                  setSelectedAyahs([]);                                }                              }                            }} className="flex-1 bg-blue-500 text-white p-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">Créer Collection</button>                          </div>
                            </div>
-                         )}
                        </div>
                        <button onClick={() => setPlaylistModalAyah(null)} className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white"><X size={20} /></button>
                      </motion.div>
@@ -3657,6 +3774,8 @@ export const QuranFull: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

@@ -20,8 +20,10 @@ import {
 } from "lucide-react";
 import { getAsrarItems } from "../../data/store";
 import { AsrarItem } from "../../types";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { useAuth } from '../../contexts/AuthContext';
+import { AuthModal } from '../../components/AuthModal';
 
 const AccordionSection: React.FC<{ title: string, htmlContent: string, readingMode: boolean }> = ({ title, htmlContent, readingMode }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,12 +53,15 @@ export const SecretDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [item, setItem] = useState<AsrarItem | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   const [readingMode, setReadingMode] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [viewMode, setViewMode] = useState<'full' | 'accordion'>('full');
+  const [rating, setRating] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     // Scroll to top when loading
@@ -197,7 +202,7 @@ export const SecretDetail: React.FC = () => {
 
   return (
     <div
-      className={`mx-auto p-4 sm:p-6 lg:p-8 pb-24 transition-colors duration-500 ${readingMode ? "bg-[#fdfbf7] dark:bg-[#1a1917] min-h-screen" : "max-w-3xl"}`}
+      className={`mx-auto px-4 pt-0 sm:px-6 sm:pt-2 lg:px-8 pb-24 transition-colors duration-500 ${readingMode ? "bg-[#fdfbf7] dark:bg-[#1a1917] min-h-screen" : "max-w-3xl"}`}
     >
       <div
         className={`flex items-center justify-between mb-6 ${readingMode ? "max-w-3xl mx-auto" : ""}`}
@@ -233,13 +238,6 @@ export const SecretDetail: React.FC = () => {
             title={t("readingMode", "Mode Lecture")}
           >
             <BookType size={22} />
-          </button>
-          <button
-            onClick={handleShare}
-            className={`p-2 rounded-full transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400`}
-            title={t("share", "Partager")}
-          >
-            <Share2 size={22} />
           </button>
           <button
             onClick={toggleBookmark}
@@ -387,10 +385,46 @@ export const SecretDetail: React.FC = () => {
               </div>
             </section>
 
-
+            {/* Rating Section */}
+            <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex flex-col items-center justify-center">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Évaluez cet article</h3>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => {
+                        if (!user) {
+                          setShowAuthModal(true);
+                          return;
+                        }
+                        setRating(star);
+                      }}
+                      className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <Star
+                        size={32}
+                        className={`${
+                          (rating || 0) >= star
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300 dark:text-gray-600"
+                        } transition-colors`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p className="text-emerald-600 dark:text-emerald-400 text-sm mt-3 font-medium">
+                    Merci pour votre évaluation ! ({rating}/5)
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

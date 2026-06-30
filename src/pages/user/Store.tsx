@@ -7,6 +7,7 @@ import { ShoppingBag, Star, Shield, Zap, Sparkles, Book, LayoutGrid, Square, Lis
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumBadge } from '../../components/PremiumBadge';
 import { PaystackService } from '../../services/PaystackService';
+import { AuthModal } from '../../components/AuthModal';
 
 type LayoutMode = 'grid1' | 'grid2' | 'list';
 type SortOption = 'Date' | 'Popularité' | 'Alphabétique';
@@ -23,6 +24,7 @@ export const Store: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [productRatings, setProductRatings] = useState<Record<number, number>>({});
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [paystackConfig, setPaystackConfig] = useState({ currency: 'GHS', amount: 150 });
@@ -75,7 +77,7 @@ export const Store: React.FC = () => {
 
   const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack') => {
     if (!user) {
-      alert("Veuillez vous connecter pour effectuer un achat.");
+      setShowAuthModal(true);
       return;
     }
 
@@ -183,36 +185,7 @@ export const Store: React.FC = () => {
 
   const categories = ['Tous', 'Bagues', 'Encens', 'Livres', 'Talismans', 'Numérique', 'Abonnements'];
 
-  const defaultProducts = [
-    {
-      id: 'default1',
-      name: { fr: 'Bague de Souleymane', en: 'Ring of Solomon', ar: 'خاتم سليمان' },
-      description: { fr: 'Bague gravée avec le sceau de Souleymane.', en: 'Ring engraved with the seal of Solomon.', ar: 'خاتم منقوش بخاتم سليمان.' },
-      image: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop',
-      iconName: 'Shield',
-      color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-      category: 'Bagues',
-      date: '2023-01-01',
-      popularity: 85,
-      price: '50€',
-      pointsCost: 500
-    },
-    {
-      id: 'default2',
-      name: { fr: 'Livre: Shams al-Ma\'arif', en: 'Book: Shams al-Ma\'arif', ar: 'كتاب شمس المعارف' },
-      description: { fr: 'Livre de référence classique.', en: 'Classic reference book.', ar: 'كتاب مرجعي كلاسيكي.' },
-      image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop',
-      iconName: 'Book',
-      color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-      category: 'Livres',
-      date: '2022-11-20',
-      popularity: 98,
-      price: '40€',
-      pointsCost: 400
-    }
-  ];
-
-  const currentProducts = products.length > 0 ? products : defaultProducts;
+  const currentProducts = products;
 
   let filteredProducts = currentProducts.filter(p => {
     const pName = typeof p.name === 'string' ? p.name : (p.name[document.documentElement.lang] || p.name.fr || '');
@@ -409,9 +382,16 @@ export const Store: React.FC = () => {
 
               <div className={`p-4 sm:p-5 flex-1 flex flex-col`}>
                 <h3 className={`font-bold text-gray-900 dark:text-white mb-2 ${layoutMode === 'list' ? 'text-base sm:text-xl' : 'text-lg'}`}>{getLocalizedText(product.name)}</h3>
-                <p className={`text-sm text-gray-500 dark:text-gray-400 flex-1 mb-2 ${layoutMode === 'list' ? 'line-clamp-2 sm:line-clamp-3' : 'line-clamp-2'}`}>
-                  {getLocalizedText(product.description)}
-                </p>
+                
+                <div className="flex items-center gap-1 mb-3 text-amber-400">
+                  <Star size={16} className="fill-amber-400" />
+                  <Star size={16} className="fill-amber-400" />
+                  <Star size={16} className="fill-amber-400" />
+                  <Star size={16} className="fill-amber-400" />
+                  <Star size={16} className="fill-amber-400" />
+                  <span className="text-xs text-gray-500 ml-1">(5.0)</span>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{product.price}</span>
                   {product.pointsCost && (
@@ -464,13 +444,6 @@ export const Store: React.FC = () => {
               <div className="relative h-64 sm:h-80 w-full flex-shrink-0">
                 <img src={selectedProduct.image} alt={getLocalizedText(selectedProduct.name)} className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button 
-                    onClick={() => handleShare(selectedProduct)}
-                    className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-                    title={t('common.share', "Partager")}
-                  >
-                    <Share2 size={20} />
-                  </button>
                   <button 
                     onClick={() => setSelectedProduct(null)}
                     className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 transition-colors"
@@ -534,7 +507,7 @@ export const Store: React.FC = () => {
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus.
                 </p>
 
-                <div className="mb-8">
+                <div className="mb-8 mt-12 pt-8 border-t border-gray-100 dark:border-gray-700">
                   <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('store.rateSpiritual', "Évaluer l'efficacité spirituelle :")}</div>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -582,13 +555,6 @@ export const Store: React.FC = () => {
                   )}
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => handleShare(selectedProduct)}
-                      className="w-14 sm:w-16 flex items-center justify-center rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      title={t('common.share', "Partager")}
-                    >
-                      <Share2 size={24} className="text-gray-500 dark:text-gray-400" />
-                    </button>
-                    <button 
                       onClick={() => toggleFavorite(selectedProduct.id, { stopPropagation: () => {} } as any)}
                       className={`w-14 sm:w-16 flex items-center justify-center rounded-xl border-2 transition-colors ${
                         favorites.includes(selectedProduct.id) 
@@ -605,6 +571,8 @@ export const Store: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

@@ -42,6 +42,20 @@ export default defineConfig(() => {
               },
             },
             {
+              urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "firestore-cache",
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
               urlPattern: /^https:\/\/api\.alquran\.cloud\/.*/i,
               handler: "CacheFirst",
               options: {
@@ -82,6 +96,20 @@ export default defineConfig(() => {
                   statuses: [0, 200],
                 },
                 rangeRequests: true,
+              },
+            },
+            {
+              urlPattern: /^https:\/\/(images\.unsplash\.com|firebasestorage\.googleapis\.com)\/.*/i,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "images-cache",
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
               },
             },
           ],
