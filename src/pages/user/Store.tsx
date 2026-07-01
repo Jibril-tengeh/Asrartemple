@@ -42,37 +42,8 @@ export const Store: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Attempt to auto-detect country and currency for Paystack
-    const detectCountry = async () => {
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        const countryCode = data.country_code; // e.g. "GH", "NG", "ZA", "KE", "CI", "SN"
-
-        let currency = 'GHS';
-        let amount = 150; // default 150 GHS (approx 10 USD)
-
-        switch(countryCode) {
-          case 'GH': currency = 'GHS'; amount = 150; break;
-          case 'NG': currency = 'NGN'; amount = 15000; break;
-          case 'ZA': currency = 'ZAR'; amount = 200; break;
-          case 'KE': currency = 'KES'; amount = 1500; break;
-          // For Francophone West/Central Africa
-          case 'CI': case 'SN': case 'ML': case 'BF': case 'TG': case 'BJ': case 'NE': case 'GW':
-            currency = 'XOF'; amount = 6000; break;
-          case 'CM': case 'GA': case 'CG': case 'TD': case 'CF': case 'GQ':
-            currency = 'XAF'; amount = 6000; break;
-          case 'RW': currency = 'RWF'; amount = 13000; break;
-          case 'UG': currency = 'UGX'; amount = 38000; break;
-          default: currency = 'USD'; amount = 10; break;
-        }
-        
-        setPaystackConfig({ currency, amount });
-      } catch (e) {
-        console.error("Could not detect country, defaulting to GHS", e);
-      }
-    };
-    detectCountry();
+    // Default to GHS as requested
+    setPaystackConfig({ currency: 'GHS', amount: 200 });
   }, []);
 
   const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack' | 'visa' | 'crypto') => {
@@ -547,30 +518,6 @@ export const Store: React.FC = () => {
                   )}
                   {selectedProduct.category === 'Abonnements' ? (
                     <div className="flex flex-col flex-1 gap-2">
-                      <div className="flex flex-col sm:flex-row items-center gap-2 mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Devise (Paystack) :</label>
-                        <select 
-                          value={paystackConfig.currency}
-                          onChange={(e) => {
-                            const currency = e.target.value;
-                            // Set a dummy amount based on currency just for UI, accurate amount calculated on click if needed
-                            let amount = 150;
-                            if (currency === 'XOF' || currency === 'XAF') amount = 6000;
-                            if (currency === 'NGN') amount = 15000;
-                            if (currency === 'USD') amount = 10;
-                            setPaystackConfig({ currency, amount });
-                          }}
-                          className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none w-full sm:w-auto"
-                        >
-                          <option value="USD">USD ($)</option>
-                          <option value="XOF">XOF (FCFA)</option>
-                          <option value="XAF">XAF (FCFA)</option>
-                          <option value="EUR">EUR (€)</option>
-                          <option value="NGN">NGN (₦)</option>
-                          <option value="GHS">GHS (GH₵)</option>
-                          <option value="ZAR">ZAR (R)</option>
-                        </select>
-                      </div>
                       <button 
                         onClick={() => handlePurchase(selectedProduct, false, 'paystack')}
                         className="py-3 bg-[#0BA4DB] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#0983AF]"
