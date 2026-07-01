@@ -129,6 +129,42 @@ Votre message ici...
     }
   });
 
+  // AI FAQ Assistant
+  app.post("/api/assistant/faq", async (req, res) => {
+    try {
+      const { question, language } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `
+Vous êtes un expert spirituel islamique et un guide bienveillant sur l'application AsrarHub.
+L'utilisateur pose la question suivante : "${question}"
+La langue de l'utilisateur est : "${language || 'fr'}" (traduisez la réponse finale dans cette langue).
+
+Règles de comportement et formatage (TRÈS IMPORTANT) :
+1. **Professionnalisme et Empathie** : Répondez de manière très professionnelle, détaillée, bien structurée, claire, concise et apaisante. Ne soyez jamais familier.
+2. **Formatage Markdown** : Utilisez correctement le Markdown.
+3. **Titres avec Emojis** : TOUS vos titres (de H1 à H6, ex: #, ##, ###) doivent être bien stylisés et TOUJOURS accompagnés d'un emoji approprié (ex: "## 🌟 L'importance du Tawakkul").
+4. **Textes Sacrés** : Lorsque vous citez des Sourates, Versets Coraniques ou des Douas (invocations), VOUS DEVEZ OBLIGATOIREMENT les écrire d'abord en Arabe (avec le texte original), puis fournir la traduction juste en dessous dans la langue choisie par l'utilisateur (${language || 'fr'}).
+5. **Précision** : Utilisez la terminologie islamique appropriée (wird, zikr, baraka, etc.).
+6. **Limites** : Restez dans le contexte de la spiritualité, des prières et des invocations. Ne pas inventer de verdicts religieux (fatwa).
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      res.json({ answer: response.text });
+    } catch (error: any) {
+      console.error("AI FAQ error:", error);
+      res.status(500).json({ error: "Failed to generate answer" });
+    }
+  });
+
   // Paystack verification
   app.post("/api/verify-paystack", async (req, res) => {
     try {

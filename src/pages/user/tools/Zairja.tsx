@@ -1,14 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Hexagon, ArrowLeft, Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Hexagon, ArrowLeft, Send, Download, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
+import html2canvas from 'html2canvas';
 
 export const Zairja: React.FC = () => {
   const { t } = useLanguage();
   const [question, setQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [answer, setAnswer] = useState<{ crypted: string; clear: string } | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const downloadImage = async () => {
+    if (!resultRef.current) return;
+    try {
+      const canvas = await html2canvas(resultRef.current, { backgroundColor: '#18181b' });
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'zairja-result.png';
+      link.href = url;
+      link.click();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const shareResult = async () => {
+    if (!resultRef.current) return;
+    try {
+      const canvas = await html2canvas(resultRef.current, { backgroundColor: '#18181b' });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'zairja-result.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Zairja Oracle',
+            text: 'Voici la réponse de la Zairja de Tlemsani.',
+            files: [file]
+          });
+        } else {
+          alert('Le partage direct n\'est pas supporté sur ce navigateur.');
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
   
   // Scramble state
   const [scrambleText, setScrambleText] = useState('');
@@ -146,9 +184,9 @@ export const Zairja: React.FC = () => {
             key="answer"
             initial={{ opacity: 0, scale: 0.9 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-8 relative"
+            className="mt-8 relative flex flex-col items-center gap-6"
           >
-            <div className="bg-zinc-50 dark:bg-zinc-900/80 rounded-3xl p-6 sm:p-10 border-2 border-zinc-200 dark:border-zinc-700 text-center shadow-2xl backdrop-blur-sm">
+            <div ref={resultRef} className="bg-zinc-50 dark:bg-zinc-900/80 rounded-3xl p-6 sm:p-10 border-2 border-zinc-200 dark:border-zinc-700 text-center shadow-2xl backdrop-blur-sm w-full">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-4">Corde Numérique Extraite</h3>
                 <p className="font-mono text-lg sm:text-xl tracking-[0.4em] text-zinc-400 mb-8 blur-[2px] transition-all duration-500 hover:blur-none select-all relative group cursor-pointer">
@@ -165,6 +203,17 @@ export const Zairja: React.FC = () => {
                   « {answer.clear} »
                 </p>
               </motion.div>
+            </div>
+            
+            <div className="flex gap-4 mt-4">
+              <button onClick={downloadImage} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-zinc-800 text-white hover:bg-zinc-700 font-semibold transition-colors shadow-lg">
+                <Download size={20} />
+                {t('zairja.download', 'Enregistrer')}
+              </button>
+              <button onClick={shareResult} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold transition-colors shadow-lg">
+                <Share2 size={20} />
+                {t('zairja.share', 'Partager')}
+              </button>
             </div>
           </motion.div>
         )}

@@ -11,12 +11,12 @@ import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy, setDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { TipTapEditor } from '../../components/TipTapEditor';
-import SimpleEditor from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-markup';
-import 'prismjs/themes/prism-tomorrow.css';
+// import SimpleEditor from 'react-simple-code-editor';
+// import Prism from 'prismjs';
+// import 'prismjs/components/prism-javascript';
+// import 'prismjs/components/prism-css';
+// import 'prismjs/components/prism-markup';
+// import 'prismjs/themes/prism-tomorrow.css';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -27,6 +27,7 @@ type AdminTab = 'overview' | 'users' | 'community' | 'features' | 'ruqyah' | 'co
 interface Article {
   id: string;
   title: string;
+  hook?: string;
   thumbnail: string;
   content: string;
   type: 'richtext' | 'code';
@@ -125,7 +126,7 @@ export const AdminDashboard: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [newArticle, setNewArticle] = useState<Partial<Article>>({
-    title: '', thumbnail: '', content: '', type: 'richtext'
+    title: '', hook: '', thumbnail: '', content: '', type: 'richtext'
   });
   const [showPreview, setShowPreview] = useState(false);
   const [draftSavedMessage, setDraftSavedMessage] = useState('');
@@ -465,6 +466,9 @@ export const AdminDashboard: React.FC = () => {
       if (editingArticle) {
         await updateDoc(doc(db, 'articles', editingArticle.id), {
           title: newArticle.title,
+          hook: newArticle.hook || '',
+          hook_en: (newArticle as any).hook_en || '',
+          hook_ha: (newArticle as any).hook_ha || '',
           title_en: (newArticle as any).title_en || '',
           title_ha: (newArticle as any).title_ha || '',
           thumbnail: newArticle.thumbnail || '',
@@ -482,6 +486,9 @@ export const AdminDashboard: React.FC = () => {
       } else {
         await addDoc(collection(db, 'articles'), {
           title: newArticle.title,
+          hook: newArticle.hook || '',
+          hook_en: (newArticle as any).hook_en || '',
+          hook_ha: (newArticle as any).hook_ha || '',
           title_en: (newArticle as any).title_en || '',
           title_ha: (newArticle as any).title_ha || '',
           thumbnail: newArticle.thumbnail || '',
@@ -497,7 +504,7 @@ export const AdminDashboard: React.FC = () => {
         });
         showToast("Article publié avec succès !");
       }
-      setNewArticle({ title: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '', benefits: [] } as any);
+      setNewArticle({ title: '', hook: '', thumbnail: '', content: '', type: 'richtext', status: 'Draft', publishDate: '', benefits: [] } as any);
       localStorage.removeItem('asrarhub_article_draft');
     } catch (error: any) {
       console.error("Error saving article:", error);
@@ -531,6 +538,7 @@ export const AdminDashboard: React.FC = () => {
     setEditingArticle(article);
     setNewArticle({ 
       title: article.title, 
+      hook: (article as any).hook,
       title_en: (article as any).title_en,
       title_ha: (article as any).title_ha,
       thumbnail: article.thumbnail, 
@@ -540,7 +548,8 @@ export const AdminDashboard: React.FC = () => {
       benefits: (article as any).benefits || [],
       type: article.type,
       status: article.status || 'Draft',
-      publishDate: article.publishDate || ''
+      publishDate: article.publishDate || '',
+      isPremium: (article as any).isPremium || false
     });
     setActiveTab('articles');
   };
@@ -819,34 +828,44 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const ALL_USER_TOOLS = [
+    { id: 'explore', label: 'Explore', desc: 'Dashboard explorer (Secrets, Lexique, etc)' },
+    { id: 'store', label: 'Store (Boutique)', desc: 'Boutique en ligne' },
+    { id: 'community', label: 'Communauté', desc: 'Forum communautaire' },
+    { id: 'journal', label: 'Journal Intime', desc: 'Notes personnelles' },
+    { id: 'faq', label: 'FAQ / Assistant', desc: 'Assistant IA spirituel' },
+    { id: 'quizz', label: 'Quiz', desc: 'Test de connaissances' },
+    { id: 'lexique', label: 'Lexique', desc: 'Lexique des termes' },
+    { id: 'calendar', label: 'Calendrier', desc: 'Calendrier Hégirien' },
     { id: 'ruqyah', label: 'Module Ruqyah', desc: 'Accès aux versets de protection et guérison' },
     { id: 'abjad', label: 'Calculateur Abjad', desc: 'Outil de numérologie arabe' },
     { id: 'dreams', label: 'Journal des Rêves', desc: 'Fonctionnalité de suivi et interprétation' },
     { id: 'zakat', label: 'Calculateur Zakat', desc: 'Module de calcul des aumônes' },
-    { id: 'asma', label: 'Asma al-Husna', desc: 'Les 99 Noms d\'Allah et leurs secrets' },
+    { id: 'asma', label: 'Noms Divins Personnels', desc: 'Découvrez vos noms divins correspondants au poids mystique' },
+    { id: '99names', label: 'Les 99 Noms d\'Allah', desc: 'Les Noms Sublimes (Asma al-Husna)' },
     { id: 'awfaq', label: 'Awfaq Advanced', desc: 'Générateur de carrés magiques' },
-    { id: 'dhikr', label: 'Daily Dhikr Tracker', desc: 'Suivi quotidien des invocations' },
-    { id: 'elements', label: 'Elemental Analyzer', desc: 'Analyse des 4 éléments' },
+    { id: 'daily-dhikr', label: 'Daily Dhikr Tracker', desc: 'Suivi quotidien des invocations' },
+    { id: 'elemental', label: 'Elemental Analyzer', desc: 'Analyse des 4 éléments' },
     { id: 'faraid', label: 'Faraid Calculator', desc: 'Calcul de l\'héritage islamique' },
     { id: 'geomancy', label: 'Geomancy', desc: 'Outil de géomancie (Ilm al-Raml)' },
-    { id: 'grandoaths', label: 'Grand Oaths', desc: 'Grands serments spirituels' },
-    { id: 'ilmjafar', label: 'Ilm Jafar', desc: 'Science des lettres et des nombres' },
+    { id: 'grand-oaths', label: 'Grand Oaths', desc: 'Grands serments spirituels' },
+    { id: 'ilm-jafar', label: 'Ilm Jafar', desc: 'Science des lettres et des nombres' },
     { id: 'istikhara', label: 'Istikhara', desc: 'Outil de consultation' },
     { id: 'khatim', label: 'Khatim Generator', desc: 'Générateur de sceaux' },
     { id: 'khouddam', label: 'Khouddam Extractor', desc: 'Extraction des serviteurs spirituels' },
-    { id: 'lunarmansions', label: 'Lunar Mansions', desc: 'Les demeures lunaires' },
-    { id: 'wird', label: 'Personal Wird', desc: 'Générateur de Wird personnel' },
+    { id: 'lunar-mansions', label: 'Lunar Mansions', desc: 'Les demeures lunaires' },
+    { id: 'personal-wird', label: 'Personal Wird', desc: 'Générateur de Wird personnel' },
     { id: 'planetary', label: 'Planetary Hours', desc: 'Heures planétaires' },
     { id: 'quran', label: 'Quran Full', desc: 'Explorateur du Coran' },
-    { id: 'quranicfaal', label: 'Quranic Faal', desc: 'Tirage de sorts coraniques' },
+    { id: 'quranic-faal', label: 'Quranic Faal', desc: 'Tirage de sorts coraniques' },
     { id: 'rouhaniyya', label: 'Rouhaniyya Extractor', desc: 'Extraction spirituelle' },
-    { id: 'scienceofletters', label: 'Science of Letters', desc: 'Science des lettres (Ilm al-Huruf)' },
-    { id: 'sirralasrar', label: 'Sirr Al Asrar', desc: 'Le secret des secrets' },
-    { id: 'compatibility', label: 'Spiritual Compatibility', desc: 'Compatibilité spirituelle' },
+    { id: 'letters', label: 'Science of Letters', desc: 'Science des lettres (Ilm al-Huruf)' },
+    { id: 'sirr', label: 'Sirr Al Asrar', desc: 'Le secret des secrets' },
+    { id: 'spiritual-compatibility', label: 'Spiritual Compatibility', desc: 'Compatibilité spirituelle' },
     { id: 'taksir', label: 'Taksir', desc: 'Brisement des lettres' },
     { id: 'talsam', label: 'Talsam', desc: 'Générateur de talismans' },
     { id: 'tasbih', label: 'Tasbih', desc: 'Chapelet virtuel' },
-    { id: 'zairja', label: 'Zairja', desc: 'Machine divinatoire' }
+    { id: 'zairja', label: 'Zairja', desc: 'Machine divinatoire' },
+    { id: 'halaqat', label: 'Halaqat', desc: 'Cercles d\'étude' }
   ];
 
   const renderFeatures = () => (
@@ -1066,6 +1085,16 @@ export const AdminDashboard: React.FC = () => {
             className="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
 
+          <textarea
+            placeholder={`Accroche / Extrait (Hook) (${activeLangTab.toUpperCase()})`}
+            value={(activeLangTab === 'fr' ? (newArticle as any).hook : (newArticle as any)[`hook_${activeLangTab}`]) || ''}
+            onChange={(e) => {
+              if (activeLangTab === 'fr') setNewArticle({ ...newArticle, hook: e.target.value } as any);
+              else setNewArticle({ ...newArticle, [`hook_${activeLangTab}`]: e.target.value } as any);
+            }}
+            className="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 h-20 resize-none"
+          />
+
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Image de couverture (Thumbnail)
@@ -1133,24 +1162,15 @@ export const AdminDashboard: React.FC = () => {
                 className="h-full"
               />
             ) : (
-              <div className="h-[300px] overflow-auto bg-[#2d2d2d]">
-                <SimpleEditor
-                  value={(activeLangTab === 'fr' ? newArticle.content : (newArticle as any)[`content_${activeLangTab}`]) || ''}
-                  onValueChange={(code) => {
-                    if (activeLangTab === 'fr') setNewArticle({ ...newArticle, content: code });
-                    else setNewArticle({ ...newArticle, [`content_${activeLangTab}`]: code });
-                  }}
-                  highlight={(code) => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
-                  padding={15}
-                  style={{
-                    fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                    fontSize: 14,
-                    minHeight: '100%',
-                    color: '#f8f8f2'
-                  }}
-                  className="code-editor-container"
-                />
-              </div>
+              <textarea
+                value={(activeLangTab === 'fr' ? newArticle.content : (newArticle as any)[`content_${activeLangTab}`]) || ''}
+                onChange={(e) => {
+                  if (activeLangTab === 'fr') setNewArticle({ ...newArticle, content: e.target.value });
+                  else setNewArticle({ ...newArticle, [`content_${activeLangTab}`]: e.target.value });
+                }}
+                className="w-full h-full min-h-[300px] p-4 bg-[#2d2d2d] text-[#f8f8f2] font-mono text-sm resize-none focus:outline-none"
+                placeholder="Entrez votre code HTML/Markdown ici..."
+              />
             )}
           </div>
 
@@ -1419,6 +1439,55 @@ export const AdminDashboard: React.FC = () => {
         <h3 className="font-bold text-gray-900 dark:text-white mb-6">Paramètres Globaux</h3>
         
         <div className="space-y-4 mb-8">
+          <div className="flex flex-col p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Volume2 size={18} className="text-blue-500" />
+                  Annonce de l'Accueil
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">Afficher une annonce sur la page d'accueil (force la mise à jour).</p>
+              </div>
+              <button
+                onClick={() => handleToggleFeature('announcementVisible', !featureToggles['announcementVisible'])}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+                  featureToggles['announcementVisible'] ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
+                    featureToggles['announcementVisible'] ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            {featureToggles['announcementVisible'] && (
+              <div className="space-y-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titre de l'annonce</label>
+                  <input
+                    type="text"
+                    value={featureToggles['announcementTitle'] || ''}
+                    onChange={(e) => handleToggleFeature('announcementTitle', e.target.value)}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl"
+                    placeholder="Nouvelles mises à jour disponibles !"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Texte de l'annonce</label>
+                  <textarea
+                    value={featureToggles['announcementText'] || ''}
+                    onChange={(e) => handleToggleFeature('announcementText', e.target.value)}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl"
+                    placeholder="Découvrez la nouvelle version..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-4">
             <div>
               <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">

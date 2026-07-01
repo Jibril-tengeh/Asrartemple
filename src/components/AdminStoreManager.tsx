@@ -127,14 +127,14 @@ export const AdminStoreManager = () => {
                 <h4 className="font-semibold text-sm">Nom du produit (3 langues)</h4>
                 <input required placeholder="Nom (Français)" value={typeof formData.name === 'string' ? formData.name : formData.name.fr} onChange={e => setFormData({...formData, name: { ...formData.name, fr: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
                 <input placeholder="Nom (Anglais)" value={typeof formData.name === 'string' ? '' : formData.name.en} onChange={e => setFormData({...formData, name: { ...formData.name, en: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
-                <input placeholder="Nom (Arabe)" value={typeof formData.name === 'string' ? '' : formData.name.ar} onChange={e => setFormData({...formData, name: { ...formData.name, ar: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-right" dir="auto" />
+                <input placeholder="Nom (Hausa)" value={typeof formData.name === 'string' ? '' : formData.name.ha} onChange={e => setFormData({...formData, name: { ...formData.name, ha: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl space-y-3">
                 <h4 className="font-semibold text-sm">Description (3 langues)</h4>
                 <textarea required placeholder="Description (Français)" value={typeof formData.description === 'string' ? formData.description : formData.description.fr} onChange={e => setFormData({...formData, description: { ...formData.description, fr: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
                 <textarea placeholder="Description (Anglais)" value={typeof formData.description === 'string' ? '' : formData.description.en} onChange={e => setFormData({...formData, description: { ...formData.description, en: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
-                <textarea placeholder="Description (Arabe)" value={typeof formData.description === 'string' ? '' : formData.description.ar} onChange={e => setFormData({...formData, description: { ...formData.description, ar: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-right" dir="auto" />
+                <textarea placeholder="Description (Hausa)" value={typeof formData.description === 'string' ? '' : formData.description.ha} onChange={e => setFormData({...formData, description: { ...formData.description, ha: e.target.value }})} className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

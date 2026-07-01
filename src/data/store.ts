@@ -55,12 +55,18 @@ export const getAsrarItems = (): AsrarItem[] => {
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
-        return parsed;
+        return parsed.map(item => ({
+          ...item,
+          hook: item.hook || (item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '')
+        }));
       }
     }
   } catch (e) {
     console.error("Error parsing asrar_items", e);
   }
   localStorage.setItem('asrar_items', JSON.stringify(initialData));
-  return initialData;
+  return initialData.map(item => ({
+    ...item,
+    hook: item.hook || (item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '')
+  }));
 };

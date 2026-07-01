@@ -16,7 +16,8 @@ import {
   Heart,
   Shield,
   Droplets,
-  Users
+  Users,
+  Crown
 } from "lucide-react";
 import { getAsrarItems } from "../../data/store";
 import { AsrarItem } from "../../types";
@@ -95,16 +96,21 @@ export const SecretDetail: React.FC = () => {
             const data = docSnap.data();
             const activeTitle = language === 'fr' ? data.title : data[`title_${language}`] || data.title;
             const activeContent = language === 'fr' ? data.content : data[`content_${language}`] || data.content;
+            let activeHook = language === 'fr' ? data.hook : data[`hook_${language}`] || data.hook || '';
             
-            const hookText = activeContent ? activeContent.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
+            if (!activeHook && activeContent) {
+              activeHook = activeContent.replace(/<[^>]+>/g, '').substring(0, 120) + '...';
+            }
+            
             setItem({
               id: docSnap.id,
               title: activeTitle,
-              hook: hookText,
+              hook: activeHook,
               category: data.category || 'recette',
               content: activeContent,
               benefits: data.benefits || [],
               imageUrl: data.thumbnail,
+              isPremium: data.isPremium || false,
               createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()
             } as AsrarItem);
             checkBookmark(docSnap.id);
@@ -248,6 +254,36 @@ export const SecretDetail: React.FC = () => {
         </div>
       </div>
 
+      {isBookmarked && (
+        <div className={`mb-6 p-3 rounded-xl flex items-center justify-between ${readingMode ? "max-w-3xl mx-auto bg-[#f4ebd0]/30 dark:bg-[#383120]/30" : "bg-gray-50 dark:bg-gray-800"}`}>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Classer dans un dossier :</span>
+          <select 
+            defaultValue={JSON.parse(localStorage.getItem('asrar_bookmark_folders') || '[]').find((f: any) => f.items.includes(item.id))?.id || ""}
+            onChange={(e) => {
+              const folderId = e.target.value;
+              try {
+                const parsedFolders = JSON.parse(localStorage.getItem('asrar_bookmark_folders') || '[]');
+                const newFolders = parsedFolders.map((f: any) => {
+                  f.items = f.items.filter((id: string) => id !== item.id);
+                  if (f.id === folderId) {
+                    f.items.push(item.id);
+                  }
+                  return f;
+                });
+                localStorage.setItem('asrar_bookmark_folders', JSON.stringify(newFolders));
+                alert("Dossier mis à jour !");
+              } catch (err) {}
+            }}
+            className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">-- Sélectionnez --</option>
+            {JSON.parse(localStorage.getItem('asrar_bookmark_folders') || '[]').map((f: any) => (
+              <option key={f.id} value={f.id}>{f.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div
         className={`overflow-hidden transition-all duration-500 ${readingMode ? "max-w-3xl mx-auto bg-transparent border-none" : "bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700"}`}
       >
@@ -265,15 +301,23 @@ export const SecretDetail: React.FC = () => {
         <div
           className={`${readingMode ? "p-0 sm:p-2 lg:p-4" : "p-6 md:p-8 lg:p-10"}`}
         >
-          <h1
-            className={`font-extrabold mb-6 leading-tight transition-colors ${
-              readingMode
-                ? "text-2xl sm:text-3xl md:text-4xl text-[#4a3f35] dark:text-[#d4c39c] font-arabic text-center"
-                : "text-xl sm:text-2xl md:text-3xl text-gray-900 dark:text-white"
-            }`}
-          >
-            {item.title}
-          </h1>
+          <div className="flex flex-col items-center sm:items-start gap-4 mb-6">
+            {item.isPremium && (
+              <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm text-sm font-bold w-fit mx-auto sm:mx-0">
+                <Crown size={16} />
+                <span>Premium</span>
+              </div>
+            )}
+            <h1
+              className={`font-extrabold leading-tight transition-colors text-center sm:text-left w-full ${
+                readingMode
+                  ? "text-2xl sm:text-3xl md:text-4xl text-[#4a3f35] dark:text-[#d4c39c] font-arabic"
+                  : "text-xl sm:text-2xl md:text-3xl text-gray-900 dark:text-white"
+              }`}
+            >
+              {item.title}
+            </h1>
+          </div>
 
           {item.verse && (
             <div

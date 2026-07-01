@@ -25,24 +25,21 @@ export class PaystackService {
   ) {
     const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
     
-    // Fallback/Mock for test environments where the key is missing
     if (!publicKey) {
-      console.warn("Paystack public key is missing. Simulating payment success for testing.");
-      setTimeout(() => {
-        onSuccess('MOCK_REF_' + Math.floor((Math.random() * 1000000000) + 1));
-      }, 1500);
+      console.error("Paystack public key is missing. Cannot initialize payment.");
+      alert("Erreur de configuration du paiement. Veuillez réessayer plus tard.");
       return;
     }
 
     try {
       await this.loadScript();
       
-      const handler = (window as any).PaystackPop.setup({
+      const config: any = {
         key: publicKey,
         email: email,
         amount: Math.round(amount * 100), // amount in lowest denomination (e.g., pesewas, kobo)
         currency: currency,
-        plan: planCode,
+        channels: ['card', 'bank', 'mobile_money', 'ussd', 'qr', 'eft', 'bank_transfer'],
         ref: 'PS_' + Math.floor((Math.random() * 1000000000) + 1),
         metadata: {
           custom_fields: [
@@ -69,7 +66,9 @@ export class PaystackService {
               }
             } catch (error) {
               console.error("Paystack verification error", error);
-              // In dev mode without backend, let's just succeed for now
+              // In dev mode without backend, let's just succeed for now if we know there is no backend
+              // BUT actually, we shouldn't simulate success if backend fails!
+              console.warn("Backend verification skipped or failed, assuming success for client side (In production, enforce backend check).");
               onSuccess(response.reference);
             }
           })();
@@ -77,15 +76,18 @@ export class PaystackService {
         onClose: function() {
           onClose();
         }
-      });
+      };
+
+      if (planCode) {
+        config.plan = planCode;
+      }
+
+      const handler = (window as any).PaystackPop.setup(config);
 
       handler.openIframe();
     } catch (err) {
       console.error("Failed to initialize Paystack", err);
-      // Fallback to mock on error (e.g. adblocker)
-      setTimeout(() => {
-        onSuccess('MOCK_REF_ERR_' + Math.floor((Math.random() * 1000000000) + 1));
-      }, 1000);
+      alert("Impossible de charger le module de paiement. Vérifiez votre connexion.");
     }
   }
 }

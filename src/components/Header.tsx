@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Moon, Sun, Languages, User, Users, Shield, LogOut, LogIn, Bell, Store, ChevronDown, ChevronUp, Megaphone, X, ExternalLink } from 'lucide-react';
+import { Moon, Sun, Languages, User, Users, Shield, LogOut, LogIn, Bell, Store, ChevronDown, ChevronUp, Megaphone, X, ExternalLink, MessageCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatures } from '../contexts/FeatureContext';
 import { signOut, db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,6 +20,7 @@ export const Header: React.FC = () => {
   const { language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { featureToggles } = useFeatures();
   const [scrolled, setScrolled] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
@@ -147,19 +149,21 @@ export const Header: React.FC = () => {
           
           <div className="flex items-center space-x-2 sm:space-x-3">
             
-            <Link to="/community">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors hidden sm:flex"
-                aria-label="Community"
-              >
-                <Users size={18} />
-              </motion.div>
-            </Link>
+            {featureToggles['tool_community'] !== 'inactive' && (
+              <Link to="/community" id="tour-community">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors hidden sm:flex"
+                  aria-label="Community"
+                >
+                  <Users size={18} />
+                </motion.div>
+              </Link>
+            )}
 
             {user && (
-              <div className="relative" ref={notifMenuRef}>
+              <div className="relative" ref={notifMenuRef} id="tour-notifications">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -174,6 +178,7 @@ export const Header: React.FC = () => {
                     </span>
                   )}
                 </motion.button>
+
                 <AnimatePresence>
                   {notifMenuOpen && (
                     <motion.div 
@@ -209,7 +214,7 @@ export const Header: React.FC = () => {
               </div>
             )}
 
-            <div className="relative" ref={langMenuRef}>
+            <div className="relative" ref={langMenuRef} id="tour-language">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -254,6 +259,7 @@ export const Header: React.FC = () => {
             </div>
             
             <motion.button
+              id="tour-theme"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleTheme}
@@ -278,16 +284,18 @@ export const Header: React.FC = () => {
               </motion.button>
             )}
 
-            <Link to="/community" className="sm:hidden">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
-                aria-label="Community"
-              >
-                <Users size={18} />
-              </motion.div>
-            </Link>
+            {featureToggles['tool_community'] !== 'inactive' && (
+              <Link to="/community" className="sm:hidden">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-full hover:bg-emerald-700 dark:hover:bg-emerald-900 text-white transition-colors"
+                  aria-label="Community"
+                >
+                  <Users size={18} />
+                </motion.div>
+              </Link>
+            )}
 
             {(user?.role === 'admin' || ['jibriltengeh4@gmail.com', 'sbireino@gmail.com', 'tenibawwal10@gmail.com', 'jibriltengeh57@gmail.com'].includes(user?.email?.toLowerCase() || '')) && (
               <Link to="/admin">
@@ -302,7 +310,7 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            <Link to="/profile">
+            <Link to="/profile" id="tour-profile">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

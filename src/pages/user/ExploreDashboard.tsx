@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Compass, Book, Shield, Heart, Sparkles, Moon, Sun, ArrowRight, Wallet, Activity, Share2, HelpCircle, FileText, Download, Eye, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useFeatures } from '../../contexts/FeatureContext';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
@@ -11,6 +12,7 @@ import { PremiumWrapper } from '../../components/PremiumWrapper';
 
 export const ExploreDashboard: React.FC = () => {
   const { t } = useLanguage();
+  const { featureToggles } = useFeatures();
 
   const categories = [
     {
@@ -236,67 +238,73 @@ export const ExploreDashboard: React.FC = () => {
       <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Module Lexique des Symboles */}
-        <Link to="/explore/lexique" className="group">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <FileText size={120} />
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
-                <Book size={24} />
+        {featureToggles['tool_lexique'] !== 'inactive' && (
+          <Link to="/explore/lexique" className="group">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <FileText size={120} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.lexiconTitle')}</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
+                  <Book size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.lexiconTitle')}</h3>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
+                {t('exploreDashboard.lexiconDesc')}
+              </p>
+              <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
+                {t('exploreDashboard.lexiconLink')} <ArrowRight size={16} className="ml-2" />
+              </div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              {t('exploreDashboard.lexiconDesc')}
-            </p>
-            <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              {t('exploreDashboard.lexiconLink')} <ArrowRight size={16} className="ml-2" />
-            </div>
-          </div>
-        </Link>
+          </Link>
+        )}
         
         {/* Module Quizz sur les Asrar */}
-        <Link to="/explore/quizz" className="group">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <HelpCircle size={120} />
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
-                <Sparkles size={24} />
+        {featureToggles['tool_quizz'] !== 'inactive' && (
+          <Link to="/explore/quizz" className="group">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <HelpCircle size={120} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.quizTitle')}</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
+                  <Sparkles size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.quizTitle')}</h3>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
+                {t('exploreDashboard.quizDesc')}
+              </p>
+              <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
+                {t('exploreDashboard.quizLink')} <ArrowRight size={16} className="ml-2" />
+              </div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              {t('exploreDashboard.quizDesc')}
-            </p>
-            <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              {t('exploreDashboard.quizLink')} <ArrowRight size={16} className="ml-2" />
-            </div>
-          </div>
-        </Link>
+          </Link>
+        )}
 
         {/* Module Calendar Converter */}
-        <Link to="/explore/calendar" className="group md:col-span-2 lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Moon size={120} />
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
-                <Moon size={24} />
+        {featureToggles['tool_calendar'] !== 'inactive' && (
+          <Link to="/explore/calendar" className="group md:col-span-2 lg:col-span-1">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all h-full relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Moon size={120} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.calendarTitle')}</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <Moon size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('exploreDashboard.calendarTitle')}</h3>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
+                {t('exploreDashboard.calendarDesc')}
+              </p>
+              <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
+                {t('exploreDashboard.calendarLink')} <ArrowRight size={16} className="ml-2" />
+              </div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 relative z-10 w-full md:max-w-[80%]">
-              {t('exploreDashboard.calendarDesc')}
-            </p>
-            <div className="flex font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors items-center">
-              {t('exploreDashboard.calendarLink')} <ArrowRight size={16} className="ml-2" />
-            </div>
-          </div>
-        </Link>
+          </Link>
+        )}
         
       </div>
 

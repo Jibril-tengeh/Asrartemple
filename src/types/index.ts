@@ -10,5 +10,6 @@ export interface AsrarItem {
   content: string;
   benefits: string[];
   imageUrl?: string; // URL for the thumbnail image
+  isPremium?: boolean;
   createdAt: string;
 }

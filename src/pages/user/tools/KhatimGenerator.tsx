@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Star, ArrowLeft, RefreshCw, Calculator, Grid, Type } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Star, ArrowLeft, RefreshCw, Calculator, Grid, Type, Download, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { calculateAbjadValue } from '../../../utils/abjad';
+import html2canvas from 'html2canvas';
 
 export const KhatimGenerator: React.FC = () => {
   const { t } = useLanguage();
@@ -12,6 +13,43 @@ export const KhatimGenerator: React.FC = () => {
   const [grid, setGrid] = useState<number[][] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [calculatedTotal, setCalculatedTotal] = useState<number>(0);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const downloadImage = async () => {
+    if (!resultRef.current) return;
+    try {
+      const canvas = await html2canvas(resultRef.current, { backgroundColor: '#18181b' });
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'khatim-result.png';
+      link.href = url;
+      link.click();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const shareResult = async () => {
+    if (!resultRef.current) return;
+    try {
+      const canvas = await html2canvas(resultRef.current, { backgroundColor: '#18181b' });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'khatim-result.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Khatim Généré',
+            text: 'Voici mon Khatim généré.',
+            files: [file]
+          });
+        } else {
+          alert('Le partage direct n\'est pas supporté sur ce navigateur.');
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const generate3x3 = (total: number) => {
     let base = total - 12;
@@ -179,9 +217,9 @@ export const KhatimGenerator: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="relative"
+            className="relative flex flex-col items-center gap-6"
           >
-            <div className="bg-zinc-900 rounded-3xl p-8 sm:p-10 shadow-2xl border-4 border-zinc-800 mx-auto max-w-md relative overflow-hidden">
+            <div ref={resultRef} className="bg-zinc-900 rounded-3xl p-8 sm:p-10 shadow-2xl border-4 border-zinc-800 mx-auto max-w-md relative overflow-hidden w-full">
                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                
                <div className="text-center mb-8 relative z-10">
@@ -222,6 +260,17 @@ export const KhatimGenerator: React.FC = () => {
                  <p className="text-xs text-zinc-500 font-bold tracking-widest uppercase mb-1">Harmonie Parfaite</p>
                  <p className="text-xs text-zinc-600">Lignes, colonnes et diagonales = {calculatedTotal}</p>
               </div>
+            </div>
+            
+            <div className="flex gap-4 mt-4">
+              <button onClick={downloadImage} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-zinc-800 text-white hover:bg-zinc-700 font-semibold transition-colors shadow-lg">
+                <Download size={20} />
+                {t('khatim.download', 'Enregistrer')}
+              </button>
+              <button onClick={shareResult} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-purple-600 text-white hover:bg-purple-500 font-semibold transition-colors shadow-lg">
+                <Share2 size={20} />
+                {t('khatim.share', 'Partager')}
+              </button>
             </div>
           </motion.div>
         )}

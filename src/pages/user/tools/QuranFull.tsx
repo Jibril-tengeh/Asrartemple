@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import { useAudio } from '../../../contexts/AudioContext';
 import { get, set } from 'idb-keyval';
 import { surahTranslations } from '../../../data/surahTranslations';
@@ -545,13 +545,15 @@ export const QuranFull: React.FC = () => {
         originalOpacity = arabicTextNode.style.opacity || '1';
         arabicTextNode.style.opacity = '0';
       }
-      const dataUrlBg = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
+      const canvasBg = await html2canvas(node, { useCORS: true, backgroundColor: document.documentElement.classList.contains('dark') && zoomedAyahBg === 0 ? '#111827' : null });
+      const dataUrlBg = canvasBg.toDataURL('image/png');
       
       // 2. Capture full image with text
       if (arabicTextNode) {
         arabicTextNode.style.opacity = originalOpacity;
       }
-      const dataUrlFull = await toPng(node, { cacheBust: true, backgroundColor: 'transparent' });
+      const canvasFull = await html2canvas(node, { useCORS: true, backgroundColor: document.documentElement.classList.contains('dark') && zoomedAyahBg === 0 ? '#111827' : null });
+      const dataUrlFull = canvasFull.toDataURL('image/png');
       
       if (actionButtons) actionButtons.style.display = 'flex';
       if (closeBtn) closeBtn.style.display = 'block';
@@ -734,7 +736,7 @@ export const QuranFull: React.FC = () => {
     { id: 'gradient-emerald', class: 'bg-gradient-to-br from-emerald-500 to-teal-900', iconClass: 'bg-gradient-to-br from-emerald-500 to-teal-900' },
     { id: 'gradient-sunset', class: 'bg-gradient-to-br from-amber-500 to-rose-900', iconClass: 'bg-gradient-to-br from-amber-500 to-rose-900' },
     { id: 'gradient-ocean', class: 'bg-gradient-to-br from-blue-600 to-slate-900', iconClass: 'bg-gradient-to-br from-blue-600 to-slate-900' },
-    { id: 'pattern-islamic', class: 'bg-emerald-900 bg-[url("https://www.transparenttextures.com/patterns/arabesque.png")]', iconClass: 'bg-emerald-900 bg-[url("https://www.transparenttextures.com/patterns/arabesque.png")]' },
+    { id: 'pattern-islamic', class: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-800 via-teal-900 to-emerald-950', iconClass: 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-800 via-teal-900 to-emerald-950' },
   ];
 
   const ZOOM_TEXT_COLORS = [
@@ -2567,8 +2569,9 @@ export const QuranFull: React.FC = () => {
                                originalConsoleError(...args);
                              };
                              
-                             toPng(node, { cacheBust: true, backgroundColor: 'transparent' })
-                               .then(async (dataUrl) => {
+                             html2canvas(node, { useCORS: true, backgroundColor: document.documentElement.classList.contains('dark') && zoomedAyahBg === 0 ? '#111827' : null })
+                               .then(async (canvas) => {
+                                 const dataUrl = canvas.toDataURL('image/png');
                                  console.error = originalConsoleError;
                                  if (actionButtons) actionButtons.style.display = 'flex';
                                  if (closeBtn) closeBtn.style.display = 'block';

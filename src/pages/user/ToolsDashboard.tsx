@@ -457,7 +457,6 @@ export const ToolsDashboard: React.FC = () => {
   ];
 
   const displayedTools = tools.filter((tool) => {
-    if (tool.level !== activeTab) return false;
     const status = featureToggles[`tool_${tool.id}`] || "active";
     if (status === "inactive") return false;
     if (searchQuery) {
@@ -473,6 +472,8 @@ export const ToolsDashboard: React.FC = () => {
           : tool.description
       ).toLowerCase();
       if (!title.includes(q) && !desc.includes(q)) return false;
+    } else {
+      if (tool.level !== activeTab) return false;
     }
     return true;
   });

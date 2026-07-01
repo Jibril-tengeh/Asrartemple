@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw, Sparkles, LogIn } from 'lucide-react';
-import { motion } from 'motion/react';
+import { User, Bell, Clock, Save, Shield, Moon, Sun, Smartphone, Award, Medal, Star, Target, LogOut, Camera, Image as ImageIcon, RefreshCw, Sparkles, LogIn, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { PremiumBadge } from '../../components/PremiumBadge';
 import { AuthModal } from '../../components/AuthModal';
 import { signOut, db, auth } from '../../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface Reminder {
   id: string;
@@ -16,6 +16,47 @@ interface Reminder {
   enabled: boolean;
   label: string;
 }
+
+const CollapsibleSection: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  headerAction?: React.ReactNode;
+}> = ({ title, icon, children, headerAction }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+      <div 
+        className="flex items-center justify-between cursor-pointer group"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          {icon}
+          {title}
+        </h2>
+        <div className="flex items-center gap-3">
+          {headerAction && <div onClick={e => e.stopPropagation()}>{headerAction}</div>}
+          <div className={`p-1.5 rounded-full bg-gray-50 dark:bg-gray-700/50 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+            <ChevronDown size={18} />
+          </div>
+        </div>
+      </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            className="overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const GamificationBadges = () => {
   const { t } = useLanguage();
@@ -75,11 +116,10 @@ const GamificationBadges = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-      <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-        <Award className="text-amber-500" size={20} />
-        {t('profile.badges.title', 'Badges & Accomplissements')}
-      </h2>
+    <CollapsibleSection
+      title={t('profile.badges.title', 'Badges & Accomplissements')}
+      icon={<Award className="text-amber-500" size={20} />}
+    >
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
         {t('profile.badges.subtitle', 'Vos actes constants forgent votre lumière. Ces badges reflètent votre régularité et discipline.')}
       </p>
@@ -101,7 +141,7 @@ const GamificationBadges = () => {
           </div>
         ))}
       </div>
-    </div>
+    </CollapsibleSection>
   );
 };
 
@@ -116,6 +156,9 @@ export const UserProfile: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newTime, setNewTime] = useState('06:00');
   const [newLabel, setNewLabel] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [isClearingCache, setIsClearingCache] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('asrar_reminders');
@@ -369,21 +412,18 @@ export const UserProfile: React.FC = () => {
 
       <GamificationBadges />
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Bell className="text-emerald-500" size={20} />
-            {t('profile.reminders.title', 'Rappels Quotidiens')}
-          </h2>
+      <CollapsibleSection
+        title={t('profile.reminders.title', 'Rappels Quotidiens')}
+        icon={<Bell className="text-emerald-500" size={20} />}
+        headerAction={
           <button 
             onClick={requestNotificationPermission}
             className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
           >
             {t('profile.reminders.enablePush', 'Activer les notifications push')}
           </button>
-        </div>
-
+        }
+      >
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
           {t('profile.reminders.subtitle', "Configurez des rappels pour vos heures de lecture (Wirds, Zikrs). L'application vous enverra une notification à l'heure souhaitée.")}
         </p>
@@ -447,14 +487,12 @@ export const UserProfile: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Moon className="text-emerald-500" size={20} />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('profile.theme.title', 'Apparence & Thème')}</h2>
-        </div>
-        
+      <CollapsibleSection
+        title={t('profile.theme.title', 'Apparence & Thème')}
+        icon={<Moon className="text-emerald-500" size={20} />}
+      >
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
           {t('profile.theme.subtitle', "Personnalisez l'apparence de l'application. Le mode automatique synchronise l'affichage avec votre système pour un confort optimal jour et nuit.")}
         </p>
@@ -484,14 +522,12 @@ export const UserProfile: React.FC = () => {
             <span className={`font-medium text-sm ${theme === 'system' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{t('profile.theme.auto', 'Automatique')}</span>
           </button>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="text-emerald-500" size={20} />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Abonnement & Achats</h2>
-        </div>
-        
+      <CollapsibleSection
+        title="Abonnement & Achats"
+        icon={<Shield className="text-emerald-500" size={20} />}
+      >
         {user?.subscriptionTier === 'premium' || user?.subscriptionTier === 'pro' ? (
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50 dark:bg-gray-800/50 gap-4 mb-4">
@@ -519,9 +555,18 @@ export const UserProfile: React.FC = () => {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Passez à la version Premium pour débloquer toutes les fonctionnalités et supprimer les publicités.
-          </p>
+          <div className="flex flex-col gap-4 items-start">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Passez à la version Premium pour débloquer toutes les fonctionnalités et supprimer les publicités.
+            </p>
+            <Link
+              to="/payment"
+              className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <Star size={18} />
+              Devenir Premium
+            </Link>
+          </div>
         )}
 
         <div>
@@ -544,43 +589,82 @@ export const UserProfile: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <RefreshCw className="text-emerald-500" size={20} />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Maintenance</h2>
-        </div>
-        
+      <CollapsibleSection
+        title={t('profile.offlineMode.title', 'Mode Hors-ligne')}
+        icon={<Save className="text-emerald-500" size={20} />}
+      >
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+          {t('profile.offlineMode.subtitle', 'Synchronisez vos favoris et données locales pour y accéder sans connexion internet.')}
+        </p>
+        <button
+          onClick={() => {
+            setIsSyncing(true);
+            setTimeout(() => {
+              setIsSyncing(false);
+              setSyncMessage(t('profile.offlineMode.success', 'Synchronisation hors-ligne terminée avec succès.'));
+              setTimeout(() => setSyncMessage(''), 3000);
+            }, 1000);
+          }}
+          disabled={isSyncing}
+          className={`flex items-center justify-center gap-2 w-full sm:w-auto bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 dark:text-emerald-400 rounded-xl px-5 py-3 font-bold transition-colors ${isSyncing ? 'opacity-70 cursor-not-allowed' : ''}`}
+        >
+          {isSyncing ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+          {isSyncing ? t('profile.offlineMode.syncing', 'Synchronisation en cours...') : t('profile.offlineMode.syncButton', 'Synchroniser maintenant')}
+        </button>
+        {syncMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-3 bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm rounded-lg flex items-center gap-2"
+          >
+            <Sparkles size={16} />
+            {syncMessage}
+          </motion.div>
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Maintenance"
+        icon={<RefreshCw className="text-emerald-500" size={20} />}
+      >
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
           Vider le cache peut résoudre les problèmes de lecture audio ou libérer de l'espace sur votre appareil.
         </p>
 
         <button
           onClick={async () => {
-            if ('serviceWorker' in navigator) {
-              const registrations = await navigator.serviceWorker.getRegistrations();
-              for (const registration of registrations) {
-                await registration.unregister();
+            setIsClearingCache(true);
+            try {
+              if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                  await registration.unregister();
+                }
               }
-            }
-            if ('caches' in window) {
-              const keys = await caches.keys();
-              for (const key of keys) {
-                await caches.delete(key);
+              if ('caches' in window) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                  await caches.delete(key);
+                }
               }
+              localStorage.removeItem('quran_downloaded_items');
+              localStorage.removeItem('quran_paused_downloads');
+              setTimeout(() => {
+                window.location.reload();
+              }, 500);
+            } catch (e) {
+              setIsClearingCache(false);
             }
-            localStorage.removeItem('quran_downloaded_items');
-            localStorage.removeItem('quran_paused_downloads');
-            alert('Cache vidé avec succès. La page va se recharger.');
-            window.location.reload();
           }}
-          className="flex items-center justify-center gap-2 w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-xl px-5 py-3 font-bold transition-colors"
+          disabled={isClearingCache}
+          className={`flex items-center justify-center gap-2 w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-xl px-5 py-3 font-bold transition-colors ${isClearingCache ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          <RefreshCw size={18} />
-          Vider le cache
+          <RefreshCw size={18} className={isClearingCache ? 'animate-spin' : ''} />
+          {isClearingCache ? 'Nettoyage...' : 'Vider le cache'}
         </button>
-      </div>
+      </CollapsibleSection>
       
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>

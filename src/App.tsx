@@ -51,14 +51,37 @@ import { DailyRewardHandler } from './components/DailyRewardHandler';
 
 import { MaintenanceOverlay } from './components/MaintenanceOverlay';
 import { FloatingBackButton } from './components/FloatingBackButton';
+import { Link } from 'react-router-dom';
 
 const Store = React.lazy(() => import('./pages/user/Store').then(m => ({ default: m.Store })));
+const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
+
+import { FeatureProvider, useFeatures } from './contexts/FeatureContext';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-full min-h-[50vh]">
     <h2 className="text-2xl font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
   </div>
 );
+
+const FaqButton = () => {
+  const { featureToggles } = useFeatures();
+  
+  if (featureToggles['tool_faq'] === 'inactive') return null;
+  
+  return (
+    <Link 
+      to="/faq" 
+      id="tour-faq"
+      className="fixed bottom-[85px] right-4 sm:bottom-6 sm:right-6 z-40 bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95"
+      aria-label="Assistant IA"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11.9567 24C12.1645 17.5144 17.3079 12.3551 23.7547 12.0298C17.3079 11.6961 12.1645 6.54519 11.9567 0.0595703C11.7489 6.54519 6.60555 11.6961 0.158691 12.0298C6.60555 12.3551 11.7489 17.5144 11.9567 24Z" fill="currentColor"/>
+      </svg>
+    </Link>
+  );
+};
 
 export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(
@@ -170,11 +193,13 @@ export default function App() {
             <Route path="/saved" element={<UserDashboard initialFilter="favoris" />} />
             <Route path="/community" element={<Community />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
           </Routes>
             </React.Suspense>
         </main>
         <AudioPlayer />
+        <FaqButton />
         <BottomNav />
       </div>
     </MaintenanceOverlay>
