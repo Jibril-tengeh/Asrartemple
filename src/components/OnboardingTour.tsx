@@ -93,6 +93,7 @@ export const OnboardingTour: React.FC = () => {
       // Small delay to let the UI render completely
       setTimeout(() => {
         setRun(true);
+        localStorage.setItem('asrarhub_tour_completed', 'true');
       }, 1000);
     }
   }, []);
@@ -197,10 +198,10 @@ export const OnboardingTour: React.FC = () => {
   ];
 
   const handleJoyrideCallback = (data: EventData) => {
-    const { status } = data;
+    const { status, type } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
-    if (finishedStatuses.includes(status)) {
+    if (finishedStatuses.includes(status) || type === 'tour:end') {
       setRun(false);
       localStorage.setItem('asrarhub_tour_completed', 'true');
     }

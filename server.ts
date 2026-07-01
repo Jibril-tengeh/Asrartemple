@@ -36,6 +36,19 @@ async function startServer() {
   app.use(express.json());
   app.use(cors());
 
+  // Helper for retrying Gemini API calls
+  const generateWithRetry = async (ai: GoogleGenAI, params: any, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await ai.models.generateContent(params);
+      } catch (error: any) {
+        const isTransient = error?.status === 503 || error?.status === 429 || error?.message?.includes("503") || error?.message?.includes("429");
+        if (i === retries - 1 || !isTransient) throw error;
+        await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))); // Exponential-ish backoff
+      }
+    }
+  };
+
   // Dream Interpretation via Gemini
   app.post("/api/dreams/interpret", async (req, res) => {
     try {
@@ -62,7 +75,7 @@ Règles d'éthique spirituelle :
 - Répondre en français avec douceur et sagesse spirituelle.
 `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateWithRetry(ai, {
         model: "gemini-2.5-pro",
         contents: prompt,
       });
@@ -101,12 +114,12 @@ Votre message ici...
 ["id1", "id2"]
 `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateWithRetry(ai, {
         model: "gemini-2.5-flash",
         contents: prompt,
       });
 
-      const text = response.text || "";
+      const text = response?.text || "";
       const messagePart = text.split("---IDS---")[0]?.replace("---MESSAGE---", "")?.trim() || "Voici quelques recommandations :";
       let idsPart = text.split("---IDS---")[1]?.trim() || "[]";
       
@@ -153,15 +166,16 @@ Règles de comportement et formatage (TRÈS IMPORTANT) :
 6. **Limites** : Restez dans le contexte de la spiritualité, des prières et des invocations. Ne pas inventer de verdicts religieux (fatwa).
 `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateWithRetry(ai, {
         model: "gemini-2.5-flash",
         contents: prompt,
       });
 
-      res.json({ answer: response.text });
+      res.json({ answer: response?.text || "Une erreur s'est produite lors de la génération de la réponse." });
     } catch (error: any) {
       console.error("AI FAQ error:", error);
-      res.status(500).json({ error: "Failed to generate answer" });
+      const isOverloaded = error?.status === 503 || error?.message?.includes("503");
+      res.status(isOverloaded ? 503 : 500).json({ error: "Failed to generate answer" });
     }
   });
 

@@ -11,31 +11,20 @@ import { AuthModal } from '../../components/AuthModal';
 const detectUserCurrencyAndPrice = (priceUSD: number) => {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   
-  if (tz.startsWith('Europe/')) {
-    let price = 23;
-    if (priceUSD === 13) price = 12;
-    if (priceUSD === 45) price = 42;
-    return { currency: 'EUR', price, displayStr: `${price} €` };
-  } else if (
-    tz === 'Africa/Dakar' || tz === 'Africa/Abidjan' || tz === 'Africa/Bamako' || 
-    tz === 'Africa/Lome' || tz === 'Africa/Niamey' || tz === 'Africa/Ouagadougou' || 
-    tz === 'Africa/Porto-Novo'
-  ) {
-    let price = 15000;
-    if (priceUSD === 13) price = 8000;
-    if (priceUSD === 45) price = 27000;
-    return { currency: 'XOF', price, displayStr: `${price} FCFA` };
-  } else if (
+  // Default to XOF (FCFA) for all users since the merchant account likely only supports local currencies
+  // Paystack will automatically handle the conversion for European/US cards.
+  let price = 15000;
+  if (priceUSD === 13) price = 8000;
+  if (priceUSD === 45) price = 27000;
+  
+  if (
     tz === 'Africa/Douala' || tz === 'Africa/Libreville' || tz === 'Africa/Brazzaville' || 
     tz === 'Africa/Bangui' || tz === 'Africa/Ndjamena' || tz === 'Africa/Malabo'
   ) {
-    let price = 15000;
-    if (priceUSD === 13) price = 8000;
-    if (priceUSD === 45) price = 27000;
     return { currency: 'XAF', price, displayStr: `${price} FCFA` };
   }
   
-  return { currency: 'USD', price: priceUSD, displayStr: `${priceUSD} $` };
+  return { currency: 'XOF', price, displayStr: `${price} FCFA` };
 };
 
 export const PaymentPage: React.FC = () => {

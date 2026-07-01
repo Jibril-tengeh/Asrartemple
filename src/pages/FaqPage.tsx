@@ -32,6 +32,13 @@ export const FaqPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text, language })
       });
+      if (!response.ok) {
+        if (response.status === 503) {
+           setMessages(prev => [...prev, { role: 'assistant', content: "Le service d'intelligence artificielle est actuellement très sollicité. Veuillez patienter quelques instants et réessayer." }]);
+           return;
+        }
+      }
+
       const data = await response.json();
       
       if (data.answer) {

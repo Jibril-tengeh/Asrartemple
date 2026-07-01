@@ -54,7 +54,7 @@ export const SecretDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [item, setItem] = useState<AsrarItem | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -128,6 +128,28 @@ export const SecretDetail: React.FC = () => {
     }
   }, [id, language]);
 
+  const [isCheckingPremium, setIsCheckingPremium] = useState(true);
+
+  useEffect(() => {
+    if (item) {
+      if (item.isPremium) {
+        if (authLoading) {
+           setIsCheckingPremium(true);
+        } else if (!user) {
+           setIsCheckingPremium(true);
+           setShowAuthModal(true);
+        } else if (user.subscriptionTier !== 'premium' && user.subscriptionTier !== 'pro') {
+           setIsCheckingPremium(true);
+           navigate('/payment');
+        } else {
+           setIsCheckingPremium(false);
+        }
+      } else {
+        setIsCheckingPremium(false);
+      }
+    }
+  }, [item, user, authLoading, navigate]);
+
   const toggleBookmark = () => {
     if (!item) return;
     let bookmarks = [];
@@ -193,7 +215,7 @@ export const SecretDetail: React.FC = () => {
     );
   }
 
-  if (!item) {
+  if (!item || (item.isPremium && (authLoading || isCheckingPremium))) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -202,6 +224,13 @@ export const SecretDetail: React.FC = () => {
             {t("loading", "Chargement...")}
           </p>
         </div>
+        
+        {showAuthModal && (
+          <AuthModal isOpen={showAuthModal} onClose={() => {
+            setShowAuthModal(false);
+            navigate(-1);
+          }} />
+        )}
       </div>
     );
   }

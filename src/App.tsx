@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 const UserDashboard = React.lazy(() => import('./pages/user/UserDashboard').then(m => ({ default: m.UserDashboard })));
@@ -83,13 +83,30 @@ const FaqButton = () => {
   );
 };
 
+import { App as CapacitorApp } from '@capacitor/app';
+
 export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(
     localStorage.getItem('hasCompletedOnboarding') === 'true'
   );
   
   const location = useLocation();
+  const navigate = useNavigate();
   const isRuqyahPlayer = location.pathname === '/tools/ruqyah';
+
+  React.useEffect(() => {
+    CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (canGoBack) {
+        navigate(-1);
+      } else {
+        CapacitorApp.exitApp();
+      }
+    });
+
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
+  }, [navigate]);
 
   React.useEffect(() => {
     let lastCheckedMinute = -1;
