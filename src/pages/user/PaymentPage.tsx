@@ -3,28 +3,38 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Shield, Star, Check, Sparkles, ArrowLeft, CreditCard, Landmark, Bitcoin, Crown } from 'lucide-react';
 import { PaystackService } from '../../services/PaystackService';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthModal } from '../../components/AuthModal';
 
 const detectUserCurrencyAndPrice = (priceUSD: number) => {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   
-  // Default to XOF (FCFA) for all users since the merchant account likely only supports local currencies
-  // Paystack will automatically handle the conversion for European/US cards.
-  let price = 15000;
-  if (priceUSD === 13) price = 8000;
-  if (priceUSD === 45) price = 27000;
-  
-  if (
+  if (tz.startsWith('Europe/')) {
+    let price = 23;
+    if (priceUSD === 13) price = 12;
+    if (priceUSD === 45) price = 42;
+    return { currency: 'EUR', price, displayStr: `${price} €` };
+  } else if (
+    tz === 'Africa/Dakar' || tz === 'Africa/Abidjan' || tz === 'Africa/Bamako' || 
+    tz === 'Africa/Lome' || tz === 'Africa/Niamey' || tz === 'Africa/Ouagadougou' || 
+    tz === 'Africa/Porto-Novo'
+  ) {
+    let price = 15000;
+    if (priceUSD === 13) price = 8000;
+    if (priceUSD === 45) price = 27000;
+    return { currency: 'XOF', price, displayStr: `${price} FCFA` };
+  } else if (
     tz === 'Africa/Douala' || tz === 'Africa/Libreville' || tz === 'Africa/Brazzaville' || 
     tz === 'Africa/Bangui' || tz === 'Africa/Ndjamena' || tz === 'Africa/Malabo'
   ) {
+    let price = 15000;
+    if (priceUSD === 13) price = 8000;
+    if (priceUSD === 45) price = 27000;
     return { currency: 'XAF', price, displayStr: `${price} FCFA` };
   }
   
-  return { currency: 'XOF', price, displayStr: `${price} FCFA` };
+  // Default to USD
+  return { currency: 'USD', price: priceUSD, displayStr: `${priceUSD} $` };
 };
 
 export const PaymentPage: React.FC = () => {
@@ -87,6 +97,8 @@ export const PaymentPage: React.FC = () => {
     }
   ];
 
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('AUTO');
+
   const handleSubscribe = async (plan: any) => {
     if (!user) {
       setShowAuthModal(true);
@@ -94,7 +106,15 @@ export const PaymentPage: React.FC = () => {
     }
     
     setLoading(true);
-    const pricing = detectUserCurrencyAndPrice(plan.priceNumber);
+    let pricing = detectUserCurrencyAndPrice(plan.priceNumber);
+    
+    if (selectedCurrency !== 'AUTO') {
+      pricing = {
+        currency: selectedCurrency,
+        price: selectedCurrency === 'XOF' || selectedCurrency === 'XAF' ? (plan.priceNumber === 13 ? 8000 : 27000) : (selectedCurrency === 'NGN' ? (plan.priceNumber === 13 ? 15000 : 45000) : plan.priceNumber),
+        displayStr: `${plan.priceNumber} ${selectedCurrency}`
+      }
+    }
 
     try {
       await PaystackService.initializePaystackPayment(
@@ -103,12 +123,7 @@ export const PaymentPage: React.FC = () => {
         pricing.currency,
         user.uid,
         async (reference) => {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            subscriptionTier: 'premium',
-            subscriptionPlan: plan.id,
-            subscriptionDate: new Date().toISOString()
-          });
+          // Server-side verification updates the user document.
           alert(t('payment.success', `Félicitations! Vous êtes maintenant abonné au plan ${plan.name}.`).replace('{plan}', plan.name));
           navigate('/user/dashboard');
         },
@@ -139,6 +154,28 @@ export const PaymentPage: React.FC = () => {
         <p className="text-gray-500 dark:text-gray-400 max-w-2xl">
           {t('payment.subtitle', "Choisissez le plan qui correspond à vos besoins spirituels.")}
         </p>
+        
+        <div className="mt-4 flex flex-col sm:flex-row items-center gap-2 justify-center sm:justify-start">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Devise de paiement (Paystack) :</label>
+          <select 
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="AUTO">Automatique (Détecté)</option>
+            <option value="XOF">XOF (FCFA - UEMOA)</option>
+            <option value="XAF">XAF (FCFA - CEMAC)</option>
+            <option value="USD">USD (Dollars Américains)</option>
+            <option value="EUR">EUR (Euros)</option>
+            <option value="NGN">NGN (Naira Nigérian)</option>
+            <option value="GHS">GHS (Cedi Ghanéen)</option>
+            <option value="ZAR">ZAR (Rand Sud-Africain)</option>
+          </select>
+          <p className="text-xs text-amber-600 dark:text-amber-400 max-w-sm mt-1 sm:mt-0 text-left">
+            * Choisissez la devise supportée par votre compte marchand Paystack si l'automatique échoue ("Currency not supported").
+          </p>
+        </div>
+        
         <div className="mt-6 flex flex-wrap gap-4 items-center justify-center sm:justify-start text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
           <span className="flex items-center gap-1.5"><CreditCard size={16} /> {t('payment.method.card', 'Carte Visa / Mastercard')}</span>
           <span className="text-emerald-300 hidden sm:inline">•</span>

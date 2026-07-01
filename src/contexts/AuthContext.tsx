@@ -80,6 +80,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           if (docSnap.exists()) {
             const data = docSnap.data();
+            let subTier = data.subscriptionTier || 'free';
+            if (subTier === 'premium' && data.premiumUntil) {
+              const now = new Date();
+              const expiry = data.premiumUntil.toDate ? data.premiumUntil.toDate() : new Date(data.premiumUntil);
+              if (now > expiry) {
+                subTier = 'free';
+                // Optionally could update the document here, but at least we reflect it in state
+              }
+            }
+
             setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
@@ -93,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               coverPhotoURL: data.coverPhotoURL || null,
               spiritualPoints: data.spiritualPoints || 0,
               lastDailyRewardDate: data.lastDailyRewardDate,
-              subscriptionTier: data.subscriptionTier || 'free',
+              subscriptionTier: subTier,
               hideAds: data.hideAds || false,
               streakDays: data.streakDays || 0,
               purchasedItems: data.purchasedItems || []

@@ -75,7 +75,7 @@ export const Store: React.FC = () => {
     detectCountry();
   }, []);
 
-  const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack') => {
+  const handlePurchase = async (product: any, usePoints: boolean = false, paymentMethod?: 'paystack' | 'visa' | 'crypto') => {
     if (!user) {
       setShowAuthModal(true);
       return;
@@ -103,6 +103,15 @@ export const Store: React.FC = () => {
         alert("Une erreur est survenue lors de l'échange.");
       }
     } else {
+      if (paymentMethod === 'visa') {
+        alert("Paiement par carte Visa en cours de configuration. Bientôt disponible !");
+        return;
+      }
+      if (paymentMethod === 'crypto') {
+        alert("Paiement par crypto-monnaie en cours de configuration. Bientôt disponible !");
+        return;
+      }
+
       // For all products (subscriptions and one-time), we will use paystack.
       
       try {
@@ -538,11 +547,47 @@ export const Store: React.FC = () => {
                   )}
                   {selectedProduct.category === 'Abonnements' ? (
                     <div className="flex flex-col flex-1 gap-2">
+                      <div className="flex flex-col sm:flex-row items-center gap-2 mb-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Devise (Paystack) :</label>
+                        <select 
+                          value={paystackConfig.currency}
+                          onChange={(e) => {
+                            const currency = e.target.value;
+                            // Set a dummy amount based on currency just for UI, accurate amount calculated on click if needed
+                            let amount = 150;
+                            if (currency === 'XOF' || currency === 'XAF') amount = 6000;
+                            if (currency === 'NGN') amount = 15000;
+                            if (currency === 'USD') amount = 10;
+                            setPaystackConfig({ currency, amount });
+                          }}
+                          className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none w-full sm:w-auto"
+                        >
+                          <option value="USD">USD ($)</option>
+                          <option value="XOF">XOF (FCFA)</option>
+                          <option value="XAF">XAF (FCFA)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="NGN">NGN (₦)</option>
+                          <option value="GHS">GHS (GH₵)</option>
+                          <option value="ZAR">ZAR (R)</option>
+                        </select>
+                      </div>
                       <button 
                         onClick={() => handlePurchase(selectedProduct, false, 'paystack')}
                         className="py-3 bg-[#0BA4DB] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#0983AF]"
                       >
-                        Payer avec Paystack ({paystackConfig.amount} {paystackConfig.currency})
+                        Payer avec Paystack
+                      </button>
+                      <button 
+                        onClick={() => handlePurchase(selectedProduct, false, 'visa')}
+                        className="py-3 bg-[#1434CB] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#0F289F]"
+                      >
+                        Payer avec Carte Visa / Mastercard
+                      </button>
+                      <button 
+                        onClick={() => handlePurchase(selectedProduct, false, 'crypto')}
+                        className="py-3 bg-[#F7931A] text-white rounded-xl font-bold transition-colors shadow-md hover:bg-[#D98115]"
+                      >
+                        Payer en Crypto-monnaie
                       </button>
                     </div>
                   ) : (

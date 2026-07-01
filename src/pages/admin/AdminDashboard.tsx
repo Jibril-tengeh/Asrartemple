@@ -5,7 +5,7 @@ import { AuthModal } from '../../components/AuthModal';
 import { 
   Settings, Users, BarChart3, Database, Shield, LayoutDashboard, 
   Book, ToggleLeft, Volume2, Save, Search, Plus, Trash2, Edit2, FileText,
-  Eye, Image as ImageIcon, Crop as CropIcon, X, Upload, ShoppingBag
+  Eye, Image as ImageIcon, Crop as CropIcon, X, Upload, ShoppingBag, CreditCard
 } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy, setDoc } from 'firebase/firestore';
@@ -1530,6 +1530,37 @@ export const AdminDashboard: React.FC = () => {
                 }`}
               />
             </button>
+          </div>
+        </div>
+
+        <h3 className="font-bold text-gray-900 dark:text-white mb-4 mt-8">Passerelles de Paiement</h3>
+        <div className="space-y-4 mb-8">
+          <div className="flex flex-col p-4 bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-2xl gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <CreditCard size={18} className="text-blue-500" />
+                  Configuration Paystack
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">Configurez la clé publique de votre passerelle Paystack.</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Paystack Public Key</label>
+                <input
+                  type="text"
+                  value={featureToggles['paystackPublicKey'] || ''}
+                  onChange={(e) => handleToggleFeature('paystackPublicKey', e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl"
+                  placeholder="pk_test_..."
+                />
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Note: Cette clé primera sur celle configurée dans les variables d'environnement.
+              </p>
+            </div>
           </div>
         </div>
 

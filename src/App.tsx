@@ -85,6 +85,31 @@ const FaqButton = () => {
 
 import { App as CapacitorApp } from '@capacitor/app';
 
+const NetworkStatus = () => {
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (isOnline) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white text-center py-2 text-sm font-medium shadow-md">
+      Connexion Internet perdue. L'application fonctionne en mode hors ligne.
+    </div>
+  );
+};
+
 export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(
     localStorage.getItem('hasCompletedOnboarding') === 'true'
@@ -95,9 +120,9 @@ export default function App() {
   const isRuqyahPlayer = location.pathname === '/tools/ruqyah';
 
   React.useEffect(() => {
-    CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-      if (canGoBack) {
-        navigate(-1);
+    CapacitorApp.addListener('backButton', () => {
+      if (window.location.pathname !== '/' && window.location.pathname !== '/home') {
+        window.history.back();
       } else {
         CapacitorApp.exitApp();
       }
@@ -106,7 +131,7 @@ export default function App() {
     return () => {
       CapacitorApp.removeAllListeners();
     };
-  }, [navigate]);
+  }, []);
 
   React.useEffect(() => {
     let lastCheckedMinute = -1;
@@ -153,6 +178,7 @@ export default function App() {
 
   return (
     <MaintenanceOverlay>
+      <NetworkStatus />
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors flex flex-col font-sans mb-16 sm:mb-0">
         <FloatingBackButton />
         <Header />
